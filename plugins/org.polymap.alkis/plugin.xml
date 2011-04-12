@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.hydrologis.jgrass.csv2shape.operations">
+      <operation
+            class="org.polymap.alkis.internal.flurliste.FlurlisteCsvOperation"
+            label="Flurstücksliste"
+            tooltip="RW/HW aus Flurstücksliste dekodieren">
+      </operation>
+      <operation
+            class="org.polymap.alkis.internal.flurliste.ZaehlerNennerCsvOperation"
+            label="Zähler/Nenner"
+            tooltip="Zähler/Nenner suchen und Koordinaten des Flurstücks zuordnen">
+      </operation>
+   </extension>
+
+</plugin>
