@@ -108,10 +108,16 @@ public class ZaehlerNennerCsvOperation
                 logOut.println( "    Feld: " + header[i] + ", Position: " + i );
             }
             else if (ArrayUtils.contains( PROP_X, header[i].toLowerCase() )) {
+                if (xField != -1) {
+                    throw new Exception( "Es gibt mehrere Felder für den Rechtswert: " + xField + " und " + i );
+                }
                 xField = i;
                 logOut.println( "    Feld: " + header[i] + ", Position: " + i );
             }
             else if (ArrayUtils.contains( PROP_Y, header[i].toLowerCase() )) {
+                if (yField != -1) {
+                    throw new Exception( "Es gibt mehrere Felder für den Hochwert: " + yField + " und " + i );
+                }
                 yField = i;
                 logOut.println( "    Feld: " + header[i] + ", Position: " + i );
             }
