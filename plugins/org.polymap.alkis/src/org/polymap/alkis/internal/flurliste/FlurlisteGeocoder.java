@@ -69,22 +69,22 @@ public class FlurlisteGeocoder
         // find flurstuecke
         for (Flurstueck flurstueck : flurstuecke) {
             Filter filter = ff.and( Arrays.asList( new Filter[] {
-                    ff.equals( ff.property( "gemarkung" ), ff.literal( flurstueck.getGemarkung() ) ),
-                    ff.equals( ff.property( "zaehler" ), ff.literal( flurstueck.getZaehler() ) ),
-                    ff.equals( ff.property( "nenner" ), ff.literal( flurstueck.getNenner() ) ) } ) );
+                    ff.equals( ff.property( "GKZ" ), ff.literal( flurstueck.getGemarkung() ) ),
+                    ff.equals( ff.property( "ZAEHLER" ), ff.literal( flurstueck.getZaehler() ) ),
+                    ff.equals( ff.property( "NENNER" ), ff.literal( flurstueck.getNenner() ) ) } ) );
             
             for (FeatureSource fs : fss) {
                 // XXX org.polymap.core.data.feature.lucene.LuceneFeatureCacheProcessor needs this
                 FeatureType schema = fs.getSchema();
                 
                 // check properties
-                if (schema.getDescriptor( "gemarkung" ) == null) {
+                if (schema.getDescriptor( "GKZ" ) == null) {
                     throw new IllegalStateException( "Flurliste enthält kein Feld 'gemarkung'. Ebene: " + schema.getName() );
                 }
-                if (schema.getDescriptor( "zaehler" ) == null) {
+                if (schema.getDescriptor( "ZAEHLER" ) == null) {
                     throw new IllegalStateException( "Flurliste enthält kein Feld 'zaehler'. Ebene: " + schema.getName() );
                 }
-                if (schema.getDescriptor( "nenner" ) == null) {
+                if (schema.getDescriptor( "NENNER" ) == null) {
                     throw new IllegalStateException( "Flurliste enthält kein Feld 'nenner'. Ebene: " + schema.getName() );
                 }
                 
