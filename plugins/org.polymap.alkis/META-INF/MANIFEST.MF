@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Alkis Core Plugin
+Bundle-Name: ALKIS Plugin
 Bundle-SymbolicName: org.polymap.alkis;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: org.polymap.alkis.AlkisPlugin
@@ -10,9 +10,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.polymap.core.libs;bundle-version="3.0.0",
  org.polymap.core;bundle-version="3.0.0",
  org.polymap.core.project;bundle-version="3.0.0",
- org.polymap.core.qi4j;bundle-version="3.0.0",
  org.polymap.core.data;bundle-version="3.0.0",
- eu.hydrologis.jgrass.csv2shape;bundle-version="1.0.0"
+ eu.hydrologis.jgrass.csv2shape;bundle-version="1.0.0",
+ org.polymap.core.model;bundle-version="3.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
