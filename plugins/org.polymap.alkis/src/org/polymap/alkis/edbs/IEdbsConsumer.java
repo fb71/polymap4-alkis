@@ -21,8 +21,8 @@ package org.polymap.alkis.edbs;
  */
 public interface IEdbsConsumer {
 
-    public void consume( EdbsRecord obj );
+    public void consume( EdbsRecord obj ) throws Exception;
     
-    public void endOfRecords();
+    public void endOfRecords() throws Exception;
     
 }

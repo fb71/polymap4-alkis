@@ -21,19 +21,11 @@ import java.util.Map;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-
-import org.geotools.data.DefaultTransaction;
-import org.geotools.data.FeatureStore;
-import org.geotools.data.Transaction;
-import org.geotools.data.shapefile.ShapefileDataStore;
-import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.opengis.feature.Feature;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import org.apache.commons.logging.Log;
@@ -45,14 +37,16 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- * Baut {@link Feature} objekte aus den {@link EdbsRecord} Objekten. 
+ * Baut {@link Feature}s aus den EDBS-Records. Jedes Objekt und jede Linie
+ * wird dabei zu einer Geometrie. Diese werden nicht zusammengefasst. Das könnte für
+ * Test hilfreich sein. 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class FeatureBuilder
+public class PlainFeatureBuilder
         implements IEdbsConsumer {
 
-    private static Log log = LogFactory.getLog( FeatureBuilder.class );
+    private static Log log = LogFactory.getLog( PlainFeatureBuilder.class );
 
     private Map<String,EdbsRecord>      objekte = new HashMap();
     
@@ -65,12 +59,10 @@ public class FeatureBuilder
             
             // objekt
             if (objektnummer != null) {
-                if (objekte.containsKey( objektnummer )) {
-                    log.info( "Objektnummer gefunden: " + objektnummer );
+                EdbsRecord old = objekte.put( objektnummer, record );
+                if (old != null) {
+                    throw new IllegalStateException( "Objektnummer existiert bereits: " + objektnummer );
                 }
-                else {
-                    objekte.put( objektnummer, record );
-                }                
             }
             
             // linie
@@ -92,17 +84,18 @@ public class FeatureBuilder
         
         // objekte
         for (EdbsRecord record : objekte.values()) {
-            // feature
+            //
             Point anfang = record.get( Objektdaten.Property.ANFANG );
             List<Point> endeList = record.getList( Objektdaten.Property.ENDE );
             List<Point> punkte = record.getList( Objektdaten.Property.PUNKTE );
             String objektnummer = record.get( Objektdaten.Property.OBJEKTNUMMER );
             
-            if (endeList.size() > 1) {
+            if (punkte.size() > 1) {
                 log.info( "Punkte: " + punkte );
                 log.info( "Objektnummer: " + objektnummer );
             }
             
+            // features
             for (Point ende : endeList) {
                 Coordinate[] coords = new Coordinate[ 1 + punkte.size() + 1 ];
                 int i = 0;
@@ -114,6 +107,9 @@ public class FeatureBuilder
                 
                 LineString geom = gf.createLineString( coords );
                 fb.set( "geom", geom );
+                fb.set( "objnum", objektnummer );
+                fb.set( "objart", record.get( Objektdaten.Property.OBJEKTART ) );
+                fb.set( "folie", record.get( Objektdaten.Property.FOLIE ) );
                 fc.add( fb.buildFeature( null ) );
             }
         }
@@ -124,13 +120,18 @@ public class FeatureBuilder
             Point anfang = record.get( Objektdaten.Property.ANFANG );
             List<Point> endeList = record.getList( Objektdaten.Property.ENDE );
             
+            if (!record.getList( Objektdaten.Property.PUNKTE ).isEmpty()) {
+                throw new IllegalStateException( "Punkte in Linie" );
+            }
+//            printProperties( record );
+            
             for (Point ende : endeList) {
                 LineString geom = gf.createLineString( new Coordinate[] { anfang.getCoordinate(), ende.getCoordinate() } );
                 fb.set( "geom", geom );
                 fc.add( fb.buildFeature( null ) );
 
                 //
-//                List objektnummer1 = record.getList( Objektdaten.Property.OBJEKTNUMMER1 );
+//                List objektnummer1 = record.getList( Objektdaten.Property.LINIE_OBJEKTNUMMER1 );
 //                List objektnummer2 = record.getList( Objektdaten.Property.OBJEKTNUMMER2 );
 //
 //                for (int i=0; i<objektnummer1.size(); i++) {
@@ -148,7 +149,7 @@ public class FeatureBuilder
         }
         
         try {
-            writeShapefile( fc );
+            new ShapefileWriter( new File( "/tmp/edbs.shp" ) ).write( fc );
         }
         catch (IOException e) {
             log.warn( "", e );
@@ -160,49 +161,10 @@ public class FeatureBuilder
         SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
         builder.setName( "edbs" );
         builder.add( "objnum", String.class );
+        builder.add( "folie", Integer.class );
+        builder.add( "objart", Integer.class );
         builder.add( "geom", LineString.class );
         return builder.buildFeatureType();
     }
     
-    
-    protected File writeShapefile( FeatureCollection<SimpleFeatureType,SimpleFeature> src )
-    throws IOException {
-        File newFile = new File( "/tmp/edbs.shp" );
-        SimpleFeatureType shapeSchema = src.getSchema();
-        
-        ShapefileDataStoreFactory shapeFactory = new ShapefileDataStoreFactory();
-
-        Map<String,Serializable> params = new HashMap<String,Serializable>();
-        params.put( "url", newFile.toURI().toURL() );
-        params.put( "create spatial index", Boolean.TRUE );
-
-        ShapefileDataStore shapeDs = (ShapefileDataStore)shapeFactory.createNewDataStore( params );
-        shapeDs.createSchema( shapeSchema );
-
-        //shapeDs.forceSchemaCRS(DefaultGeographicCRS.WGS84);
-        //shapeDs.setStringCharset( )
-        
-        // write shapefile
-        Transaction tx = new DefaultTransaction( "create" );
-
-        String typeName = shapeDs.getTypeNames()[0];
-        FeatureStore<SimpleFeatureType,SimpleFeature> shapeFs 
-                = (FeatureStore<SimpleFeatureType, SimpleFeature>)shapeDs.getFeatureSource( typeName );
-
-        shapeFs.setTransaction( tx );
-        try {
-            shapeFs.addFeatures( src );
-            tx.commit();
-        } 
-        catch (IOException e) {
-            tx.rollback();
-            throw e;
-        } 
-        finally {
-            tx.close();
-        }
-        
-        return newFile;
-    }
-
 }

@@ -24,9 +24,9 @@ import java.util.Map;
 class LogConsumer
         implements IEdbsConsumer {
 
-    public void consume( EdbsRecord obj ) {
-        System.out.println( "EDBS-Objekt: ID=" + obj.getId() );
-        for (Map.Entry<String,Object> prop : obj) {
+    public void consume( EdbsRecord record ) {
+        System.out.println( "EDBS-Objekt: " + record.getClass().getSimpleName() );
+        for (Map.Entry<String,Object> prop : record.state()) {
             System.out.println( "    Property: key=" + prop.getKey() + ", value=" + prop.getValue() );
         }
     }

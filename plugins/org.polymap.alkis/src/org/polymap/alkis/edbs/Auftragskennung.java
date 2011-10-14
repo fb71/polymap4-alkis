@@ -22,38 +22,50 @@ import org.apache.commons.logging.LogFactory;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
-import org.polymap.alkis.edbs.EdbsReader.RecordTokenizer;
 
 
 /**
  * Liest aus dem EDBS-Auftragskennsatz (AKND, ULQA0000) die
  * Datenelemente 'Datenkennung-ALK' und 'Datenkennung-DLM'
  * und belegt die Variable 'datenmodell'.
- * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 class Auftragskennung
-        implements IEdbsRecordHandler {
+        implements IEdbsRecordParser {
 
     private static Log log = LogFactory.getLog( Auftragskennung.class );
 
-    public static final int     ID = 1;
+    /**
+     * 
+     */
+    public static class Record
+            extends EdbsRecord {
 
-    public static final String  PROP_DIENSTSTELLE = "dienststelle";
-    public static final String  PROP_AUSGABE = "ausgabe";
-    public static final String  PROP_KENNUNG_ALK = "alk";
-    public static final String  PROP_KENNUNG_ATKIS = "atkis";
-    public static final String  PROP_COUNT = "count";
-    public static final String  PROP_ERSTEINTRAG_DATUM = "ersteintragdatum";
-    public static final String  PROP_AUSGABE_DATUM = "ausgabedatum";
-    public static final String  PROP_MODIFIKATION_DATUM = "modifikationsdatum";
-    
+        public static final int     ID = 1;
+
+        public static final Record  TYPE = type( Record.class );
+
+        public Record() {
+            state().put( this.typeId.name(), ID );
+        }
+
+        public Property<String> dienststelle       = new Property( "dienststelle" );
+        public Property<String> ausgabe            = new Property( "ausgabe" );
+        public Property<String> alk                = new Property( "alk" );
+        public Property<String> atkis              = new Property( "atkis" );
+        public Property<String> count              = new Property( "count" );
+        public Property<String> ersteintragdatum   = new Property( "ersteintragdatum" );
+        public Property<String> ausgabedatum       = new Property( "ausgabedatum" );
+        public Property<String> modifikationsdatum = new Property( "modifikationsdatum" );
         
+    }    
+
+    
     public int canHandle( RecordTokenizer record ) throws IOException {
         if (record.operation.equals( "AKND" )
                 && record.infoname.equals( "ULQA0000")) {
-            return ID;
+            return Record.ID;
         }
         else {
             return 0;
@@ -62,13 +74,13 @@ class Auftragskennung
 
 
     public List<EdbsRecord> handle( RecordTokenizer record ) throws IOException {
-            EdbsRecord result = new EdbsRecord( ID );
+            Record result = new Record();
 
             if (record.nextWhf() != 1 ) {
                 throw new EdbsParseException( "Datengruppe 'Auftragskenndaten' kommt != 1-mal vor." );
             }
             
-            result.put( PROP_DIENSTSTELLE, record.nextString( 14 ) ); /* Dienststelle */
+            result.dienststelle.put( record.nextString( 14 ) ); /* Dienststelle */
             record.skip( 5 );  /* Auftragsnummer */
             record.skip( 1 );  /* weitere Gliederung */
 
@@ -83,17 +95,17 @@ class Auftragskennung
 
             record.skip( 1 );  /* Auftragskennung */
             record.skip( 8 );  /* Benutzungs-/Fortf.-art */
-            result.put( PROP_AUSGABE, record.nextString( 32 ) );    /* Text fuer die Ausgabe */
+            result.ausgabe.put( record.nextString( 32 ) );    /* Text fuer die Ausgabe */
             record.skip( 2 );  /* Verarbeitungsmodus */
             record.skip( 2 );  /* Anzahl Ausfertigungen */
 
             record.skip( 2 );  /* Punktdatenkennung */
 
-            result.put( PROP_KENNUNG_ALK, record.nextString( 2 ) );  /* Datenkennung-ALK */
+            result.alk.put( record.nextString( 2 ) );  /* Datenkennung-ALK */
 
             record.skip( 2 );  /* Messungselementekennung */
 
-            result.put( PROP_KENNUNG_ATKIS, record.nextString( 2 ) ); /* Datenkennung-DLM */
+            result.atkis.put( record.nextString( 2 ) ); /* Datenkennung-DLM */
 
             /* ************************************************************************ */
             /* Auskommentiert am 29.5.96 wg. Problem der Erkennung von EDBS/ATKIS-Input */
@@ -120,11 +132,11 @@ class Auftragskennung
             record.skip( 3 );  /* Verarbeitungsstatus */
 
             record.skip( 6 );  /* hoechste weitere Satznummer */
-            result.put( PROP_COUNT, record.nextString( 6 ) ); /* Anzahl der weiteren Saetze */
+            result.count.put( record.nextString( 6 ) ); /* Anzahl der weiteren Saetze */
 
-            result.put( PROP_ERSTEINTRAG_DATUM, record.nextString( 6 ) ); /* Datum Ersteintrag */
-            result.put( PROP_MODIFIKATION_DATUM, record.nextString( 6 ) ); /* Datum Modifikation */
-            result.put( PROP_AUSGABE_DATUM, record.nextString( 6 ) ); /* Datum Ausgabe */
+            result.ersteintragdatum.put( record.nextString( 6 ) ); /* Datum Ersteintrag */
+            result.modifikationsdatum.put( record.nextString( 6 ) ); /* Datum Modifikation */
+            result.ausgabe.put( record.nextString( 6 ) ); /* Datum Ausgabe */
 
             record.skip( 14 ); /* zustaendige Stelle */
             record.skip( 12 ); /* Plausibilitaetssteuerung */

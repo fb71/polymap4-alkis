@@ -22,35 +22,42 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.alkis.edbs.EdbsReader.RecordTokenizer;
-
-
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 class Attribute
-        implements IEdbsRecordHandler {
+        implements IEdbsRecordParser {
 
     private static Log log = LogFactory.getLog( Attribute.class );
 
-    public static final int     ID = 6;
-
     /**
-     * Die möglichen Properties, die in {@link EdbsRecord} geschrieben werden. 
+     * 
      */
-    public enum Prop {
-        OBJEKTNUMMER,
-        TEILNUMMER
-    }
-    
+    public static class Record
+            extends EdbsRecord {
+
+        public static final int     ID = 6;
+
+        public static final Record  TYPE = type( Record.class );
+
+        public Record() {
+            state().put( this.typeId.name(), ID );
+        }
+
+        public Property<String> objektnummer = new Property( "objektnummer" );
+        public Property<String> teilnummer = new Property( "teilnummer" );
+        
+    }    
+
+
 
     public int canHandle( RecordTokenizer record )
     throws IOException {
         if ((record.operation.equals( "BSPE" ) || record.operation.equals( "FEIN" ))
                 && record.infoname.equals( "ULTANN  ")) {
-            return ID;
+            return Record.ID;
         }
         else {
             return 0;
@@ -73,13 +80,13 @@ class Attribute
     throws IOException {
         int i = record.nextWhf();       /* i muss 1 sein    */
         if (i != 1) {
-            throw new EdbsParseException( "WHF Attributkennzeichen != 1\n" );
+            throw new EdbsParseException( "WHF Attributkennzeichen != 1" );
         }
 
-        EdbsRecord result = new EdbsRecord( ID );
+        Record result = new Record();
         
-        result.put( Prop.OBJEKTNUMMER, record.nextString( 7 ) );/* Objektnummer     */
-        result.put( Prop.TEILNUMMER,  record.nextString( 3 ) ); /* Objektteilnummer     */
+        result.objektnummer.put( record.nextString( 7 ) );/* Objektnummer     */
+        result.teilnummer.put( record.nextString( 3 ) ); /* Objektteilnummer     */
         record.skip( 1 );               /* Pruefzeichen     */
         record.skip( 2 );               /* Aktualitaet      */
 
@@ -90,7 +97,7 @@ class Attribute
             String att_typ = record.nextString( 4 );
             String att_wert = record.nextString( 7 );
 
-            result.put( att_typ, att_wert );
+            result.state().put( att_typ, att_wert );
             
 //            fprintf( fp_att, IDFORMAT TRENNER "%3d" TRENNER "%.4s" TRENNER "%7d" "\n",
 //                    nummer2id( obj_nr ), atoi( teil_nr ), att_typ, atoi( att_wert ) );

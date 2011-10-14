@@ -18,21 +18,24 @@ import java.util.List;
 
 import java.io.IOException;
 
-import org.polymap.alkis.edbs.EdbsReader.RecordTokenizer;
 
 /**
+ * Parser Interface für die Behandlung der einzelnen Datensätze (Zeilen).
+ * </p> 
+ * Die einzelnen Zeilen werden vom {@link EdbsRecord} gelesen, wenn nötig
+ * verschmolzen, und dann als {@link RecordTokenizer} an die Parser gegeben.
+ * Der Parser entscheided ob er diesen Datensatz behandeln kann.
  * 
- *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public interface IEdbsRecordHandler {
+public interface IEdbsRecordParser {
 
     /**
-     * 
+     * Prüft, ob der übergebene Datensatz von diesem Parser verarbeitet werden kann.
      * 
      * @param record
-     * @return Die Satzart oder 0, wenn dieser Handler den RecordTokenizer nicht verarbeiten
-     *         kann.
+     * @return Die Satzart oder 0, wenn dieser Parser den {@link RecordTokenizer}
+     *         nicht verarbeiten kann.
      * @throws EdbsParseException
      * @throws IOException
      */
@@ -40,7 +43,8 @@ public interface IEdbsRecordHandler {
     throws IOException;
 
     /**
-     * 
+     * Liefert einen oder mehrere {@link EdbsRecord}s, die aus dem Datensatz geparst
+     * wrden konnten.
      * 
      * @throws EdbsParseException
      * @throws IOException

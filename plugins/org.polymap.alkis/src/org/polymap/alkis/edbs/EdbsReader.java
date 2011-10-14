@@ -19,7 +19,6 @@ package org.polymap.alkis.edbs;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -29,9 +28,7 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 
 import org.polymap.core.runtime.Timer;
 
@@ -41,6 +38,7 @@ import org.polymap.core.runtime.Timer;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class EdbsReader {
+//        implements Iterable<RecordTokenizer> {
 
     private static Log log = LogFactory.getLog( EdbsReader.class );
     
@@ -68,150 +66,20 @@ public class EdbsReader {
     public static final int     MAX_FORTSATZ = 100;
 
     private PrintStream         stderr = System.err;
-    private PrintStream         stdout = System.out;
-    private LineNumberReader    stdin;
+    private LineNumberReader    in;
     
     private int                 satz_zaehler = 0;   /* Anzahl gelesener Saetze */
 
-    private List<IEdbsRecordHandler> handlers = new ArrayList();
+    private List<IEdbsRecordParser> parsers = new ArrayList();
     
-    private Datenmodell         datenmodell = Datenmodell.ALK;
-
-    /**
-     * Repräsentiert eine Zeile in der EDBS-Datei und stellt Methoden
-     * für die {@link IEdbsRecordHandler} bereit.
-     */
-    public class RecordTokenizer {
-        
-        private String          data;
-
-        /** aktuelle Position im satz */
-        private int             pos = 0;
-
-        private int             laenge = 36;
-
-        public String           operation, infoname;
-        
-        public char             zugehoerig;
-        
-        
-        RecordTokenizer( String data ) {
-            this.data = data;
-        }
-
-        public void init() throws IOException {
-            if (!nextString( 4 ).equals( "EDBS" )) {
-                throw new IOException( "Input ist kein EDBS-Satz." );
-            }
-
-            /* Satzlaenge lesen (gezaehlt ab Pos. 13), Laenge des Headers (36) abziehen */
-            /* ergibt: Erhoehung von satz_laenge um Laenge des "Inhalts der Information"    */
-            laenge += (12 + nextInt( 4 ) - 36);
-
-            skip( 4 );                  /* Anfangsadresse Suchkriterium */
-            operation = nextString( 4 );/* Operation */
-            skip( 6 );                  /* EDBS-Satznummer */
-            zugehoerig = nextChar();    /* Zugehoerigkeitsschluessel */
-            skip( 1 );                  /* Editierschluessel */
-            skip( 4 );                  /* Quittungsschluessel */
-            infoname = nextString( 8 ); /* Name der Information */
-        }
-        
-        public String toString() {
-            return "RecordTokenizer [" + data + "]";
-        }
-
-        public int length() {
-            return data.length();
-        }
-        
-        /*
-         * Liefert naechstes Zeichen aus satz.
-         */
-        public char nextChar() {
-            return data.charAt( pos++ );            
-        }
-
-        /**
-         * Liest n Zeichen aus satz ab Position pos.
-         * Setzt pos auf pos+n.
-         */
-        public String nextString( int n ) {
-            String result = data.substring( pos, pos + n );
-            pos += n;
-            return result;
-        }
-
-        /**
-         * Liefert die naechsten n Zeichen in satz als ganze Zahl.
-         */
-        public int nextInt( int n ) {
-            return Integer.parseInt( nextString( n ) );
-        }
-
-        /**
-         * Liefert die naechsten n Zeichen in satz als 4stellige ganze Zahl.
-         */ 
-        public int nextWhf() {
-            int whf = nextInt( 4 );
-            if (whf > 200) {
-                stderr.printf( "WHF > 200 koennte fehlerhaft sein." );
-            }
-            return whf;
-        }
-
-        
-        /**
-         *  liest ab der aktuellen Position in 'satz'
-         *  Numerierungsbezirk und relativen Rechts- und
-         *  Hochwert (= 20 Zeichen, ALK/ATKIS-Format), und
-         *  schreibt Gauss-Krueger-Koordinaten ins Feld 'p'.
-         */
-        public Point nextPoint() {
-            Point p;
-
-            double x = 100000.0 * nextInt( 2 );    /* NBZ [100 km] */
-            double y = 100000.0 * nextInt( 2 );
-
-            if (datenmodell == Datenmodell.ALK) {
-                x = x + 1000.0 * nextInt( 2 );    /* NBZ ALK [1 km] */
-                y = y + 1000.0 * nextInt( 2 );
-
-                x = x + 0.001 * nextInt( 6 );     /* rel. Rechtswert [1 mm] */
-                y = y + 0.001 * nextInt( 6 );     /* rel. Hochwert   [1 mm] */    
-            } 
-            else if (datenmodell == Datenmodell.ATKIS) {
-                x = x + 10000.0 * nextInt( 1 );     /* NBZ ATKIS [10 km] */
-                skip( 1 );                          /* Leerzeichen */
-                y = y + 10000.0 * nextInt( 1 );
-                skip( 1 );
-
-                x = x + 0.01 * nextInt( 6 );        /* rel. Rechtswert [1 cm] */
-                y = y + 0.01 * nextInt( 6 );        /* rel. Hochwert   [1 cm] */
-            }
-            else {
-                throw new IllegalStateException( "Unbekanntes Datenmodell: " + datenmodell );
-            }
-
-            return gf.createPoint( new Coordinate( x, y ) );
-        }
-
-        
-        /**
-         * Zaehlt den Positionszeiger pos fuer satz um n hoch.
-         */
-        public void skip( int n ) {
-            pos += n;
-        }
-
-    }
+    Datenmodell                 datenmodell = Datenmodell.ALK;
 
     
     public EdbsReader( LineNumberReader in ) {
-       this.stdin = in;
-       handlers.add( new Auftragskennung() );
-       handlers.add( new Attribute() );
-       handlers.add( new Objektdaten() );
+       this.in = in;
+       parsers.add( new Auftragskennung() );
+       parsers.add( new Attribute() );
+       parsers.add( new Objektdaten() );
     }
 
     
@@ -297,7 +165,7 @@ public class EdbsReader {
 //        return UNDEFINIERT;
 //    }
 
-
+    
     /**
      * Liest naechsten EDBS-Satz. Falls misslungen, Programmabbruch;
      * d.h. in main() kontrollieren, ob noch Saetze vorhanden.
@@ -330,13 +198,11 @@ public class EdbsReader {
             }
     
             if (fsatzart != satzart) {
-                stderr.printf( "\nSatzart wechselt in Fortsetzungssaetzen\n" );
-                return null;
+                throw new EdbsParseException( "Satzart wechselt in Fortsetzungssätzen" );
             }
     
             else if (satz.zugehoerig != 'E') {
-                stderr.printf( "\nKein Endesatz fuer Fortsetzungssaetze\n" );
-                return null;
+                throw new EdbsParseException( "Kein Endesatz fuer Fortsetzungssaetze" );
                 /* Achtung: In diesem Fall koennen der A-Satz, alle evtl. folgenden F-  */
                 /* Saetze UND DER DARAUFFOLGENDE NICHT-E-SATZ nicht bearbeitet werden.  */
                 /* D.h., bedingt durch das Zusammenschmelzen der Fortsetzungssaetze in  */
@@ -345,8 +211,7 @@ public class EdbsReader {
         }
     
         else if (satz.zugehoerig != ' ') {
-            stderr.printf( "\nEDBS-Folge- oder Endesatz ohne Anfangssatz\n" );
-            return null;
+            throw new EdbsParseException( "\nEDBS-Folge- oder Endesatz ohne Anfangssatz\n" );
         }
         return satz;
     }
@@ -360,8 +225,8 @@ public class EdbsReader {
      * @throws IOException 
      */
     protected RecordTokenizer lies_satz() throws IOException {
-        RecordTokenizer satz = new RecordTokenizer( null );
-        if ((satz.data = stdin.readLine()) == null) {
+        RecordTokenizer satz = new RecordTokenizer( this, null );
+        if ((satz.data = in.readLine()) == null) {
             return null;
         }
         satz.init();
@@ -385,7 +250,7 @@ public class EdbsReader {
         String fsatz;
         int laenge;
 
-        if ((fsatz = stdin.readLine()) == null) {
+        if ((fsatz = in.readLine()) == null) {
             return 0;
         }
         satz_zaehler++;
@@ -414,7 +279,7 @@ public class EdbsReader {
     
     protected int satzart( RecordTokenizer satz ) 
     throws IOException {
-        for (IEdbsRecordHandler handler : handlers) {
+        for (IEdbsRecordParser handler : parsers) {
             int satzart = handler.canHandle( satz );
             if (satzart != 0) {
                 return satzart;
@@ -424,9 +289,9 @@ public class EdbsReader {
     }
 
     
-    public List<EdbsRecord> edbsRecords( RecordTokenizer satz ) 
+    public List<EdbsRecord> parse( RecordTokenizer satz ) 
     throws IOException {
-        for (IEdbsRecordHandler handler : handlers) {
+        for (IEdbsRecordParser handler : parsers) {
             if (handler.canHandle( satz ) != 0) {
                 return handler.handle( satz );
             }
@@ -467,16 +332,17 @@ public class EdbsReader {
     throws Exception {
 
         System.setProperty( "org.apache.commons.logging.simplelog.defaultlog", "info" );
-        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.alkis", "debug" );
+        //System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.alkis.recordstore", "debug" );
 
-        LineNumberReader in = new LineNumberReader( new FileReader( 
-                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
+        LineNumberReader in = new LineNumberReader( new FileReader(
+                "/home/falko/Data/ALK_Testgemeinden/edbs.Test-IT-ALK.dbout.1.001" ) );
+//                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
         
         List<IEdbsConsumer> consumers = new ArrayList();
 
         // consumers
-//        consumers.add( new LogConsumer() );
-        consumers.add( new FeatureBuilder() );
+        //consumers.add( new LogConsumer() );
+        consumers.add( new StoreFeatureBuilder() );
         
         EdbsReader reader = new EdbsReader( in );
         RecordTokenizer satz = null;
@@ -488,10 +354,14 @@ public class EdbsReader {
 //            reader.stdout.println( count + ": " + satz.toString() );
             
             try {
-                List<EdbsRecord> objs = reader.edbsRecords( satz );
-                for (EdbsRecord obj : objs) {
+                List<EdbsRecord> records = reader.parse( satz );
+                if (records.isEmpty()) {
+                    throw new EdbsParseException( "Unbeaknnter Satztyp: " + satz );
+                }
+                
+                for (EdbsRecord record : records) {
                     for (IEdbsConsumer consumer : consumers) {
-                        consumer.consume( obj );       
+                        consumer.consume( record );       
                     }
                 }
             }
@@ -505,7 +375,7 @@ public class EdbsReader {
         for (IEdbsConsumer consumer : consumers) {
             consumer.endOfRecords();       
         }
-        reader.stdout.println( "Fehler: " + errorCount + ", Zeit: " + timer.elapsedTime() + "ms" );
+        System.out.println( "Fehler: " + errorCount + ", Zeit: " + timer.elapsedTime() + "ms" );
     }
-
+    
 }

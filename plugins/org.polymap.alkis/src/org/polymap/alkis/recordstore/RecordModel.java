@@ -20,6 +20,8 @@ import java.util.Map.Entry;
 
 import java.lang.reflect.Constructor;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * 
  *
@@ -64,7 +66,14 @@ public abstract class RecordModel {
             return ctor.newInstance( new Object[] { nullState } );
         }
         catch (Exception e) {
-            throw new RuntimeException( e );
+            // try no-arg ctor
+            try {
+                Constructor<M> ctor = cl.getDeclaredConstructor( ArrayUtils.EMPTY_CLASS_ARRAY );
+                return ctor.newInstance( ArrayUtils.EMPTY_OBJECT_ARRAY );
+            }
+            catch (Exception e2) {
+                throw new RuntimeException( e );
+            }
         }
     }
     

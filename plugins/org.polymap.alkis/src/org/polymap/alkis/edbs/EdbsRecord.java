@@ -16,137 +16,111 @@ package org.polymap.alkis.edbs;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.polymap.alkis.recordstore.IRecordState;
+import org.polymap.alkis.recordstore.RecordModel;
+
 /**
- * 
+ * Modelliert einen EDBS Datensatz als {@link RecordModel}. Tatsächlich is kein Store
+ * vorhanden, die Werte werden im Speicher in einer {@link Map} gehalten.
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class EdbsRecord
-        implements Iterable<Map.Entry<String,Object>> {
+        extends RecordModel {
 
     private static Log log = LogFactory.getLog( EdbsRecord.class );
     
-    private int                 id;
-    
-    private Map<String,Object>  properties = new TreeMap();
+    public Property<Integer> typeId = new Property( "typeId" );
 
     
-    EdbsRecord( int id ) {
-        this.id = id;
-    }
-
-
-    public int getId() {
-        return id;
+    protected EdbsRecord() {
+        super( new RecordState() );
     }
 
     
-    /**
-     * Setzt den Wert für das Property mit dem angegebenen Namen.
-     *
-     * @param name
-     * @param value
-     */
-    public void put( String name, Object value ) {
-        Object old = properties.put( name, value );
-//        if (old != null) {
-//            throw new IllegalStateException( "Property existiert bereits: " + name );
-//        }
+    public EdbsRecord( IRecordState record ) {
+        super( record );
     }
 
-    /**
-     * Setzt den Wert für das Property mit dem angegebenen Namen.
-     *
-     * @param name
-     * @param value
-     */
-    public void put( Enum name, Object value ) {
-        Object old = properties.put( name.name(), value );
-//        if (old != null) {
-//            throw new IllegalStateException( "Property existiert bereits: " + name );
-//        }
-    }
 
     /**
-     * Liefert den Wert für das Property mit dem angegebenen Namen. Eventuell
-     * kann das auch eine Liste mit Werten sein. 
+     * Fake record state that stores properties in a {@link Map}.
      */
-    public <T> T get( String name ) {
-        return (T)properties.get( name );
-    }
+    static class RecordState
+            implements IRecordState {
+        
+        private Map<String,Object>  properties = new HashMap();
 
-    /**
-     * Liefert den Wert für das Property mit dem angegebenen Namen. Eventuell
-     * kann das auch eine Liste mit Werten sein. 
-     */
-    public <T> T get( Enum name ) {
-        return get( name.name() );
-    }
 
-    public <T> List<T> getList( String name ) {
-        Object value = properties.get( name );
-        if (value == null) {
-            return Collections.EMPTY_LIST;
+        public Object id() {
+            // XXX Auto-generated method stub
+            throw new RuntimeException( "not yet implemented." );
         }
-        else if (value instanceof List) {
-            return (List)value;
+
+
+        public <T> T put( String name, T value ) {
+            Object old = properties.put( name, value );
+            //        if (old != null) {
+            //            throw new IllegalStateException( "Property existiert bereits: " + name );
+            //        }
+            return (T)old;
         }
-        else {
-            return Collections.singletonList( (T)value );
+
+
+        public <T> T get( String name ) {
+            return (T)properties.get( name );
         }
-    }
-    
-    public <T> List<T> getList( Enum name ) {
-        return getList( name.name() );
-    }
-    
-    /**
-     * Fügt einen neuen Wert zum Property mit dem angegebenen Namen. Wenn
-     * bereits ein oder mehrere Werte existieren, dann wird eine {@link List}
-     * initialisiert.
-     * 
-     * @param name
-     * @param value
-     */
-    public void add( String name, Object value ) {
-        Object old = properties.put( name, value );
-        if (old != null) {
-            if (old instanceof List) {
-                ((List)old).add( value );
-                properties.put( name, old );
+
+
+        public <T> List<T> getList( String name ) {
+            Object value = properties.get( name );
+            if (value == null) {
+                return Collections.EMPTY_LIST;
+            }
+            else if (value instanceof List) {
+                return (List)value;
             }
             else {
-                List list = new ArrayList();
-                list.add( old );
-                list.add( value );
-                properties.put( name, list );
+                return Collections.singletonList( (T)value );
             }
         }
-    }
 
-    /**
-     * Fügt einen neuen Wert zum Property mit dem angegebenen Namen. Wenn
-     * bereits ein oder mehrere Werte existieren, dann wird eine {@link List}
-     * initialisiert.
-     * 
-     * @param name
-     * @param value
-     */
-    public void add( Enum name, Object value ) {
-        add( name.name(), value );
-    }
-    
-    public Iterator<Entry<String, Object>> iterator() {
-        return properties.entrySet().iterator();
+
+        public void add( String name, Object value ) {
+            Object old = properties.put( name, value );
+            if (old != null) {
+                if (old instanceof List) {
+                    ((List)old).add( value );
+                    properties.put( name, old );
+                }
+                else {
+                    List list = new ArrayList();
+                    list.add( old );
+                    list.add( value );
+                    properties.put( name, list );
+                }
+            }
+        }
+
+        
+        public void remove( String key ) {
+            // XXX Auto-generated method stub
+            throw new RuntimeException( "not yet implemented." );
+        }
+
+
+        public Iterator<Entry<String, Object>> iterator() {
+            return properties.entrySet().iterator();
+        }
     }
     
 }

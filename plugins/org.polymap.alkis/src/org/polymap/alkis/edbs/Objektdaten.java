@@ -1,17 +1,20 @@
-/* 
- * polymap.org
- * Copyright 2011, Polymap GmbH. All rights reserved.
- *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- */
+/*
+    polymap.org
+    Copyright (C) 1995 Claus Rinner
+    Copyright 2011, Polymap GmbH. All rights reserved.
+
+    Dieses Programm ist freie Software. Sie können es unter
+    den Bedingungen der GNU General Public License, wie von der
+    Free Software Foundation herausgegeben, weitergeben und/oder
+    modifizieren, entweder unter Version 2 der Lizenz oder (wenn
+    Sie es wünschen) jeder späteren Version.
+
+    Die Veröffentlichung dieses Programms erfolgt in der
+    Hoffnung, daß es Ihnen von Nutzen sein wird, aber OHNE JEDE
+    GEWÄHRLEISTUNG - sogar ohne die implizite Gewährleistung
+    der MARKTREIFE oder der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
+    Details finden Sie in der GNU General Public License.
+*/
 package org.polymap.alkis.edbs;
 
 import java.util.ArrayList;
@@ -24,16 +27,16 @@ import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.Point;
 
-import org.polymap.alkis.edbs.EdbsReader.RecordTokenizer;
+import org.polymap.alkis.recordstore.IRecordState;
 
 
 /**
- * 
+ * Parser für 'ULOBNN' Datensätze.
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 class Objektdaten
-        implements IEdbsRecordHandler {
+        implements IEdbsRecordParser {
 
     private static Log log = LogFactory.getLog( Objektdaten.class );
 
@@ -43,40 +46,80 @@ class Objektdaten
     public static final int     LINKS = 1;
     public static final int     BEIDE = 2;
 
+
     /**
-     * Die möglichen Properties, die in {@link EdbsRecord} geschrieben werden. 
+     * Ein 'Objekt' Datensatz. 
      */
-    public enum Property {
-            FOLIE,
-            OBJEKTART,
-            OBJEKTTYP,
-            OBJEKTNUMMER,
-            TEILNUMMER,
-            RICHTUNG,
-            LAPA,
-            PUNKTE,
-            ANFANG,
-            ENDE,
-            GEOM_ART,
-            OBJEKTNUMMER1,
-            OBJEKTNUMMER2,
-            TEILNUMMER1,
-            TEILNUMMER2,
-            INFO,
-            INFO_ART
-    }
+    public static class ObjektRecord
+            extends EdbsRecord {
+
+        @SuppressWarnings("hiding")
+        public static final int             ID = 51;
+
+        public static final ObjektRecord    TYPE = type( ObjektRecord.class );
+
+        public ObjektRecord() {
+            state().put( this.typeId.name(), ID );
+        }
+
+        public ObjektRecord( IRecordState record ) {
+            super( record );
+            assert typeId.get() != null /*&& typeId.get().equals( ID )*/;
+        }
+
+        public Property<Point> anfang = new Property( "anfang" );
+        public Property<Integer> geomArt = new Property( "geomart" );
+        public Property<Integer> folie = new Property( "folie" );
+        public Property<Integer> objektArt = new Property( "objektArt" );
+        public Property<String> objekttyp = new Property( "objekttyp" );
+        public Property<String> objektnummer = new Property( "objektnummer" );
+        public Property<String> teilnummer = new Property( "teilnummer" );
+        public Property<Point> punkte = new Property( "punkte" );
+        public Property<String> info = new Property( "info" );
+        public Property<Integer> infoArt = new Property( "infoArt" );
+    }    
+
+
+    /**
+     * Ein 'Linie' Datensatz. 
+     */
+    public static class LinieRecord
+            extends EdbsRecord {
+
+        @SuppressWarnings("hiding")
+        public static final int         ID = 52;
+
+        public static final LinieRecord TYPE = type( LinieRecord.class );
+
+        public LinieRecord() {
+            state().put( this.typeId.name(), ID );
+        }
+        
+        public Property<Point> anfang = new Property( "anfang" );
+        public Property<Point> enden = new Property( "enden" );
+        public Property<Integer> geomArt = new Property( "geomart" );
+        public Property<Integer> folien = new Property( "folien" );
+        public Property<String> objektArten = new Property( "objektArten" );
+        public Property<String> objektnummern1 = new Property( "objektnummern1" );
+        public Property<String> objektnummern2 = new Property( "objektnummern2" );
+        public Property<String> teilnummern1 = new Property( "teilnummern1" );
+        public Property<String> teilnummern2 = new Property( "teilnummern2" );
+        public Property<Integer> richtungen = new Property( "richtungen" );
+        public Property<Point> lapa = new Property( "lapa" );
+    }    
+
+
+    // instance *******************************************
     
     /** Der aktuelle Datensatz. */
-    private RecordTokenizer     record;
-    /** Das aktuelle Ergebnisobjekt. */
-    private EdbsRecord          result;
+    private RecordTokenizer     tokenizer;
 
     
     @SuppressWarnings("hiding")
-    public int canHandle( RecordTokenizer record )
+    public int canHandle( RecordTokenizer tokenizer )
     throws IOException {
-        if ((record.operation.equals( "BSPE" ) || record.operation.equals( "FEIN" ))
-                && record.infoname.equals( "ULOBNN  ")) {
+        if ((tokenizer.operation.equals( "BSPE" ) || tokenizer.operation.equals( "FEIN" ))
+                && tokenizer.infoname.equals( "ULOBNN  ")) {
             return ID;
         }
         else {
@@ -86,41 +129,41 @@ class Objektdaten
 
 
     @SuppressWarnings("hiding")
-    public List<EdbsRecord> handle( RecordTokenizer record )
+    public List<EdbsRecord> handle( RecordTokenizer tokenizer )
     throws IOException {
-        int i = record.nextWhf();
+        int i = tokenizer.nextWhf();
         List<EdbsRecord> result = new ArrayList( i );
         while (i-- > 0) {
-            result.add( handleOne( record ) );
+            result.addAll( handleOne( tokenizer ) );
         }
         return result;
     }
     
     
     @SuppressWarnings("hiding")
-    protected EdbsRecord handleOne( RecordTokenizer record )
+    protected List<EdbsRecord> handleOne( RecordTokenizer tokenizer )
     throws IOException {
-        int i = record.nextWhf();       /* i muss 1 sein    */
+        int i = tokenizer.nextWhf();       /* i muss 1 sein    */
         if (i != 1) {
             throw new EdbsParseException( "WHF Grundriss-Koordinate != 1" );
         }
 
-        this.record = record;
-        this.result = new EdbsRecord( ID );
+        this.tokenizer = tokenizer;
         
-        Point anfang = record.nextPoint(); /* globale Variable */
-        result.put( Property.ANFANG, anfang );
-        record.skip( 1 );               /* 1 Byte fuer Pruefzeichen, nicht verwertet */
+        Point anfang = tokenizer.nextPoint(); /* globale Variable */
+        tokenizer.skip( 1 );               /* 1 Byte fuer Pruefzeichen, nicht verwertet */
 
-        i = record.nextWhf();           /* Datengruppe 'Endpunkt der Linie' und abhaengige */
+        List<EdbsRecord> result = new ArrayList();
+        
+        i = tokenizer.nextWhf();           /* Datengruppe 'Endpunkt der Linie' und abhaengige */
         while (i-- > 0) {
-            linie();
+            result.add( linie( anfang ) );
         }
-        i = record.nextWhf();           /* Datengruppe 'Funktion des Objekts' und abhaengige */
+        i = tokenizer.nextWhf();           /* Datengruppe 'Funktion des Objekts' und abhaengige */
         while (i-- > 0) {
-            objekt();
+            result.add( objekt( anfang ) );
         }
-        return this.result;
+        return result;
     }
 
     
@@ -142,64 +185,68 @@ class Objektdaten
      *
      * @throws EdbsParseException 
      */
-    private void linie() 
+    private LinieRecord linie( Point anfang )
     throws EdbsParseException {
-        int n = record.nextWhf();               /* fuer Endpunkt; muss 1 sein */
+        int n = tokenizer.nextWhf();                /* fuer Endpunkt; muss 1 sein */
         if (n != 1 ) {
             throw new EdbsParseException( "WHF Linienendpunkt != 1" );
-        }        
-        Point ende = record.nextPoint();
-        result.add( Property.ENDE, ende );
+        }
         
-        int art_geo = record.nextInt( 2 );  /* Art der Geometrie */
-        if (art_geo != 11 && art_geo != 15 ) { /* keine Gerade/Vektor */
-            throw new EdbsParseException( "\nUnbekannte Art der Geometrie: " + art_geo );
+        LinieRecord result = new LinieRecord();
+        Point ende = tokenizer.nextPoint();
+        result.anfang.put( anfang );
+        result.enden.add( ende );
+        
+        int art_geo = tokenizer.nextInt( 2 );       /* Art der Geometrie */
+        if (art_geo != 11 && art_geo != 15 ) {      /* keine Gerade/Vektor */
+            throw new EdbsParseException( "Unbekannte Art der Geometrie: " + art_geo );
         }
-        result.add( Property.GEOM_ART, art_geo );
+        result.geomArt.add( art_geo );
 
-        n = record.nextWhf();
+        n = tokenizer.nextWhf();
         while (n-- > 0) {
-            linieFunktion();
+            linieFunktion( result );
         }
 
-        int anzahl_lapa = record.nextWhf(); /* Anzahl der Lageparameter */
-        for (int i=0; i<anzahl_lapa; i++) { /* Datengruppe "Lageparameter" */
-            Point lapa = record.nextPoint();
-            result.add( Property.LAPA, lapa );
+        int anzahl_lapa = tokenizer.nextWhf();      /* Anzahl der Lageparameter */
+        for (int i=0; i<anzahl_lapa; i++) {         /* Datengruppe "Lageparameter" */
+            Point lapa = tokenizer.nextPoint();
+            result.lapa.add( lapa );
         }
-//        return linie_schreiben();   /* Ausgabe in 'fp' */
+        return result;
     }
 
     
     /**
      * Bearbeitet anzahl_doppel mal die Datengruppe "Funktion der Linie".
+     * @param result 
      * 
      * @throws EdbsParseException 
      */
-    private void linieFunktion() 
+    private void linieFunktion( LinieRecord result ) 
     throws EdbsParseException {
         
-        if (record.nextWhf() != 1) {
+        if (tokenizer.nextWhf() != 1) {
             throw new EdbsParseException( "WHF Linienfunktion != 1" );
         }
         //folie[i] = lies_zahl( 3 );          /* Folie */
         //objektart[i] = lies_zahl( OA_LAENGE );  /* Objektart */
-        result.add( Property.FOLIE, record.nextInt( 3 ) );
-        result.add( Property.OBJEKTART, record.nextString( 4 ) );
+        result.folien.add( tokenizer.nextInt( 3 ) );
+        result.objektArten.add( tokenizer.nextString( 4 ) );
 
-        Object objektnummer1 = record.nextString( 7 );  /* Objektnummer 1 (rechts)  */
-        result.add( Property.OBJEKTNUMMER1, objektnummer1 );
-        Object objektnummer2 = record.nextString( 7 );  /* Objektnummer 2 (link)  */
-        result.add( Property.OBJEKTNUMMER2, objektnummer1 );
+        String objektnummer1 = tokenizer.nextString( 7 );  /* Objektnummer 1 (rechts)  */
+        result.objektnummern1.add( objektnummer1 );
+        String objektnummer2 = tokenizer.nextString( 7 );  /* Objektnummer 2 (link)  */
+        result.objektnummern2.add( objektnummer1 );
 
         if (objektnummer1.equals( "       " )) {        /* Nr. rechts frei  */
-            result.add( Property.RICHTUNG, LINKS );
+            result.richtungen.add( LINKS );
         }
         else if (objektnummer1.equals( "       " )) {   /* Nr. links frei   */
-            result.add( Property.RICHTUNG, RECHTS );
+            result.richtungen.add( RECHTS );
         }
         else {                                          /* beide Nummernfelder belegt   */
-            result.add( Property.RICHTUNG, BEIDE );
+            result.richtungen.add( BEIDE );
 
             //                /* Nachbarschaft merken - Objektteilnummer beruecksichtigen?    */
             //                /* CR 2001-03-10                        */
@@ -208,18 +255,18 @@ class Objektdaten
             //                if( ferror( fp_att ) ) perror( "Fehler beim Schreiben in fp_nachbar\n" );
         }
 
-        String teilnummer1 = record.nextString( 3 );          /* Objektteilnummer 1 (rechts)  */
-        result.add( Property.TEILNUMMER1, teilnummer1 );
-        String teilnummer2 = record.nextString( 3 );          /* Objektteilnummer 2 (links)  */
-        result.add( Property.TEILNUMMER2, teilnummer2 );
+        String teilnummer1 = tokenizer.nextString( 3 );          /* Objektteilnummer 1 (rechts)  */
+        result.teilnummern1.add( teilnummer1 );
+        String teilnummer2 = tokenizer.nextString( 3 );          /* Objektteilnummer 2 (links)  */
+        result.teilnummern2.add( teilnummer2 );
 
-        record.skip( 2 );                               /* Linienteilung1 + Linienteilung2 : nicht verwertet */
+        tokenizer.skip( 2 );                               /* Linienteilung1 + Linienteilung2 : nicht verwertet */
 
-        int n = record.nextWhf();
+        int n = tokenizer.nextWhf();
         if (n != 0 ) {                                  /* fuer Fachparameter   */
             log.warn( "WHF Fachparameter > 0" );
             while (n-- > 0) {
-                record.skip( 20 );                      /* Fachparameter ueberlesen */
+                tokenizer.skip( 20 );                      /* Fachparameter ueberlesen */
             }
         }
     }
@@ -232,20 +279,24 @@ class Objektdaten
      * Verzweigt dann ggfs. n-mal zu 'Besondere Information'
      * bearbeiten ('besondere_info()').
      */
-    private void objekt() 
+    private ObjektRecord objekt( Point anfang ) 
     throws EdbsParseException {
-        int n = record.nextWhf();   /* == 1, einmal Funktion des Objekts */
+        int n = tokenizer.nextWhf();   /* == 1, einmal Funktion des Objekts */
         if (n != 1 ) {
             throw new EdbsParseException( "WHF Objektfunktion != 1" );
         }        
 
-        /* Ergebnis in folie[0], objektart[0], objekttyp, objekt1[0] */
-        objektFunktion();
+        ObjektRecord result = new ObjektRecord();
+        result.anfang.put( anfang );
 
-        n = record.nextWhf();       /* Wiederholungsfaktor Datengruppe 'Besondere Information' */
+        /* Ergebnis in folie[0], objektart[0], objekttyp, objekt1[0] */
+        objektFunktion( result );
+
+        n = tokenizer.nextWhf();       /* Wiederholungsfaktor Datengruppe 'Besondere Information' */
         while (n-- > 0) {
-            besondereInfo();
+            besondereInfo( result );
         }
+        return result;
     }
 
     
@@ -257,25 +308,23 @@ class Objektdaten
      *
      * Laesst aktuellen Anfangspunkt von 'label_schreiben(...)' in
      * eine von Objekttyp und Objektart abhaengige Datei schreiben.
-     *
-     * Gibt 0 zurueck, falls alles OK, sonst -1.
      */
-    private void objektFunktion() {
-        result.put( Property.FOLIE, record.nextInt( 3 ) );
-        result.put( Property.OBJEKTART, record.nextInt( 4 ) );
+    private void objektFunktion( ObjektRecord result ) {
+        result.folie.add( tokenizer.nextInt( 3 ) );
+        result.objektArt.add( tokenizer.nextInt( 4 ) );
 
-        record.skip( 2 );               /* Aktualitaet des Objekts */
+        tokenizer.skip( 2 );               /* Aktualitaet des Objekts */
 
-        char objekttyp = record.nextChar();
-        result.put( Property.OBJEKTTYP, objekttyp );
+        char objekttyp = tokenizer.nextChar();
+        result.objekttyp.put( String.valueOf( objekttyp ) );
 
-        String objektnummer = record.nextString( 7 );
+        String objektnummer = tokenizer.nextString( 7 );
 //        id = nummer2id( objekt1[0] );
-        result.put( Property.OBJEKTNUMMER, objektnummer );
+        result.objektnummer.put( objektnummer );
 
-        record.skip( 2 );               /* Modelltyp */
-        record.skip( 6 );               /* Entstehungsdatum */
-        record.skip( 1 );               /* Veraenderungskennung */
+        tokenizer.skip( 2 );               /* Modelltyp */
+        tokenizer.skip( 6 );               /* Entstehungsdatum */
+        tokenizer.skip( 1 );               /* Veraenderungskennung */
 
 //        /* Abspeichern der allg. Objektinformationen in fp_objects */
 //        fprintf( fp_objects, IDFORMAT TRENNER "%.7s", id, objekt1[0] );
@@ -364,40 +413,41 @@ class Objektdaten
      * Zweitname oder als Ueber- oder Unterfuehrungsreferenz
      * oder als Objektnummer eines Teilobjekt eines komplexen
      * Objekts interpretiert und entsprechend abgespeichert.
+     * 
      * @throws EdbsParseException 
      */
-    private void besondereInfo() 
+    private void besondereInfo( ObjektRecord result ) 
     throws EdbsParseException {
-        int n = record.nextWhf();               /* == 1, einmal 'Besondere Information' */
+        int n = tokenizer.nextWhf();               /* == 1, einmal 'Besondere Information' */
         if (n != 1 ) {
             throw new EdbsParseException( "WHF Besondere Information != 1" );
         }
 
-        int infoArt = record.nextInt( 2 );      /* 'Art der Information' */
-        result.put( Property.INFO_ART, infoArt );
+        int infoArt = tokenizer.nextInt( 2 );      /* 'Art der Information' */
+        result.infoArt.put( infoArt );
 
-        record.skip( 2 );                       /* Kartentyp */
-        record.skip( 6 );                       /* Signaturteilnummer */
+        tokenizer.skip( 2 );                       /* Kartentyp */
+        tokenizer.skip( 6 );                       /* Signaturteilnummer */
 
-        String text = record.nextString( 33 );  /* Datenelement 'Text' */
-        result.put( Property.INFO, text );
+        String text = tokenizer.nextString( 33 );  /* Datenelement 'Text' */
+        result.info.put( text );
 
-        int geometrieArt = record.nextInt( 2 ); /* Art der Geometrieangabe */
-        result.put( Property.GEOM_ART, geometrieArt );
-        String teilnummer = record.nextString( 3 );
-        result.put( Property.TEILNUMMER, teilnummer );   /* Objektteilnummer */
+        int geometrieArt = tokenizer.nextInt( 2 );  /* Art der Geometrieangabe */
+        result.geomArt.put( geometrieArt );
+        String teilnummer = tokenizer.nextString( 3 );
+        result.teilnummer.put( teilnummer );        /* Objektteilnummer */
 
-//        objektInfo( record );
-        n = record.nextWhf();       /* Wiederholungsfaktor Datengruppe 'Geometrieangabe' */
+//        objektInfo( tokenizer );
+        n = tokenizer.nextWhf();       /* Wiederholungsfaktor Datengruppe 'Geometrieangabe' */
         
         // Art 53 = Text in freier Ausrichtung (mit Richtungswinkel "TT")
         if (geometrieArt == 53) {
-            record.skip( "TT13613             ".length() );
+            tokenizer.skip( "TT13613             ".length() );
             n--;
         }
         
         while (n-- > 0) {
-            geoAngabe( geometrieArt );
+            geoAngabe( result, geometrieArt );
         }
     }
     
@@ -406,15 +456,17 @@ class Objektdaten
      * Liest die Geometrieangabe und speichert gefundene Punkte
      * mit der globalen 'id' und Art der Geometrie in fp_npos
      * (Namenpositionierung) ab.
+     * 
+     * @param result 
      * @param geometrieArt 
      */
-    private void geoAngabe( int geometrieArt ) {
+    private void geoAngabe( ObjektRecord result, int geometrieArt ) {
 
         /* evtl. hier switch nach Art der Geometrie (Gerade, Schraffur, ...) */
 //        if( n > 0 ) fprintf( fp_npos, IDFORMAT TRENNER "%2d", id, adg );
 
-        Point gp = record.nextPoint();
-        result.add( Property.PUNKTE, gp );
+        Point gp = tokenizer.nextPoint();
+        result.punkte.add( gp );
     }
     
     
