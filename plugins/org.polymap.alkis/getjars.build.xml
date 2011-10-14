@@ -4,7 +4,8 @@
  from several maven repositories on the net. See copy.properties for
  general settings. 
  -->
-<project name="org.polymap.alkis" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="org.polymap.alkis" 
+        default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 	<description>Download open source jars from the internet.</description>
 
 	<property name="lib" value="${basedir}${file.separator}lib" />
@@ -34,7 +35,10 @@
 			<remoteRepository refid="central.repository" />
 
             <!--  no longer needed -->
-			<!-- dependency groupId="org.apache.lucene" artifactId="lucene-core" version="3.1.0" /-->
+            <dependency groupId="org.apache.lucene" artifactId="lucene-core" version="3.4.0" />
+            <dependency groupId="commons-collections" artifactId="commons-collections" version="3" scope="provided" />
+            <dependency groupId="commons-logging" artifactId="commons-logging" version="1" scope="provided" />
+            
 		</artifact:dependencies>
 	</target>
 
