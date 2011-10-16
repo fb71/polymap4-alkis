@@ -342,7 +342,8 @@ public class EdbsReader {
 
         // consumers
         //consumers.add( new LogConsumer() );
-        consumers.add( new StoreFeatureBuilder() );
+        //consumers.add( new StoreFeatureBuilder() );
+        consumers.add( new PlainFeatureBuilder() );
         
         EdbsReader reader = new EdbsReader( in );
         RecordTokenizer satz = null;

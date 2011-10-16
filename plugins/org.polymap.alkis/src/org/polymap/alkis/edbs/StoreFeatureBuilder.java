@@ -21,6 +21,8 @@ import java.util.Map;
 
 import java.io.IOException;
 
+import org.opengis.feature.Feature;
+
 import org.apache.commons.collections.MultiHashMap;
 import org.apache.commons.collections.MultiMap;
 import org.apache.commons.logging.Log;
@@ -41,7 +43,8 @@ import org.polymap.alkis.recordstore.IRecordStore.Updater;
 import org.polymap.alkis.recordstore.lucene.LuceneRecordStore;
 
 /**
- *  
+ * Builds {@link Feature}s from the EDBS records. Holding and searching the
+ * records uses a {@link LuceneRecordStore}. 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -161,6 +164,8 @@ public class StoreFeatureBuilder
         }
     }
     
+    class CoordinateValueCoder
+            implements 
     
 //    protected SimpleFeatureType schema() {
 //        SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();

@@ -16,21 +16,26 @@ package org.polymap.alkis.recordstore;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A simple query that every store implementation should handle. SimpleQuery
- * supports EQUAL and wildcard MATCH expressions. All expressions are joined
- * with logical AND. If the property value is a list then CONTAINS semantic
- * is assumed. 
- *
+ * A simple query that every store implementation should handle. SimpleQuery supports
+ * EQUAL and wildcard MATCH expressions. All expressions are joined with logical AND.
+ * If the property value is a list then CONTAINS semantic is assumed.
+ * <p/>
+ * The {@link #template()} method together with RecordModel allows type-safe query by
+ * example.
+ * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public final class SimpleQuery
-        extends RecordQuery {
+        extends RecordQuery
+        implements IRecordState {
 
     private static Log log = LogFactory.getLog( SimpleQuery.class );
 
@@ -79,5 +84,69 @@ public final class SimpleQuery
     public Collection<QueryExpression> expressions() {
         return expressions;
     }
+
+
+    /*
+     * Changing return type.
+     */
+    public SimpleQuery setFirstResult( int firstResult ) {
+        return (SimpleQuery)super.setFirstResult( firstResult );
+    }
+
+    /*
+     * Changing return type.
+     */
+    public SimpleQuery setMaxResults( int maxResults ) {
+        return (SimpleQuery)super.setMaxResults( maxResults );
+    }
+
+    
+    // template *******************************************
+    
+    /**
+     * Creates a new query template. This can be use together with RecordModel for
+     * type-safe query by example queries.
+     */
+    IRecordState template() {
+        return this;
+    }
+    
+
+//    /**
+//     * 
+//     */
+//    class Template
+//            implements IRecordState {
+
+        public <T> T put( String key, T value ) {
+            SimpleQuery.this.eq( key, value );
+            return null;
+        }
+
+        public void add( String key, Object value ) {
+            throw new RuntimeException( "not yet implemented." );
+        }
+
+        public <T> T get( String key ) {
+            throw new RuntimeException( "not yet implemented." );
+        }
+
+        public <T> List<T> getList( String key ) {
+            throw new RuntimeException( "not yet implemented." );
+        }
+
+        public Object id() {
+            throw new UnsupportedOperationException( "Method no supported for query template.");
+        }
+
+        public void remove( String key ) {
+            throw new UnsupportedOperationException( "Method no supported for query template.");
+        }
+
+        public Iterator<Entry<String, Object>> iterator() {
+            throw new UnsupportedOperationException( "Method no supported for query template.");
+        }
+        
+//    }
     
 }

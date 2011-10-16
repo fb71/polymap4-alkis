@@ -15,10 +15,7 @@
 package org.polymap.alkis.edbs;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import java.io.File;
 import java.io.IOException;
 import org.geotools.feature.FeatureCollection;
@@ -36,6 +33,9 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
+import org.polymap.alkis.edbs.Objektdaten.LinieRecord;
+import org.polymap.alkis.edbs.Objektdaten.ObjektRecord;
+
 /**
  * Baut {@link Feature}s aus den EDBS-Records. Jedes Objekt und jede Linie
  * wird dabei zu einer Geometrie. Diese werden nicht zusammengefasst. Das könnte für
@@ -48,27 +48,17 @@ public class PlainFeatureBuilder
 
     private static Log log = LogFactory.getLog( PlainFeatureBuilder.class );
 
-    private Map<String,EdbsRecord>      objekte = new HashMap();
+    private List<ObjektRecord>      objekte = new ArrayList( 10000 );
     
-    private List<EdbsRecord>            linien = new ArrayList();
+    private List<LinieRecord>       linien = new ArrayList( 10000 );
 
     
     public void consume( EdbsRecord record ) {
-        if (record.getId() == Objektdaten.ID) {
-            String objektnummer = (String)record.get( Objektdaten.Property.OBJEKTNUMMER );
-            
-            // objekt
-            if (objektnummer != null) {
-                EdbsRecord old = objekte.put( objektnummer, record );
-                if (old != null) {
-                    throw new IllegalStateException( "Objektnummer existiert bereits: " + objektnummer );
-                }
-            }
-            
-            // linie
-            else {
-                linien.add( record );
-            }
+        if (record instanceof Objektdaten.ObjektRecord) {
+            objekte.add( (ObjektRecord)record );
+        }
+        else if (record instanceof Objektdaten.LinieRecord) {
+            linien.add( (LinieRecord)record );
         }
     }
 
@@ -82,47 +72,46 @@ public class PlainFeatureBuilder
         FeatureCollection fc = FeatureCollections.newCollection();
         GeometryFactory gf = new GeometryFactory();
         
-        // objekte
-        for (EdbsRecord record : objekte.values()) {
-            //
-            Point anfang = record.get( Objektdaten.Property.ANFANG );
-            List<Point> endeList = record.getList( Objektdaten.Property.ENDE );
-            List<Point> punkte = record.getList( Objektdaten.Property.PUNKTE );
-            String objektnummer = record.get( Objektdaten.Property.OBJEKTNUMMER );
-            
-            if (punkte.size() > 1) {
-                log.info( "Punkte: " + punkte );
-                log.info( "Objektnummer: " + objektnummer );
-            }
-            
-            // features
-            for (Point ende : endeList) {
-                Coordinate[] coords = new Coordinate[ 1 + punkte.size() + 1 ];
-                int i = 0;
-                coords[i++] = anfang.getCoordinate();
-                for (Point p : punkte) {
-                    coords[i++] = p.getCoordinate();
-                }
-                coords[i++] = ende.getCoordinate();
-                
-                LineString geom = gf.createLineString( coords );
-                fb.set( "geom", geom );
-                fb.set( "objnum", objektnummer );
-                fb.set( "objart", record.get( Objektdaten.Property.OBJEKTART ) );
-                fb.set( "folie", record.get( Objektdaten.Property.FOLIE ) );
-                fc.add( fb.buildFeature( null ) );
-            }
-        }
+//        // objekte
+//        for (ObjektRecord objekt : objekte) {
+//            //
+//            List<Point> endeList = record.getList( Objektdaten.Property.ENDE );
+//            List<Point> punkte = record.getList( Objektdaten.Property.PUNKTE );
+//            String objektnummer = record.get( Objektdaten.Property.OBJEKTNUMMER );
+//            
+//            if (punkte.size() > 1) {
+//                log.info( "Punkte: " + punkte );
+//                log.info( "Objektnummer: " + objektnummer );
+//            }
+//            
+//            // features
+//            for (Point ende : endeList) {
+//                Coordinate[] coords = new Coordinate[ 1 + punkte.size() + 1 ];
+//                int i = 0;
+//                coords[i++] = objekt.anfang.get().getCoordinate();
+//                for (Point p : punkte) {
+//                    coords[i++] = p.getCoordinate();
+//                }
+//                coords[i++] = ende.getCoordinate();
+//                
+//                LineString geom = gf.createLineString( coords );
+//                fb.set( "geom", geom );
+//                fb.set( "objnum", objektnummer );
+//                fb.set( "objart", record.get( Objektdaten.Property.OBJEKTART ) );
+//                fb.set( "folie", record.get( Objektdaten.Property.FOLIE ) );
+//                fc.add( fb.buildFeature( null ) );
+//            }
+//        }
         
         // linien
-        for (EdbsRecord record : linien) {
+        for (LinieRecord linie : linien) {
             // feature
-            Point anfang = record.get( Objektdaten.Property.ANFANG );
-            List<Point> endeList = record.getList( Objektdaten.Property.ENDE );
+            Point anfang = linie.anfang.get();
+            List<Point> endeList = linie.enden.getList();
             
-            if (!record.getList( Objektdaten.Property.PUNKTE ).isEmpty()) {
-                throw new IllegalStateException( "Punkte in Linie" );
-            }
+//            if (!linie.getList( Objektdaten.Property.PUNKTE ).isEmpty()) {
+//                throw new IllegalStateException( "Punkte in Linie" );
+//            }
 //            printProperties( record );
             
             for (Point ende : endeList) {

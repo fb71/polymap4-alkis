@@ -84,6 +84,7 @@ public abstract class RecordModel {
     
     
     protected RecordModel( IRecordState record ) {
+        assert record != null : "record argument is null";
         this.state = record;
     }
 

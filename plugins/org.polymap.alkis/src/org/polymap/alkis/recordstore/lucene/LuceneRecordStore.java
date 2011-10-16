@@ -29,6 +29,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
@@ -37,9 +38,10 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 
 import org.polymap.core.runtime.Timer;
-
 import org.polymap.alkis.recordstore.BaseRecordStore;
+import org.polymap.alkis.recordstore.IRecordCache;
 import org.polymap.alkis.recordstore.IRecordState;
+import org.polymap.alkis.recordstore.NullRecordCache;
 import org.polymap.alkis.recordstore.RecordQuery;
 import org.polymap.alkis.recordstore.IRecordStore;
 import org.polymap.alkis.recordstore.RecordModel;
@@ -64,6 +66,11 @@ public final class LuceneRecordStore
     private Analyzer                analyzer = new WhitespaceAnalyzer( VERSION );
     
     private ExecutorService         executor = null; //Polymap.executorService();
+    
+    /** Maps document number (instead of record ID!) into record */
+    private IRecordCache            recordCache = new NullRecordCache();
+    
+    private IRecordCache.RecordLoader recordLoader = new DocumentLoader();
 
     IndexSearcher                   searcher;
 
@@ -134,22 +141,60 @@ public final class LuceneRecordStore
         }
     }
 
+    
+    public IRecordCache getRecordCache() {
+        return recordCache;
+    }
+
+    
+    public void setRecordCache( IRecordCache recordCache ) {
+        this.recordCache = recordCache;
+    }
+
 
     public IRecordState newRecord() {
         assert reader != null : "Store is closed.";
-        return new LuceneRecordState( this, null, new Document() );
+        return new LuceneRecordState( this, new Document() );
     }
 
 
     public IRecordState get( Object id ) 
     throws Exception {
         assert reader != null : "Store is closed.";
-        assert id instanceof Integer : "Given record identifier is not an Integer: " + id;
+        assert id instanceof String : "Given record identifier is not a String: " + id;
         
-        Document doc = reader.document( (Integer)id );
-        return new LuceneRecordState( this, (Integer)id, doc );
+        TermDocs termDocs = reader.termDocs( new Term( LuceneRecordState.ID_FIELD, id.toString() ) );
+        try {
+            if (termDocs.next()) {
+                Document doc = reader.document( termDocs.doc() );
+                return new LuceneRecordState( LuceneRecordStore.this, doc );
+            }
+            return null;
+        }
+        finally {
+            termDocs.close();
+        }
     }
 
+
+    LuceneRecordState cacheOrLoad( int doc ) 
+    throws Exception {
+        return (LuceneRecordState)recordCache.get( doc, recordLoader );
+    }
+
+    
+    /**
+     * Loads records triggered by the cache in in {@link LuceneRecordStore#get(Object)}.
+     */
+    class DocumentLoader
+            implements IRecordCache.RecordLoader {
+        
+        public IRecordState load( Object docNum ) throws Exception {
+            Document doc = reader.document( (Integer)docNum );
+            return new LuceneRecordState( LuceneRecordStore.this, doc );
+        }
+    }
+    
     
     public ResultSet find( RecordQuery query )
     throws Exception {
@@ -191,6 +236,7 @@ public final class LuceneRecordStore
         public void store( IRecordState record ) throws Exception {
             // add
             if (record.id() == null) {
+                ((LuceneRecordState)record).createId();
                 writer.addDocument( ((LuceneRecordState)record).getDocument() );
             }
             // update
@@ -268,33 +314,74 @@ public final class LuceneRecordStore
     public static void main( String[] args ) throws Exception {
         
         
-        LuceneRecordStore store = new LuceneRecordStore( new File( "/tmp", "LuceneRecordStore" ), false );
-//        LuceneRecordStore store = new LuceneRecordStore();
-//        
-//        Updater updater = store.prepareUpdate();
-//        try {
-//            for (int i=0; i<100000; i++) {
-//                TestRecord record = new TestRecord( store.newRecord() );
-//                record.payload.put( "LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File" );
-//                record.type.put( "2" );
-//                record.count.put( String.valueOf( i ) );
-//                updater.store( record.state() );
-//            }
-//            
-//            updater.apply();
-//        }
-//        catch (Exception e) {
-//            updater.discard();
-//        }
+//        LuceneRecordStore store = new LuceneRecordStore( new File( "/tmp", "LuceneRecordStore" ), false );
+        LuceneRecordStore store = new LuceneRecordStore();
+//        store.setRecordCache( new HashMapRecordCache() );
         
-        Timer timer = new Timer();
+        Updater updater = store.prepareUpdate();
+        try {
+            for (int i=0; i<100000; i++) {
+                TestRecord record = new TestRecord( store.newRecord() );
+                record.payload.put( "LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File" );
+                record.type.put( "2" );
+                record.count.put( String.valueOf( i ) );
+                updater.store( record.state() );
+            }
+            
+            updater.apply();
+        }
+        catch (Exception e) {
+            updater.discard();
+        }
+        
+        final Timer timer = new Timer();
         String dummy = null;
         
+//        // ForEach loop
+//        List list = ForEach
+//                .in( new Producer<Integer>() {
+//                    int i = 0;
+//                    public Integer produce() {
+//                        if (i == 100000-1) {
+//                            log.info( "Time: " + timer.elapsedTime() + "ms -- " + dummy );
+//                        }
+//                        return i++;
+//                    }
+//                    public int size() {
+//                        return 100000;
+//                    }
+//                })
+//                .chunked( 10000 )
+//                .doFirst( new Parallel<Integer,Integer>() {
+//                    public Integer process( Integer i ) 
+//                    throws Exception {
+//                        SimpleQuery query = new SimpleQuery().setMaxResults( 1 );
+//                        TestRecord template = new TestRecord( query );
+//                        template.count.put( String.valueOf( i ) );
+//                        template.type.put( "2" );
+//                        
+//                        ResultSet result = store.find( query );
+//
+//                        if (result.count() == 0) {
+//                            throw new RuntimeException( "Query: " + query );
+//                        }
+//                        
+//                        TestRecord record = new TestRecord( result.get( 0 ) );
+//                        String dummy2 = record.type.get();
+//                        return i;
+//                    }
+//                }).asList();
+        
         for (int i=0; i<100000; i++) {
-            RecordQuery query = new SimpleQuery()
-                    .eq( TestRecord.TYPE.count.name(), String.valueOf( i ) )
-                    .eq( TestRecord.TYPE.type.name(), "2" )
-                    .setMaxResults( 1 );
+//            RecordQuery query = new SimpleQuery()
+//                    .eq( TestRecord.TYPE.count.name(), String.valueOf( i ) )
+//                    .eq( TestRecord.TYPE.type.name(), "2" )
+//                    .setMaxResults( 1 );
+            
+            SimpleQuery query = new SimpleQuery().setMaxResults( 1 );
+            TestRecord template = new TestRecord( query );
+            template.count.put( String.valueOf( i ) );
+            template.type.put( "2" );
             
             ResultSet result = store.find( query );
 

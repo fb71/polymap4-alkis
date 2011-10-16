@@ -40,16 +40,18 @@ public final class LuceneRecordState
 
     public static final String  ID_FIELD = "identifier";
     
+    private static long         idCount = System.currentTimeMillis();
+    
+    
+    // instance *******************************************
+    
     private LuceneRecordStore   store;
     
-    private Integer             id;
-
     private Document            doc;
     
     
-    protected LuceneRecordState( LuceneRecordStore store, Integer id, Document doc ) {
+    protected LuceneRecordState( LuceneRecordStore store, Document doc ) {
         this.store = store;
-        this.id = id;
         this.doc = doc;
     }
 
@@ -60,9 +62,17 @@ public final class LuceneRecordState
 
 
     public Object id() {
-        return id;
+        return doc.get( ID_FIELD );
     }
 
+    
+    void createId() {
+        assert doc.getFieldable( ID_FIELD ) == null : "ID already set for this record";
+        
+        Field idField = new Field( ID_FIELD, String.valueOf( idCount++ ), Store.YES, Index.NOT_ANALYZED );
+        doc.add( idField );
+    }
+    
     
     public <T> T put( String key, T value ) {
         assert key != null;

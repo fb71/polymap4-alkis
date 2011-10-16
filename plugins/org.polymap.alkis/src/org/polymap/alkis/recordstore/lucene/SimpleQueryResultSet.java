@@ -20,6 +20,8 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.FieldSelectorResult;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ScoreDoc;
@@ -43,6 +45,8 @@ final class SimpleQueryResultSet
     private LuceneRecordStore   store;
     
     private ScoreDoc[]          scoreDocs;
+    
+    private FieldSelector       idFieldSelector = new IdFieldSelector();
     
 
     SimpleQueryResultSet( LuceneRecordStore store, SimpleQuery query )
@@ -73,7 +77,7 @@ final class SimpleQueryResultSet
         assert index < scoreDocs.length;
         
         int doc = scoreDocs[index].doc;
-        return new LuceneRecordState( store, doc, store.reader.document( doc ) );
+        return store.cacheOrLoad( doc );
     }
 
 
@@ -91,8 +95,7 @@ final class SimpleQueryResultSet
 
             public LuceneRecordState next() {
                 try {
-                    int doc = scoreDocs[index++].doc;
-                    return new LuceneRecordState( store, doc, store.reader.document( doc ) );
+                    return get( index++ );
                 }
                 catch (Exception e) {
                     throw new RuntimeException( e );
@@ -106,4 +109,18 @@ final class SimpleQueryResultSet
         };
     }
 
+    
+    class IdFieldSelector
+            implements FieldSelector {
+        
+        public FieldSelectorResult accept( String fieldName ) {
+            return fieldName == LuceneRecordState.ID_FIELD 
+                    || fieldName.equals( LuceneRecordState.ID_FIELD )
+                    
+                    ? FieldSelectorResult.LOAD
+                    : FieldSelectorResult.NO_LOAD;
+        }
+
+    }
+    
 }
