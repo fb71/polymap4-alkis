@@ -28,8 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
-import eu.hydrologis.jgrass.csv2shape.importwizard.CsvImporter;
-import eu.hydrologis.jgrass.csv2shape.importwizard.CsvOperation;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
@@ -45,6 +43,9 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 
 import org.polymap.alkis.geocoder.Flurstueck;
 import org.polymap.alkis.geocoder.Geocoder;
+
+import org.polymap.core.data.ui.csvimport.CsvImporter;
+import org.polymap.core.data.ui.csvimport.CsvOperation;
 import org.polymap.core.runtime.Polymap;
 
 /**
