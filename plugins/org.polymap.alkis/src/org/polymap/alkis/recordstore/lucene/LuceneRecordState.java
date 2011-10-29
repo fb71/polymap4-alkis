@@ -14,6 +14,7 @@
  */
 package org.polymap.alkis.recordstore.lucene;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -74,7 +75,7 @@ public final class LuceneRecordState
     }
     
     
-    public <T> T put( String key, T value ) {
+    public <T> LuceneRecordState put( String key, T value ) {
         assert key != null;
         assert value != null : "Value must not be null.";
         
@@ -83,15 +84,13 @@ public final class LuceneRecordState
             doc.removeField( key );
         }
         boolean indexed = store.getIndexFieldSelector().accept( key );
-        Fieldable field = store.valueCoders.encode( key, value, indexed );
-        doc.add( field );
-        log.debug( "Field: " + key + " = " + field.stringValue() );
+        store.valueCoders.encode( doc, key, value, indexed );
         
-        return (T)store.valueCoders.decode( old );
+        return this;
     }
 
     
-    public void add( String key, Object value ) {
+    public LuceneRecordState add( String key, Object value ) {
         assert key != null;
         assert value != null : "Value must not be null.";
 
@@ -109,22 +108,35 @@ public final class LuceneRecordState
         
         StringBuilder arrayKey = new StringBuilder( 32 )
                 .append( key ).append( '[' ).append( length-1 ).append( ']' );
+        
         put( arrayKey.toString(), value );
+        
+        return this;
     }
 
     
     public <T> T get( String key ) {
-        Fieldable field = doc.getFieldable( key );
-        return (T)store.valueCoders.decode( field );
+        return (T)store.valueCoders.decode( doc, key );
     }
 
+    
     public <T> List<T> getList( String key ) {
-        // XXX Auto-generated method stub
-        throw new RuntimeException( "not yet implemented." );
+        // XXX try a lazy facade!?
+        List<T> result = new ArrayList<T>();
+        
+        String lengthString = doc.get( key + "_length" );
+        int length = lengthString != null ? Integer.parseInt( lengthString ) : 0;
+        for (int i=0; i<length; i++) {
+            StringBuilder arrayKey = new StringBuilder( 32 )
+                    .append( key ).append( '[' ).append( i ).append( ']' );
+            result.add( (T)get( arrayKey.toString() ) );
+        }
+        return result;
     }
 
-    public void remove( String key ) {
+    public LuceneRecordState remove( String key ) {
         doc.removeField( key );
+        return this;
     }
 
     public Iterator<Entry<String, Object>> iterator() {

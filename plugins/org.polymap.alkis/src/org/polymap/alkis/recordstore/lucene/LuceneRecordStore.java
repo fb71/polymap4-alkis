@@ -140,8 +140,13 @@ public final class LuceneRecordStore
             throw new RuntimeException( e );
         }
     }
-
     
+    
+    public ValueCoders getValueCoders() {
+        return valueCoders;
+    }
+
+
     public IRecordCache getRecordCache() {
         return recordCache;
     }
@@ -304,7 +309,7 @@ public final class LuceneRecordStore
         
         public Property<String>         type = new Property<String>( "type" );
         
-        public Property<String>         count = new Property<String>( "count" );
+        public Property<Integer>        count = new Property<Integer>( "count" );
         
         public Property<String>         payload = new Property<String>( "payload" );
         
@@ -312,7 +317,9 @@ public final class LuceneRecordStore
     
 
     public static void main( String[] args ) throws Exception {
-        
+
+        System.setProperty( "org.apache.commons.logging.simplelog.defaultlog", "info" );
+        //System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.alkis.recordstore.lucene", "debug" );
         
 //        LuceneRecordStore store = new LuceneRecordStore( new File( "/tmp", "LuceneRecordStore" ), false );
         LuceneRecordStore store = new LuceneRecordStore();
@@ -324,7 +331,7 @@ public final class LuceneRecordStore
                 TestRecord record = new TestRecord( store.newRecord() );
                 record.payload.put( "LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File LuceneRecordStore store = new LuceneRecordStore( new File" );
                 record.type.put( "2" );
-                record.count.put( String.valueOf( i ) );
+                record.count.put( i /*Integer.valueOf( i )*/ );
                 updater.store( record.state() );
             }
             
@@ -332,6 +339,7 @@ public final class LuceneRecordStore
         }
         catch (Exception e) {
             updater.discard();
+            throw e;
         }
         
         final Timer timer = new Timer();
@@ -380,7 +388,7 @@ public final class LuceneRecordStore
             
             SimpleQuery query = new SimpleQuery().setMaxResults( 1 );
             TestRecord template = new TestRecord( query );
-            template.count.put( String.valueOf( i ) );
+            template.count.put( i );
             template.type.put( "2" );
             
             ResultSet result = store.find( query );

@@ -80,7 +80,7 @@ class Auftragskennung
                 throw new EdbsParseException( "Datengruppe 'Auftragskenndaten' kommt != 1-mal vor." );
             }
             
-            result.dienststelle.put( record.nextString( 14 ) ); /* Dienststelle */
+            result.dienststelle.put( record.nextString( 14, "???" ) ); /* Dienststelle */
             record.skip( 5 );  /* Auftragsnummer */
             record.skip( 1 );  /* weitere Gliederung */
 
@@ -95,17 +95,17 @@ class Auftragskennung
 
             record.skip( 1 );  /* Auftragskennung */
             record.skip( 8 );  /* Benutzungs-/Fortf.-art */
-            result.ausgabe.put( record.nextString( 32 ) );    /* Text fuer die Ausgabe */
+            result.ausgabe.put( record.nextString( 32, "???" ) );    /* Text fuer die Ausgabe */
             record.skip( 2 );  /* Verarbeitungsmodus */
             record.skip( 2 );  /* Anzahl Ausfertigungen */
 
             record.skip( 2 );  /* Punktdatenkennung */
 
-            result.alk.put( record.nextString( 2 ) );  /* Datenkennung-ALK */
+            result.alk.put( record.nextString( 2, "???" ) );  /* Datenkennung-ALK */
 
             record.skip( 2 );  /* Messungselementekennung */
 
-            result.atkis.put( record.nextString( 2 ) ); /* Datenkennung-DLM */
+            result.atkis.put( record.nextString( 2, "???" ) ); /* Datenkennung-DLM */
 
             /* ************************************************************************ */
             /* Auskommentiert am 29.5.96 wg. Problem der Erkennung von EDBS/ATKIS-Input */
@@ -132,11 +132,11 @@ class Auftragskennung
             record.skip( 3 );  /* Verarbeitungsstatus */
 
             record.skip( 6 );  /* hoechste weitere Satznummer */
-            result.count.put( record.nextString( 6 ) ); /* Anzahl der weiteren Saetze */
+            result.count.put( record.nextString( 6, "???" ) ); /* Anzahl der weiteren Saetze */
 
-            result.ersteintragdatum.put( record.nextString( 6 ) ); /* Datum Ersteintrag */
-            result.modifikationsdatum.put( record.nextString( 6 ) ); /* Datum Modifikation */
-            result.ausgabe.put( record.nextString( 6 ) ); /* Datum Ausgabe */
+            result.ersteintragdatum.put( record.nextString( 6, "???" ) ); /* Datum Ersteintrag */
+            result.modifikationsdatum.put( record.nextString( 6, "???" ) ); /* Datum Modifikation */
+            result.ausgabe.put( record.nextString( 6, "???" ) ); /* Datum Ausgabe */
 
             record.skip( 14 ); /* zustaendige Stelle */
             record.skip( 12 ); /* Plausibilitaetssteuerung */

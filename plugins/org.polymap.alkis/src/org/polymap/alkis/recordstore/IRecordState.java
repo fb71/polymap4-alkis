@@ -45,9 +45,9 @@ public interface IRecordState
      *
      * @param key
      * @param value
-     * @return The value previously mapped to the given key, or null.
+     * @return this
      */
-    public abstract <T> T put( String key, T value );
+    public abstract <T> IRecordState put( String key, T value );
 
     /**
      * Fügt einen neuen Wert zum Property mit dem angegebenen Namen. Wenn
@@ -57,7 +57,7 @@ public interface IRecordState
      * @param name
      * @param value
      */
-    public abstract void add( String key, Object value );
+    public abstract IRecordState add( String key, Object value );
 
     /**
      *  
@@ -72,7 +72,7 @@ public interface IRecordState
      */
     public abstract <T> List<T> getList( String key );
     
-    public abstract void remove( String key );
+    public abstract IRecordState remove( String key );
     
     /*
      * 

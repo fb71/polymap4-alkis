@@ -50,7 +50,7 @@ public class ShapefileWriter {
     }
 
 
-    protected void write( FeatureCollection<SimpleFeatureType,SimpleFeature> src )
+    protected void write( FeatureCollection<SimpleFeatureType,SimpleFeature> src, boolean append )
     throws IOException {
         SimpleFeatureType shapeSchema = src.getSchema();
         
@@ -60,7 +60,9 @@ public class ShapefileWriter {
         params.put( "url", file.toURI().toURL() );
         params.put( "create spatial index", Boolean.TRUE );
 
-        ShapefileDataStore shapeDs = (ShapefileDataStore)shapeFactory.createNewDataStore( params );
+        ShapefileDataStore shapeDs = append
+                ? (ShapefileDataStore)shapeFactory.createDataStore( params )
+                : (ShapefileDataStore)shapeFactory.createNewDataStore( params );
         shapeDs.createSchema( shapeSchema );
 
         //shapeDs.forceSchemaCRS(DefaultGeographicCRS.WGS84);

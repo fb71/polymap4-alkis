@@ -85,8 +85,8 @@ class Attribute
 
         Record result = new Record();
         
-        result.objektnummer.put( record.nextString( 7 ) );/* Objektnummer     */
-        result.teilnummer.put( record.nextString( 3 ) ); /* Objektteilnummer     */
+        result.objektnummer.put( record.nextString( 7, "???" ) );/* Objektnummer     */
+        result.teilnummer.put( record.nextString( 3, "???" ) ); /* Objektteilnummer     */
         record.skip( 1 );               /* Pruefzeichen     */
         record.skip( 2 );               /* Aktualitaet      */
 
@@ -94,8 +94,8 @@ class Attribute
         
         /* auch Attributsaetze ohne Datengruppe Attribut kommen vor */
         while (i-- > 0) {
-            String att_typ = record.nextString( 4 );
-            String att_wert = record.nextString( 7 );
+            String att_typ = record.nextString( 4, "???" );
+            String att_wert = record.nextString( 7, "???" );
 
             result.state().put( att_typ, att_wert );
             

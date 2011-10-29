@@ -25,8 +25,7 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.vividsolutions.jts.geom.Point;
-
+import com.vividsolutions.jts.geom.Coordinate;
 import org.polymap.alkis.recordstore.IRecordState;
 
 
@@ -67,14 +66,14 @@ class Objektdaten
             assert typeId.get() != null /*&& typeId.get().equals( ID )*/;
         }
 
-        public Property<Point> anfang = new Property( "anfang" );
+        public Property<Coordinate> anfang = new Property( "anfang" );
         public Property<Integer> geomArt = new Property( "geomart" );
         public Property<Integer> folie = new Property( "folie" );
         public Property<Integer> objektArt = new Property( "objektArt" );
         public Property<String> objekttyp = new Property( "objekttyp" );
         public Property<String> objektnummer = new Property( "objektnummer" );
         public Property<String> teilnummer = new Property( "teilnummer" );
-        public Property<Point> punkte = new Property( "punkte" );
+        public Property<Coordinate> punkte = new Property( "punkte" );
         public Property<String> info = new Property( "info" );
         public Property<Integer> infoArt = new Property( "infoArt" );
     }    
@@ -95,8 +94,13 @@ class Objektdaten
             state().put( this.typeId.name(), ID );
         }
         
-        public Property<Point> anfang = new Property( "anfang" );
-        public Property<Point> enden = new Property( "enden" );
+        public LinieRecord( IRecordState record ) {
+            super( record );
+            assert typeId.get() != null /*&& typeId.get().equals( ID )*/;
+        }
+
+        public Property<Coordinate> anfang = new Property( "anfang" );
+        public Property<Coordinate> enden = new Property( "enden" );
         public Property<Integer> geomArt = new Property( "geomart" );
         public Property<Integer> folien = new Property( "folien" );
         public Property<String> objektArten = new Property( "objektArten" );
@@ -105,7 +109,7 @@ class Objektdaten
         public Property<String> teilnummern1 = new Property( "teilnummern1" );
         public Property<String> teilnummern2 = new Property( "teilnummern2" );
         public Property<Integer> richtungen = new Property( "richtungen" );
-        public Property<Point> lapa = new Property( "lapa" );
+        public Property<Coordinate> lapa = new Property( "lapa" );
     }    
 
 
@@ -150,7 +154,7 @@ class Objektdaten
 
         this.tokenizer = tokenizer;
         
-        Point anfang = tokenizer.nextPoint(); /* globale Variable */
+        Coordinate anfang = tokenizer.nextCoordinate(); /* globale Variable */
         tokenizer.skip( 1 );               /* 1 Byte fuer Pruefzeichen, nicht verwertet */
 
         List<EdbsRecord> result = new ArrayList();
@@ -185,7 +189,7 @@ class Objektdaten
      *
      * @throws EdbsParseException 
      */
-    private LinieRecord linie( Point anfang )
+    private LinieRecord linie( Coordinate anfang )
     throws EdbsParseException {
         int n = tokenizer.nextWhf();                /* fuer Endpunkt; muss 1 sein */
         if (n != 1 ) {
@@ -193,13 +197,13 @@ class Objektdaten
         }
         
         LinieRecord result = new LinieRecord();
-        Point ende = tokenizer.nextPoint();
+        Coordinate ende = tokenizer.nextCoordinate();
         result.anfang.put( anfang );
         result.enden.add( ende );
         
-        int art_geo = tokenizer.nextInt( 2 );       /* Art der Geometrie */
+        int art_geo = tokenizer.nextInt( 2, "geomArt" ); /* Art der Geometrie */
         if (art_geo != 11 && art_geo != 15 ) {      /* keine Gerade/Vektor */
-            throw new EdbsParseException( "Unbekannte Art der Geometrie: " + art_geo );
+            log.warn( "Unbekannte Art der Geometrie: " + art_geo );
         }
         result.geomArt.add( art_geo );
 
@@ -210,7 +214,7 @@ class Objektdaten
 
         int anzahl_lapa = tokenizer.nextWhf();      /* Anzahl der Lageparameter */
         for (int i=0; i<anzahl_lapa; i++) {         /* Datengruppe "Lageparameter" */
-            Point lapa = tokenizer.nextPoint();
+            Coordinate lapa = tokenizer.nextCoordinate();
             result.lapa.add( lapa );
         }
         return result;
@@ -231,18 +235,18 @@ class Objektdaten
         }
         //folie[i] = lies_zahl( 3 );          /* Folie */
         //objektart[i] = lies_zahl( OA_LAENGE );  /* Objektart */
-        result.folien.add( tokenizer.nextInt( 3 ) );
-        result.objektArten.add( tokenizer.nextString( 4 ) );
+        result.folien.add( tokenizer.nextInt( 3, "folie" ) );
+        result.objektArten.add( tokenizer.nextString( 4, "objektArt" ) );
 
-        String objektnummer1 = tokenizer.nextString( 7 );  /* Objektnummer 1 (rechts)  */
+        String objektnummer1 = tokenizer.nextString( 7, "objektnummer1 (rechts)" ); /* Objektnummer 1 (rechts)  */
         result.objektnummern1.add( objektnummer1 );
-        String objektnummer2 = tokenizer.nextString( 7 );  /* Objektnummer 2 (link)  */
-        result.objektnummern2.add( objektnummer1 );
+        String objektnummer2 = tokenizer.nextString( 7, "objektnummer2 (links)" );  /* Objektnummer 2 (link)  */
+        result.objektnummern2.add( objektnummer2 );
 
         if (objektnummer1.equals( "       " )) {        /* Nr. rechts frei  */
             result.richtungen.add( LINKS );
         }
-        else if (objektnummer1.equals( "       " )) {   /* Nr. links frei   */
+        else if (objektnummer2.equals( "       " )) {   /* Nr. links frei   */
             result.richtungen.add( RECHTS );
         }
         else {                                          /* beide Nummernfelder belegt   */
@@ -255,18 +259,18 @@ class Objektdaten
             //                if( ferror( fp_att ) ) perror( "Fehler beim Schreiben in fp_nachbar\n" );
         }
 
-        String teilnummer1 = tokenizer.nextString( 3 );          /* Objektteilnummer 1 (rechts)  */
+        String teilnummer1 = tokenizer.nextString( 3, "teilnummer1" ); /* Objektteilnummer 1 (rechts)  */
         result.teilnummern1.add( teilnummer1 );
-        String teilnummer2 = tokenizer.nextString( 3 );          /* Objektteilnummer 2 (links)  */
+        String teilnummer2 = tokenizer.nextString( 3, "teilnummer2" ); /* Objektteilnummer 2 (links)  */
         result.teilnummern2.add( teilnummer2 );
 
-        tokenizer.skip( 2 );                               /* Linienteilung1 + Linienteilung2 : nicht verwertet */
+        tokenizer.skip( 2 );                            /* Linienteilung1 + Linienteilung2 : nicht verwertet */
 
         int n = tokenizer.nextWhf();
         if (n != 0 ) {                                  /* fuer Fachparameter   */
             log.warn( "WHF Fachparameter > 0" );
             while (n-- > 0) {
-                tokenizer.skip( 20 );                      /* Fachparameter ueberlesen */
+                tokenizer.skip( 20 );                   /* Fachparameter ueberlesen */
             }
         }
     }
@@ -279,7 +283,7 @@ class Objektdaten
      * Verzweigt dann ggfs. n-mal zu 'Besondere Information'
      * bearbeiten ('besondere_info()').
      */
-    private ObjektRecord objekt( Point anfang ) 
+    private ObjektRecord objekt( Coordinate anfang ) 
     throws EdbsParseException {
         int n = tokenizer.nextWhf();   /* == 1, einmal Funktion des Objekts */
         if (n != 1 ) {
@@ -310,15 +314,15 @@ class Objektdaten
      * eine von Objekttyp und Objektart abhaengige Datei schreiben.
      */
     private void objektFunktion( ObjektRecord result ) {
-        result.folie.add( tokenizer.nextInt( 3 ) );
-        result.objektArt.add( tokenizer.nextInt( 4 ) );
+        result.folie.add( tokenizer.nextInt( 3, "folie" ) );
+        result.objektArt.add( tokenizer.nextInt( 4, "objektArt" ) );
 
         tokenizer.skip( 2 );               /* Aktualitaet des Objekts */
 
-        char objekttyp = tokenizer.nextChar();
+        char objekttyp = tokenizer.nextChar( "objekttyp" );
         result.objekttyp.put( String.valueOf( objekttyp ) );
 
-        String objektnummer = tokenizer.nextString( 7 );
+        String objektnummer = tokenizer.nextString( 7, "objektnummer" );
 //        id = nummer2id( objekt1[0] );
         result.objektnummer.put( objektnummer );
 
@@ -418,36 +422,36 @@ class Objektdaten
      */
     private void besondereInfo( ObjektRecord result ) 
     throws EdbsParseException {
-        int n = tokenizer.nextWhf();               /* == 1, einmal 'Besondere Information' */
+        int n = tokenizer.nextWhf();                    /* == 1, einmal 'Besondere Information' */
         if (n != 1 ) {
             throw new EdbsParseException( "WHF Besondere Information != 1" );
         }
 
-        int infoArt = tokenizer.nextInt( 2 );      /* 'Art der Information' */
-        result.infoArt.put( infoArt );
+        int infoArt = tokenizer.nextInt( 2, "infoArt" );/* 'Art der Information' */
+        result.infoArt.add( infoArt );
 
-        tokenizer.skip( 2 );                       /* Kartentyp */
-        tokenizer.skip( 6 );                       /* Signaturteilnummer */
+        tokenizer.skip( 2 );                            /* Kartentyp */
+        tokenizer.skip( 6 );                            /* Signaturteilnummer */
 
-        String text = tokenizer.nextString( 33 );  /* Datenelement 'Text' */
-        result.info.put( text );
+        String text = tokenizer.nextString( 33, "text" );/* Datenelement 'Text' */
+        result.info.add( text );
 
-        int geometrieArt = tokenizer.nextInt( 2 );  /* Art der Geometrieangabe */
-        result.geomArt.put( geometrieArt );
-        String teilnummer = tokenizer.nextString( 3 );
-        result.teilnummer.put( teilnummer );        /* Objektteilnummer */
+        int geomArt = tokenizer.nextInt( 2, "geomArt" );/* Art der Geometrieangabe */
+        result.geomArt.add( geomArt );
+        String teilnummer = tokenizer.nextString( 3, "teilnummer" );
+        result.teilnummer.add( teilnummer );            /* Objektteilnummer */
 
 //        objektInfo( tokenizer );
         n = tokenizer.nextWhf();       /* Wiederholungsfaktor Datengruppe 'Geometrieangabe' */
         
         // Art 53 = Text in freier Ausrichtung (mit Richtungswinkel "TT")
-        if (geometrieArt == 53) {
+        if (geomArt == 53) {
             tokenizer.skip( "TT13613             ".length() );
             n--;
         }
         
         while (n-- > 0) {
-            geoAngabe( result, geometrieArt );
+            geoAngabe( result, geomArt );
         }
     }
     
@@ -465,8 +469,8 @@ class Objektdaten
         /* evtl. hier switch nach Art der Geometrie (Gerade, Schraffur, ...) */
 //        if( n > 0 ) fprintf( fp_npos, IDFORMAT TRENNER "%2d", id, adg );
 
-        Point gp = tokenizer.nextPoint();
-        result.punkte.add( gp );
+        Coordinate coord = tokenizer.nextCoordinate();
+        result.punkte.add( coord );
     }
     
     

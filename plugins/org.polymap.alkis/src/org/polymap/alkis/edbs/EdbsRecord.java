@@ -67,12 +67,12 @@ public class EdbsRecord
         }
 
 
-        public <T> T put( String name, T value ) {
+        public <T> RecordState put( String name, T value ) {
             Object old = properties.put( name, value );
             //        if (old != null) {
             //            throw new IllegalStateException( "Property existiert bereits: " + name );
             //        }
-            return (T)old;
+            return this;
         }
 
 
@@ -95,7 +95,7 @@ public class EdbsRecord
         }
 
 
-        public void add( String name, Object value ) {
+        public RecordState add( String name, Object value ) {
             Object old = properties.put( name, value );
             if (old != null) {
                 if (old instanceof List) {
@@ -109,10 +109,11 @@ public class EdbsRecord
                     properties.put( name, list );
                 }
             }
+            return this;
         }
 
         
-        public void remove( String key ) {
+        public RecordState remove( String key ) {
             // XXX Auto-generated method stub
             throw new RuntimeException( "not yet implemented." );
         }

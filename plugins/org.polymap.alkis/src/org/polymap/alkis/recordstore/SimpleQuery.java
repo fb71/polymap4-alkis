@@ -118,12 +118,12 @@ public final class SimpleQuery
 //    class Template
 //            implements IRecordState {
 
-        public <T> T put( String key, T value ) {
+        public <T> SimpleQuery put( String key, T value ) {
             SimpleQuery.this.eq( key, value );
-            return null;
+            return this;
         }
 
-        public void add( String key, Object value ) {
+        public SimpleQuery add( String key, Object value ) {
             throw new RuntimeException( "not yet implemented." );
         }
 
@@ -139,7 +139,7 @@ public final class SimpleQuery
             throw new UnsupportedOperationException( "Method no supported for query template.");
         }
 
-        public void remove( String key ) {
+        public SimpleQuery remove( String key ) {
             throw new UnsupportedOperationException( "Method no supported for query template.");
         }
 

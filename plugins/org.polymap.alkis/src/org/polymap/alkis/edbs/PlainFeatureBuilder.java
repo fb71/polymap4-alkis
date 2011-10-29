@@ -31,15 +31,12 @@ import org.apache.commons.logging.LogFactory;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
-
 import org.polymap.alkis.edbs.Objektdaten.LinieRecord;
 import org.polymap.alkis.edbs.Objektdaten.ObjektRecord;
 
 /**
- * Baut {@link Feature}s aus den EDBS-Records. Jedes Objekt und jede Linie
- * wird dabei zu einer Geometrie. Diese werden nicht zusammengefasst. Das könnte für
- * Test hilfreich sein. 
+ * Test: baut {@link Feature}s aus den EDBS-Records. Jedes Objekt und jede Linie
+ * wird dabei zu einer Geometrie. Diese werden nicht zusammengefasst.
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -106,16 +103,16 @@ public class PlainFeatureBuilder
         // linien
         for (LinieRecord linie : linien) {
             // feature
-            Point anfang = linie.anfang.get();
-            List<Point> endeList = linie.enden.getList();
+            Coordinate anfang = linie.anfang.get();
+            List<Coordinate> endeList = linie.enden.getList();
             
 //            if (!linie.getList( Objektdaten.Property.PUNKTE ).isEmpty()) {
 //                throw new IllegalStateException( "Punkte in Linie" );
 //            }
 //            printProperties( record );
             
-            for (Point ende : endeList) {
-                LineString geom = gf.createLineString( new Coordinate[] { anfang.getCoordinate(), ende.getCoordinate() } );
+            for (Coordinate ende : endeList) {
+                LineString geom = gf.createLineString( new Coordinate[] { anfang, ende } );
                 fb.set( "geom", geom );
                 fc.add( fb.buildFeature( null ) );
 
@@ -138,7 +135,7 @@ public class PlainFeatureBuilder
         }
         
         try {
-            new ShapefileWriter( new File( "/tmp/edbs.shp" ) ).write( fc );
+            new ShapefileWriter( new File( "/tmp/edbs.shp" ) ).write( fc, false );
         }
         catch (IOException e) {
             log.warn( "", e );

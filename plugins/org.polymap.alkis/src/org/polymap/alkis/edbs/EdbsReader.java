@@ -66,6 +66,7 @@ public class EdbsReader {
     public static final int     MAX_FORTSATZ = 100;
 
     private PrintStream         stderr = System.err;
+    
     private LineNumberReader    in;
     
     private int                 satz_zaehler = 0;   /* Anzahl gelesener Saetze */
@@ -76,10 +77,10 @@ public class EdbsReader {
 
     
     public EdbsReader( LineNumberReader in ) {
-       this.in = in;
-       parsers.add( new Auftragskennung() );
-       parsers.add( new Attribute() );
-       parsers.add( new Objektdaten() );
+        this.in = in;
+        parsers.add( new Auftragskennung() );
+        parsers.add( new Attribute() );
+        parsers.add( new Objektdaten() );
     }
 
     
@@ -335,7 +336,7 @@ public class EdbsReader {
         //System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.alkis.recordstore", "debug" );
 
         LineNumberReader in = new LineNumberReader( new FileReader(
-                "/home/falko/Data/ALK_Testgemeinden/edbs.Test-IT-ALK.dbout.1.001" ) );
+                "/home/falko/Data/ALK_Testgemeinden/edbs.Test-IT-ALK.dbout.1.004" ) );
 //                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
         
         List<IEdbsConsumer> consumers = new ArrayList();
@@ -343,7 +344,8 @@ public class EdbsReader {
         // consumers
         //consumers.add( new LogConsumer() );
         //consumers.add( new StoreFeatureBuilder() );
-        consumers.add( new PlainFeatureBuilder() );
+        //consumers.add( new PlainFeatureBuilder() );
+        consumers.add( new JTSFeatureBuilder() );
         
         EdbsReader reader = new EdbsReader( in );
         RecordTokenizer satz = null;
@@ -352,12 +354,12 @@ public class EdbsReader {
         
         while ((satz = reader.next()) != null) {
             count++;
-//            reader.stdout.println( count + ": " + satz.toString() );
+            //System.out.println( "--------------------------\n" + satz.data.toString() );
             
             try {
                 List<EdbsRecord> records = reader.parse( satz );
                 if (records.isEmpty()) {
-                    throw new EdbsParseException( "Unbeaknnter Satztyp: " + satz );
+                    throw new EdbsParseException( "Unbekannter Satztyp: " + satz );
                 }
                 
                 for (EdbsRecord record : records) {
@@ -367,7 +369,7 @@ public class EdbsReader {
                 }
             }
             catch (Exception e) {
-                log.warn( "" + e.toString()/*, e*/ );
+                log.warn( "" + e.getMessage(), e );
                 errorCount++;
             }
         }

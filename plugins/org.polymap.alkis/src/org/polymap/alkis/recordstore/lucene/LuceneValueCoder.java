@@ -14,7 +14,7 @@
  */
 package org.polymap.alkis.recordstore.lucene;
 
-import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
 
 import org.polymap.alkis.recordstore.QueryExpression;
@@ -28,9 +28,19 @@ import org.polymap.alkis.recordstore.QueryExpression;
  */
 public interface LuceneValueCoder {
 
-    public Fieldable encode( String key, Object value, boolean indexed );
+    /**
+     * Encode the given value, removing any previously stored value.
+     * 
+     * @param doc
+     * @param key
+     * @param value
+     * @param indexed
+     * @return True, if the value was store, false if this coder does not handle the
+     *         given value type.
+     */
+    public boolean encode( Document doc, String key, Object value, boolean indexed );
    
-    public Object decode( Fieldable field );
+    public Object decode( Document doc, String key );
     
     public Query searchQuery( QueryExpression exp );
     

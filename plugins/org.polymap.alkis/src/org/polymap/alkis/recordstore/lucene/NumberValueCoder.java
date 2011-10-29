@@ -14,6 +14,8 @@
  */
 package org.polymap.alkis.recordstore.lucene;
 
+import java.text.NumberFormat;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -35,24 +37,43 @@ import org.polymap.alkis.recordstore.QueryExpression.Match;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-final class StringValueCoder
+final class NumberValueCoder
         implements LuceneValueCoder {
 
-    public static final char            MAGIC = 'S';
+    public static final char            MAGIC = 'N';
+    
+    public static final NumberFormat    nf;
+    
+    static {
+        nf = NumberFormat.getIntegerInstance();
+        nf.setMinimumIntegerDigits( 10 );
+        nf.setGroupingUsed( false );
+    }
     
     
     public boolean encode( Document doc, String key, Object value, boolean indexed ) {
-        if (value instanceof String) {
+        if (value instanceof Integer) {
+            String formatted = nf.format( (value) );
+
             Field field = (Field)doc.getFieldable( key );
-            if (field != null) {
-                field.setValue( (String)value );
+            if (field == null) {
+                field = new Field( key, formatted, Store.YES, indexed ? Index.NOT_ANALYZED : Index.NO ); 
             }
             else {
-                doc.add( new Field( key, (String)value, 
-                        Store.YES, indexed ? Index.NOT_ANALYZED : Index.NO ) );
+                field.setValue( formatted );
             }
             return true;
         }
+//        // XXX just testing...
+//        else if (value instanceof Point) {
+//            Point p = (Point)value;
+//            String formatted = new StringBuilder( 128 )
+//                    .append( nf.format( Double.doubleToLongBits( p.getX() ) ) )
+//                    .append( '|' )
+//                    .append( nf.format( Double.doubleToLongBits( p.getY() ) ) )
+//                    .toString();
+//            return new Field( key, formatted, Store.YES, indexed ? Index.NOT_ANALYZED : Index.NO );
+//        }
         else {
             return false;
         }
@@ -71,6 +92,10 @@ final class StringValueCoder
             
             if (equalExp.value instanceof String) {
                 return new TermQuery( new Term( equalExp.key, (String)equalExp.value) );
+            }
+            else if (equalExp.value instanceof Integer) {
+                String formatted = nf.format( equalExp.value );
+                return new TermQuery( new Term( equalExp.key, formatted ) );
             }
         }
         // MATCHES

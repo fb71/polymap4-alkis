@@ -15,7 +15,7 @@
 package org.polymap.alkis.recordstore.lucene;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.search.Query;
 import org.polymap.alkis.recordstore.QueryExpression;
 
@@ -24,9 +24,10 @@ import org.polymap.alkis.recordstore.QueryExpression;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-final class ValueCoders {
+public final class ValueCoders {
     
     public static final LuceneValueCoder[] DEFAULT_CODERS = new LuceneValueCoder[] {
+            new NumericValueCoder(),
             new StringValueCoder()
     };
 
@@ -48,28 +49,28 @@ final class ValueCoders {
     }
 
     
-    public final Fieldable encode( String key, Object value, boolean indexed ) {
+    public boolean encode( Document doc, String key, Object value, boolean indexed ) {
         for (LuceneValueCoder valueCoder : valueCoders) {
-            Fieldable result = valueCoder.encode( key, value, indexed );
-            if (result != null) {
-                return result;
+            if (valueCoder.encode( doc, key, value, indexed )) {
+                return true;
             }
         }
         throw new RuntimeException( "No LuceneValueCoder found for value: " + value );
     }
     
     
-    public final <T> T decode( Fieldable field ) {
-        if (field == null) {
+    public final <T> T decode( Document doc, String key ) {
+        if (key == null) {
             return null;
         }
         for (LuceneValueCoder valueCoder : valueCoders) {
-            T result = (T)valueCoder.decode( field );
+            T result = (T)valueCoder.decode( doc, key );
             if (result != null) {
                 return result;
             }
         }
-        throw new RuntimeException( "No LuceneValueCoder found for field: " + field );
+        //throw new RuntimeException( "No LuceneValueCoder found for field: " + key );
+        return null;
     }
     
 

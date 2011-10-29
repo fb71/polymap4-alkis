@@ -38,7 +38,7 @@ public abstract class RecordModel {
      */
     public static <M extends RecordModel> M type( Class<M> cl ) {
         IRecordState nullState = new IRecordState() {
-            public void add( String key, Object value ) {
+            public IRecordState add( String key, Object value ) {
                 throw new RuntimeException( "Not allowed for TYPE state." );
             }
             public <T> T get( String key ) {
@@ -53,10 +53,10 @@ public abstract class RecordModel {
             public Iterator<Entry<String, Object>> iterator() {
                 throw new RuntimeException( "Not allowed for TYPE state." );
             }
-            public <T> T put( String key, T value ) {
+            public <T> IRecordState put( String key, T value ) {
                 throw new RuntimeException( "Not allowed for TYPE state." );
             }
-            public void remove( String key ) {
+            public IRecordState remove( String key ) {
                 throw new RuntimeException( "Not allowed for TYPE state." );
             }            
         };
@@ -80,7 +80,7 @@ public abstract class RecordModel {
  
     // instance *******************************************
     
-    private IRecordState            state;
+    private IRecordState                state;
     
     
     protected RecordModel( IRecordState record ) {
@@ -119,12 +119,14 @@ public abstract class RecordModel {
             return state.getList( name );
         }
 
-        public T put( T value ) {
-            return state.put( name, value );
+        public RecordModel put( T value ) {
+            state.put( name, value );
+            return RecordModel.this;
         }
 
-        public void add( T value ) {
+        public RecordModel add( T value ) {
             state.add( name, value );
+            return RecordModel.this;
         }
     }
     

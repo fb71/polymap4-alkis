@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="eu.hydrologis.jgrass.csv2shape.operations">
+         point="org.polymap.core.data.csvimport.operations">
       <operation
             class="org.polymap.alkis.internal.flurliste.FlurlisteCsvOperation"
             label="Flurstücksliste"
