@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.io.PrintStream;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -59,6 +60,8 @@ public class JTSFeatureBuilder
     
     private Map<String,List<LineString>> lineSegments = new HashMap( 4*4096 );
 
+    private PrintStream                 report = System.err;
+    
     PolygonBuilder                      polygonBuilder;
 
     LineBuilder                         lineBuilder;
@@ -106,7 +109,7 @@ public class JTSFeatureBuilder
 
         Coordinate ende = enden.get( 0 );
         if (enden.size() > 1) {
-            log.warn( "Linie mit mehrere Endpunkten: " + enden.size() );
+            report.println( "WARN: Linie mit mehrere Endpunkten: " + enden.size() );
         }
 
         LineString segment = null;
@@ -138,7 +141,7 @@ public class JTSFeatureBuilder
 
     
     public void endOfRecords() {
-        log.info( "Objekte: " + objekte.size() + ", Linien(haufen): " + lineSegments.size() );
+        report.println( "INFO: Objekte: " + objekte.size() + ", Linien(haufen): " + lineSegments.size() );
 
         // builder
         polygonBuilder = new PolygonBuilder();
@@ -187,10 +190,12 @@ public class JTSFeatureBuilder
         
         public PolygonBuilder() {
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setName( "edbs" );
+            builder.setName( "alk-flaechen" );
             builder.add( "objnum", String.class );
             builder.add( "folie", Integer.class );
             builder.add( "objart", Integer.class );
+            builder.add( "infoart", Integer.class );
+            builder.add( "info", String.class );
             builder.add( "geom", MultiPolygon.class );
             schema = builder.buildFeatureType();
             
@@ -216,6 +221,17 @@ public class JTSFeatureBuilder
             fb.set( "objnum", objekt.objektnummer.get() );
             fb.set( "folie", objekt.folie.get() );
             fb.set( "objart", objekt.objektArt.get() );
+            
+            List<Integer> infoArten = objekt.infoArt.getList();
+            List<String> info = objekt.info.getList();
+            if (!info.isEmpty()) {
+                fb.set( "infoart", infoArten.get( 0 ) );
+                fb.set( "info", info.get( 0 ) );
+            }
+//            if (info.size() > 1) {
+//                report.println( "WARN: Mehr als ein Eintrag für 'besondereInfos': " + info.size() );
+//                report.println( ">> " + info );
+//            }
             
             fc.add( fb.buildFeature( objekt.objektnummer.get() ) );
         }

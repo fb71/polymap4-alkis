@@ -16,78 +16,134 @@ package org.polymap.alkis.edbs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.net.URL;
 
+import org.geotools.data.DataStore;
 import org.geotools.data.FeatureStore;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+
+import net.refractions.udig.catalog.CatalogPlugin;
+import net.refractions.udig.catalog.ICatalog;
+import net.refractions.udig.catalog.IResolve;
+import net.refractions.udig.catalog.IService;
+import net.refractions.udig.core.internal.CorePlugin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.runtime.Timer;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 
+import org.polymap.core.runtime.Timer;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class EdbsImporter {
+public class EdbsImporter
+        extends Job
+        implements Runnable {
 
     private static Log log = LogFactory.getLog( EdbsImporter.class );
 
-    private FeatureStore<SimpleFeatureType, SimpleFeature> polygonFs;
-
-    private FeatureStore<SimpleFeatureType, SimpleFeature> lineFs;
-
-    private FeatureStore<SimpleFeatureType, SimpleFeature> pointFs;
+    public static final String      PROP_SERVICE_URL = "serviceURL";
     
-    private List<File>                                     files;
+    private Reader                  in;
     
-    public EdbsImporter( List<File> files,
-            FeatureStore<SimpleFeatureType,SimpleFeature> polygonFs,
-            FeatureStore<SimpleFeatureType,SimpleFeature> lineFs,
-            FeatureStore<SimpleFeatureType,SimpleFeature> pointFs ) {
-        this.files = files;
-        this.polygonFs = polygonFs;
-        this.lineFs = lineFs;
-        this.pointFs = pointFs;
+    private ReportLog               report;
+
+    private IService                service;
+    
+    
+    public EdbsImporter( Properties conf, Reader in, PrintStream reportOut ) {
+        super( "EDBS-Import" );
+        setPriority( LONG );
+        setSystem( true );
+        
+        this.in = in;
+        this.report = new ReportLog( reportOut );
+
+        // find service to import into
+        try {
+            ICatalog catalog = CatalogPlugin.getDefault().getLocalCatalog();
+
+            String id = conf.getProperty( PROP_SERVICE_URL );
+            URL url  = new URL( null, id, CorePlugin.RELAXED_HANDLER );
+            List<IResolve> canditates = catalog.find( url, new NullProgressMonitor() );
+            for (IResolve resolve : canditates) {
+                if (resolve.getStatus() == IResolve.Status.BROKEN) {
+                    continue;
+                }
+                if (resolve instanceof IService) {
+                    service = (IService)resolve;
+                }
+            }
+        }
+        catch (Exception e) {
+            report.error( "Fehler beim Öffnen der Import-Datenquelle.", e);
+        }
     }
     
     
-    public void start() 
-    throws Exception {
-        JTSFeatureBuilder builder = new JTSFeatureBuilder();
-        
-        for (File f : files) {
-            processFile( f, builder, true );
-        }
-        
-        builder.endOfRecords();
-        
+    protected IStatus run( IProgressMonitor monitor ) {
         try {
-            new ShapefileWriter( new File( "/tmp/alk-flaechen.shp" ) )
-                    .write( builder.polygonBuilder.fc, false );
-            new ShapefileWriter( new File( "/tmp/alk-linien.shp" ) )
-                    .write( builder.lineBuilder.fc, false );
-            new ShapefileWriter( new File( "/tmp/alk-punkte.shp" ) )
-                    .write( builder.pointBuilder.fc, false );
+            JTSFeatureBuilder builder = new JTSFeatureBuilder();
+            processFile( builder, true );
+            builder.endOfRecords();
+        
+            if (service != null) {
+                DataStore ds = service.resolve( DataStore.class, new NullProgressMonitor() );
+                
+                SimpleFeatureType schema = builder.polygonBuilder.schema;
+                FeatureStore fs = null;
+                try {
+                    fs = (FeatureStore)ds.getFeatureSource( schema.getName() );
+                }
+                catch (Exception e) {
+                    ds.createSchema( schema );
+                    fs = (FeatureStore)ds.getFeatureSource( schema.getName() );
+                }
+                fs.addFeatures( builder.polygonBuilder.fc );
+            }
+            // shape/test
+            else {
+                new ShapefileWriter( new File( "/tmp/alk-flaechen.shp" ) )
+                        .write( builder.polygonBuilder.fc, false );
+                new ShapefileWriter( new File( "/tmp/alk-linien.shp" ) )
+                        .write( builder.lineBuilder.fc, false );
+                new ShapefileWriter( new File( "/tmp/alk-punkte.shp" ) )
+                        .write( builder.pointBuilder.fc, false );
+            }
+            return Status.OK_STATUS;
         }
         catch (IOException e) {
-            log.warn( "", e );
+            report.warn( "ABBRUCH.", e );
+            throw new RuntimeException( e );
         }
+    }
+
+
+    public void run() {
+        run( new NullProgressMonitor() );
     }
     
     
-    protected void processFile( File f, IEdbsConsumer consumer, boolean createReport ) 
+    protected void processFile( IEdbsConsumer consumer, boolean createReport ) 
     throws IOException {
         
-        EdbsReader reader = new EdbsReader( new LineNumberReader( new FileReader( f ) ) );
+        EdbsReader reader = new EdbsReader( new LineNumberReader( in ), report );
         RecordTokenizer satz = null;
         int count = 0, errorCount = 0;
         Timer timer = new Timer();
@@ -129,8 +185,11 @@ public class EdbsImporter {
         files.add( new File( "/home/falko/Data/ALK_Testgemeinden/edbs.Test-IT-ALK.dbout.1.004" ) );
         //files.add( new File( "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
         
-        EdbsImporter importer = new EdbsImporter( files, null, null, null );
-        importer.start();
+        for (File f : files) {
+            EdbsImporter importer = new EdbsImporter( null,
+                    new FileReader( f ), System.err );
+            importer.run();
+        }
     }
 
 }

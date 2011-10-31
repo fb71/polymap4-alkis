@@ -22,8 +22,6 @@ import java.util.List;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.io.PrintStream;
-
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,7 +63,7 @@ public class EdbsReader {
     /* max. Anzahl verarbeitbarer Fortsetzungssaetze */
     public static final int     MAX_FORTSATZ = 100;
 
-    private PrintStream         stderr = System.err;
+    private ReportLog           report;
     
     private LineNumberReader    in;
     
@@ -76,8 +74,9 @@ public class EdbsReader {
     Datenmodell                 datenmodell = Datenmodell.ALK;
 
     
-    public EdbsReader( LineNumberReader in ) {
+    public EdbsReader( LineNumberReader in, ReportLog report ) {
         this.in = in;
+        this.report = report;
         parsers.add( new Auftragskennung() );
         parsers.add( new Attribute() );
         parsers.add( new Objektdaten() );
@@ -258,7 +257,7 @@ public class EdbsReader {
         satz.pos = 0;
 
         if (satz.laenge + fsatz.length() - 36 > MAX_FORTSATZ * MAX_SATZLAENGE) {
-            stderr.printf( "\nSpeicher reicht nicht fuer alle Folgesaetze\n" );
+            report.error( "Speicher reicht nicht fuer alle Folgesaetze" );
             return UNDEFINIERT;
         }
         
@@ -347,7 +346,7 @@ public class EdbsReader {
         //consumers.add( new PlainFeatureBuilder() );
         consumers.add( new JTSFeatureBuilder() );
         
-        EdbsReader reader = new EdbsReader( in );
+        EdbsReader reader = new EdbsReader( in, new ReportLog( System.err ) );
         RecordTokenizer satz = null;
         int count = 0, errorCount = 0;
         Timer timer = new Timer();

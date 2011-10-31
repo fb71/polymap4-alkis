@@ -14,5 +14,13 @@
             tooltip="Zähler/Nenner suchen und Koordinaten des Flurstücks zuordnen">
       </operation>
    </extension>
+   <extension
+         point="org.polymap.service.fs.contentProviders">
+      <contentProvider
+            class="org.polymap.alkis.edbs.fs.EdbsContentProvider"
+            id="org.polymap.alkis.edbs.fs.EdbsContentProvider"
+            name="EDBS">
+      </contentProvider>
+   </extension>
 
 </plugin>
