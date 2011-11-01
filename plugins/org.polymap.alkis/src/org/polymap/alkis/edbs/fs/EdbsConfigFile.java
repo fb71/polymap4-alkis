@@ -20,6 +20,7 @@ import java.util.Properties;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -55,20 +56,33 @@ public class EdbsConfigFile
     private File                f;
     
     
-    public EdbsConfigFile( IPath parentPath, IContentProvider provider, Object source ) {
-        super( ((File)source).getName(), parentPath, provider, source );
-        this.f = (File)source;
+    public EdbsConfigFile( IPath parentPath, IContentProvider provider, File dir ) {
+        super( "import.conf", parentPath, provider, new File( dir, "import.conf" ) );
+        this.f = (File)getSource();
         
         if (!f.exists()) {
             Properties conf = new Properties();
-            //jdbc.postgis://postgres:lka2010@10.0.16.15:5432/osm
             conf.put( "serviceURL", "jdbc.h2:ALK-Mittelsachsen" );
+            //conf.put( "serviceURL", "jdbc.postgis://postgres:lka2010@10.0.16.15:5432/osm" );
+            //conf.put( "serviceURL", "mysql.jdbc://polymap:polymap4327@polymap.org:3306/polymap" );
             conf.put( "param", "wert" );
             
             FileWriterWithEncoding out = null;
             try {
                 out = new FileWriterWithEncoding( f, "ISO-8859-1" );
-                conf.store( out, "Kommentar: ..." );
+                conf.store( out, 
+                        " Das ist die Konfigurationsdatei für den EDBS-Import.\n" +
+                        "\n" + 
+                        " In der Konfigurationsdatei wird geregelt wie und wohin die ALK-Daten\n" + 
+                        " importiert werden sollen. Bei jedem Upload wird dieses Datei neu ausgewertet.\n" + 
+                        " Änderungen in der Konfigurationsdatei können nur über die WebDAV-Schnittstelle\n" + 
+                        " und nicht direkt im Browser gemacht werden.\n" +
+                        "\n" + 
+                        " Beispiel für Datenquellen (serviceURL):\n" + 
+                        "    PostGIS:   jdbc.postgis://<nutzer>:<passwort>@<host>:5432/<datenbank>\n" + 
+                        "    H2:        jdbc.h2:<datenbank>\n" + 
+                        "    MySQL:     mysql.jdbc://<nutzer>:<passwort>@<server>:3306/<datenbank>\n" 
+                        );
             }
             catch (IOException e) {
                 log.warn( "", e );
@@ -79,14 +93,32 @@ public class EdbsConfigFile
         }
     }
 
+    
+    public Properties properties() 
+    throws IOException {
+        InputStream in = null;
+        try {
+            in = new FileInputStream( f );
+            Properties result = new Properties();
+            result.load( in );
+            return result;
+        }
+        finally {
+            IOUtils.closeQuietly( in );
+        }
+    }
+
+    
     public Long getContentLength() {
         return f.length();
     }
 
+    
     public String getContentType( String accepts ) {
         return "text/plain";
     }
 
+    
     public void sendContent( OutputStream out, Range range, Map<String,String> params, String contentType )
     throws IOException, BadRequestException {
         FileInputStream in = null;
@@ -99,21 +131,31 @@ public class EdbsConfigFile
         }
     }
 
+    
     public void replaceContent( InputStream in, Long length )
-            throws IOException, BadRequestException, NotAuthorizedException {
-        // XXX Auto-generated method stub
-        throw new RuntimeException( "not yet implemented." );
+    throws IOException, BadRequestException, NotAuthorizedException {
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream( f );
+            IOUtils.copy( in, out );
+        }
+        finally {
+            IOUtils.closeQuietly( out );
+        }
     }
 
+    
     public String processForm( Map<String, String> params, Map<String, FileItem> files )
     throws IOException, BadRequestException, NotAuthorizedException {
         throw new RuntimeException( "not yet implemented." );
     }
 
+    
     public Long getMaxAgeSeconds() {
         return 60l;
     }
 
+    
     public Date getModifiedDate() {
         return new Date( f.lastModified() );
     }

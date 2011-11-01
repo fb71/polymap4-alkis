@@ -14,7 +14,6 @@
  */
 package org.polymap.alkis.edbs;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,11 +24,7 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
-
 import org.polymap.core.runtime.Timer;
 
 import org.polymap.alkis.edbs.Objektdaten.LinieRecord;
@@ -140,76 +135,76 @@ public class StoreFeatureBuilder
 //                        + ", count: " + objektLinien.count() );
 //            }
             
-            new LineStringBuilder( objekt ).createLineString();
+            throw new RuntimeException( "FIXME: new LineStringBuilder( objekt ).createLineString();" );
         }
     }
     
     
-    /*
-     * 
-     */
-    class LineStringBuilder {
-
-        private ObjektRecord        objekt;
-        
-        
-        public LineStringBuilder( ObjektRecord objekt ) {
-            this.objekt = objekt;
-        }
-
-        
-        public LineString createLineString() 
-        throws Exception {
-            List<Coordinate> coords = new ArrayList();
-            
-            Coordinate ende = objekt.anfang.get();
-            coords.add( ende );
-            
-            do {
-                SimpleQuery query = new SimpleQuery()
-                        .eq( LinieRecord.TYPE.typeId.name(), LinieRecord.ID  )
-                        .eq( LinieRecord.TYPE.anfang.name(), ende )
-                        .setMaxResults( 10 );
-                ResultSet linien = store.find( query );
-                ende = null;
-                
-                LinieRecord linie = null;
-                String objektnummer = objekt.objektnummer.get();
-                
-                for (IRecordState state : linien) {
-                    //LinieRecord linie = new LinieRecord( state );
-                    List<String> o1 = state.getList( LinieRecord.TYPE.objektnummern1.name() );
-                    List<Coordinate> enden = linie.state().getList( LinieRecord.TYPE.enden.name() );
-
-                    for (int i=0; i<o1.size(); i++) {
-                        if (o1.get( i ).equals( objektnummer ) ) {
-                            ende = enden.get( i );
-                            coords.add( ende );
-                            
-                        }
-                    }
-                    if (o1.contains( objektnummer )) {
-                        linie = new LinieRecord( state );
-                        break;
-                    }
-                    List<String> o2 = state.getList( LinieRecord.TYPE.objektnummern2.name() );
-                    if (o2.contains( objektnummer )) {
-                        linie = new LinieRecord( state );
-                        break;
-                    }
-                }
-                if (linie != null) {
-                    ende = enden.get( 0 );
-                    coords.add( ende );
-                }
-            } 
-            while (ende != null);
-            
-            if (coords.size() > 1) {
-                log.info( "LinieString: " + coords );
-            }
-            return null;
-        }
+//    /*
+//     * 
+//     */
+//    class LineStringBuilder {
+//
+//        private ObjektRecord        objekt;
+//        
+//        
+//        public LineStringBuilder( ObjektRecord objekt ) {
+//            this.objekt = objekt;
+//        }
+//
+//        
+//        public LineString createLineString() 
+//        throws Exception {
+//            List<Coordinate> coords = new ArrayList();
+//            
+//            Coordinate ende = objekt.anfang.get();
+//            coords.add( ende );
+//            
+//            do {
+//                SimpleQuery query = new SimpleQuery()
+//                        .eq( LinieRecord.TYPE.typeId.name(), LinieRecord.ID  )
+//                        .eq( LinieRecord.TYPE.anfang.name(), ende )
+//                        .setMaxResults( 10 );
+//                ResultSet linien = store.find( query );
+//                ende = null;
+//                
+//                LinieRecord linie = null;
+//                String objektnummer = objekt.objektnummer.get();
+//                
+//                for (IRecordState state : linien) {
+//                    //LinieRecord linie = new LinieRecord( state );
+//                    List<String> o1 = state.getList( LinieRecord.TYPE.objektnummern1.name() );
+//                    List<Coordinate> enden = linie.state().getList( LinieRecord.TYPE.enden.name() );
+//
+//                    for (int i=0; i<o1.size(); i++) {
+//                        if (o1.get( i ).equals( objektnummer ) ) {
+//                            ende = enden.get( i );
+//                            coords.add( ende );
+//                            
+//                        }
+//                    }
+//                    if (o1.contains( objektnummer )) {
+//                        linie = new LinieRecord( state );
+//                        break;
+//                    }
+//                    List<String> o2 = state.getList( LinieRecord.TYPE.objektnummern2.name() );
+//                    if (o2.contains( objektnummer )) {
+//                        linie = new LinieRecord( state );
+//                        break;
+//                    }
+//                }
+//                if (linie != null) {
+//                    ende = enden.get( 0 );
+//                    coords.add( ende );
+//                }
+//            } 
+//            while (ende != null);
+//            
+//            if (coords.size() > 1) {
+//                log.info( "LinieString: " + coords );
+//            }
+//            return null;
+//        }
         
         
 //        public String toString() {
@@ -220,6 +215,5 @@ public class StoreFeatureBuilder
 //            }
 //            return result.toString();
 //        }
-    }
     
 }

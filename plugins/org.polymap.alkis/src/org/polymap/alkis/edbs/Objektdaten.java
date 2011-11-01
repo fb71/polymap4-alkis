@@ -118,7 +118,14 @@ class Objektdaten
     /** Der aktuelle Datensatz. */
     private RecordTokenizer     tokenizer;
 
+    private ReportLog           report;
     
+    
+    public Objektdaten( ReportLog report ) {
+        this.report = report;
+    }
+
+
     @SuppressWarnings("hiding")
     public int canHandle( RecordTokenizer tokenizer )
     throws IOException {
@@ -203,7 +210,7 @@ class Objektdaten
         
         int art_geo = tokenizer.nextInt( 2, "geomArt" ); /* Art der Geometrie */
         if (art_geo != 11 && art_geo != 15 ) {      /* keine Gerade/Vektor */
-            log.warn( "Unbekannte Art der Geometrie: " + art_geo );
+            report.warn( "Unbekannte Art der Geometrie: " + art_geo );
         }
         result.geomArt.add( art_geo );
 

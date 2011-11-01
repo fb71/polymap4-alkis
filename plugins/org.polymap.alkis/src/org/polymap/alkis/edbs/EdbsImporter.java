@@ -27,7 +27,9 @@ import java.io.Reader;
 import java.net.URL;
 
 import org.geotools.data.DataStore;
+import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FeatureStore;
+import org.geotools.data.Transaction;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import net.refractions.udig.catalog.CatalogPlugin;
@@ -67,13 +69,14 @@ public class EdbsImporter
     private IService                service;
     
     
-    public EdbsImporter( Properties conf, Reader in, PrintStream reportOut ) {
+    public EdbsImporter( Properties conf, Reader in, PrintStream reportOut )
+    throws IOException {
         super( "EDBS-Import" );
         setPriority( LONG );
         setSystem( true );
         
         this.in = in;
-        this.report = new ReportLog( reportOut );
+        this.report = new ReportLog( reportOut, System.out );
 
         // find service to import into
         try {
@@ -90,22 +93,36 @@ public class EdbsImporter
                     service = (IService)resolve;
                 }
             }
+            if (service == null) {
+                throw new IOException( "Kein Service im Katalog für URL: " + id );
+            }
+        }
+        catch (IOException e) {
+            report.error( "Fehler beim Öffnen der Import-Datenquelle.", e );
+            throw e;
         }
         catch (Exception e) {
-            report.error( "Fehler beim Öffnen der Import-Datenquelle.", e);
+            report.error( "Fehler beim Öffnen der Import-Datenquelle.", e );
+            throw new IOException( e );
         }
     }
     
     
     protected IStatus run( IProgressMonitor monitor ) {
         try {
-            JTSFeatureBuilder builder = new JTSFeatureBuilder();
+            // process using JTSFeatureBuilder
+            JTSFeatureBuilder builder = new JTSFeatureBuilder( report );
             processFile( builder, true );
             builder.endOfRecords();
         
             if (service != null) {
+                // find DataStore from service
                 DataStore ds = service.resolve( DataStore.class, new NullProgressMonitor() );
+                if (ds == null) {
+                    throw new IOException( "Kein DataStore für Service: " + service );
+                }
                 
+                // create feature type
                 SimpleFeatureType schema = builder.polygonBuilder.schema;
                 FeatureStore fs = null;
                 try {
@@ -115,7 +132,22 @@ public class EdbsImporter
                     ds.createSchema( schema );
                     fs = (FeatureStore)ds.getFeatureSource( schema.getName() );
                 }
-                fs.addFeatures( builder.polygonBuilder.fc );
+
+                // write down
+                Transaction tx = new DefaultTransaction( "edbs-import" );
+                fs.setTransaction( tx );
+                try {
+                    fs.addFeatures( builder.polygonBuilder.fc );
+                    tx.commit();
+                } 
+                catch (IOException e) {
+                    tx.rollback();
+                    throw e;
+                } 
+                finally {
+                    tx.close();
+                }
+
             }
             // shape/test
             else {
@@ -128,9 +160,10 @@ public class EdbsImporter
             }
             return Status.OK_STATUS;
         }
-        catch (IOException e) {
+        catch (Exception e) {
             report.warn( "ABBRUCH.", e );
-            throw new RuntimeException( e );
+            //throw new RuntimeException( e );
+            return Status.CANCEL_STATUS;
         }
     }
 
@@ -153,7 +186,7 @@ public class EdbsImporter
                 count++;
                 List<EdbsRecord> records = reader.parse( satz );
                 if (records.isEmpty()) {
-                    throw new EdbsParseException( "Unbekannter Satztyp: " + satz );
+                    report.warn( "Unbekannter Satztyp: " + satz );
                 }
                 
                 for (EdbsRecord record : records) {

@@ -79,7 +79,7 @@ public class EdbsReader {
         this.report = report;
         parsers.add( new Auftragskennung() );
         parsers.add( new Attribute() );
-        parsers.add( new Objektdaten() );
+        parsers.add( new Objektdaten( report ) );
     }
 
     
@@ -339,14 +339,16 @@ public class EdbsReader {
 //                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
         
         List<IEdbsConsumer> consumers = new ArrayList();
-
+        
+        ReportLog report = new ReportLog( System.err );
+        
         // consumers
         //consumers.add( new LogConsumer() );
         //consumers.add( new StoreFeatureBuilder() );
         //consumers.add( new PlainFeatureBuilder() );
-        consumers.add( new JTSFeatureBuilder() );
+        consumers.add( new JTSFeatureBuilder( report ) );
         
-        EdbsReader reader = new EdbsReader( in, new ReportLog( System.err ) );
+        EdbsReader reader = new EdbsReader( in, report );
         RecordTokenizer satz = null;
         int count = 0, errorCount = 0;
         Timer timer = new Timer();

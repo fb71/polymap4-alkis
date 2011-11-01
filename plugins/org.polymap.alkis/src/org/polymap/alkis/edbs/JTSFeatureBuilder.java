@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.io.PrintStream;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureCollections;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -53,14 +52,14 @@ public class JTSFeatureBuilder
 
     private static Log log = LogFactory.getLog( JTSFeatureBuilder.class );
 
-    public static final GeometryFactory     gf = new GeometryFactory();
+    public static final GeometryFactory gf = new GeometryFactory();
     
     /** objektnummer+teilnummer -> objekt */
     private Map<String,ObjektRecord>    objekte = new HashMap( 4*4096 );
     
     private Map<String,List<LineString>> lineSegments = new HashMap( 4*4096 );
 
-    private PrintStream                 report = System.err;
+    private ReportLog                   report;
     
     PolygonBuilder                      polygonBuilder;
 
@@ -69,6 +68,11 @@ public class JTSFeatureBuilder
     PointBuilder                        pointBuilder;
 
     
+    public JTSFeatureBuilder( ReportLog report ) {
+        this.report = report;
+    }
+
+
     public void consume( EdbsRecord record ) {
         // objekt
         if (record instanceof ObjektRecord) {
@@ -109,7 +113,7 @@ public class JTSFeatureBuilder
 
         Coordinate ende = enden.get( 0 );
         if (enden.size() > 1) {
-            report.println( "WARN: Linie mit mehrere Endpunkten: " + enden.size() );
+            report.warn( "Linie mit mehrere Endpunkten: " + enden.size() );
         }
 
         LineString segment = null;
@@ -141,7 +145,7 @@ public class JTSFeatureBuilder
 
     
     public void endOfRecords() {
-        report.println( "INFO: Objekte: " + objekte.size() + ", Linien(haufen): " + lineSegments.size() );
+        report.info( "Objekte: " + objekte.size() + ", Linien(haufen): " + lineSegments.size() );
 
         // builder
         polygonBuilder = new PolygonBuilder();
@@ -161,7 +165,7 @@ public class JTSFeatureBuilder
                 pointBuilder.add( objekt );
             }
             else {
-                log.warn( "Objekttyp nicht behandelt: " + objekt.objekttyp.get() );
+                report.warn( "Objekttyp nicht behandelt: " + objekt.objekttyp.get() );
             }
         }
         
@@ -190,7 +194,7 @@ public class JTSFeatureBuilder
         
         public PolygonBuilder() {
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setName( "alk-flaechen" );
+            builder.setName( "ALK_Flaechen" );
             builder.add( "objnum", String.class );
             builder.add( "folie", Integer.class );
             builder.add( "objart", Integer.class );
@@ -253,7 +257,7 @@ public class JTSFeatureBuilder
         
         public LineBuilder() {
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setName( "edbs" );
+            builder.setName( "ALK_Linien" );
             builder.add( "objnum", String.class );
             builder.add( "folie", Integer.class );
             builder.add( "objart", Integer.class );
@@ -303,7 +307,7 @@ public class JTSFeatureBuilder
         
         public PointBuilder() {
             SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-            builder.setName( "edbs" );
+            builder.setName( "ALK_Punkte" );
             builder.add( "objnum", String.class );
             builder.add( "folie", Integer.class );
             builder.add( "objart", Integer.class );

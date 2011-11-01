@@ -30,23 +30,26 @@ public class ReportLog
         extends SimpleLog
         implements Log {
 
-    private PrintStream             out;
+    private PrintStream[]           outs;
     
     
-    public ReportLog( PrintStream out ) {
-        super( "EDBS-Import-Log" );
-        this.out = out;
+    public ReportLog( PrintStream... outs ) {
+        super( "Import" );
+        this.outs = outs;
         info( "Start: " + new Date() );
     }
 
     protected void write( StringBuffer buffer ) {
         String msg = buffer.toString();
-        out.println( msg );
-        System.err.println( msg );
+        for (PrintStream out : outs) {
+            out.println( msg );
+        }
     }
 
     public void flush() {
-        out.flush();
+        for (PrintStream out : outs) {
+            out.flush();
+        }
     }
     
 }

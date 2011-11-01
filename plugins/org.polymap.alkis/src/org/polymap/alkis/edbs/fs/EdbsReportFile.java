@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,8 +31,10 @@ import org.eclipse.core.runtime.IPath;
 
 import org.polymap.service.fs.spi.BadRequestException;
 import org.polymap.service.fs.spi.DefaultContentNode;
+import org.polymap.service.fs.spi.IContentDeletable;
 import org.polymap.service.fs.spi.IContentFile;
 import org.polymap.service.fs.spi.IContentProvider;
+import org.polymap.service.fs.spi.NotAuthorizedException;
 import org.polymap.service.fs.spi.Range;
 
 /**
@@ -41,7 +44,7 @@ import org.polymap.service.fs.spi.Range;
  */
 public class EdbsReportFile
         extends DefaultContentNode
-        implements IContentFile {
+        implements IContentFile, IContentDeletable {
 
     private static Log log = LogFactory.getLog( EdbsReportFile.class );
 
@@ -53,14 +56,17 @@ public class EdbsReportFile
         this.f = (File)source;
     }
 
+    
     public Long getContentLength() {
         return f.length();
     }
 
+    
     public String getContentType( String accepts ) {
         return "text/plain";
     }
 
+    
     public void sendContent( OutputStream out, Range range, Map<String,String> params, String contentType )
     throws IOException, BadRequestException {
         FileInputStream in = null;
@@ -73,10 +79,27 @@ public class EdbsReportFile
         }
     }
 
+    
+    public void delete()
+    throws BadRequestException, NotAuthorizedException {
+        f.delete();
+
+        try {
+            EdbsContentProvider provider = (EdbsContentProvider)getProvider();
+            provider.reImport( StringUtils.removeEnd( getName(), ".report" ) );
+        }
+        catch (IOException e) {
+            throw new RuntimeException( e );
+            //FileUtils.writeStringToFile( f, e.toString() );
+        }
+    }
+
+    
     public Long getMaxAgeSeconds() {
         return 60l;
     }
 
+    
     public Date getModifiedDate() {
         return new Date( f.lastModified() );
     }

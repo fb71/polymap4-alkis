@@ -17,9 +17,19 @@ package org.polymap.alkis.edbs.fs;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,11 +38,17 @@ import org.eclipse.core.runtime.IPath;
 import org.polymap.core.project.ILayer;
 import org.polymap.core.project.IMap;
 import org.polymap.core.runtime.Polymap;
+import org.polymap.core.security.SecurityUtils;
 
+import org.polymap.alkis.edbs.EdbsImporter;
+
+import org.polymap.service.fs.spi.BadRequestException;
+import org.polymap.service.fs.spi.IContentFile;
 import org.polymap.service.fs.spi.IContentFolder;
 import org.polymap.service.fs.spi.IContentNode;
 import org.polymap.service.fs.spi.IContentProvider;
 import org.polymap.service.fs.spi.IContentSite;
+import org.polymap.service.fs.spi.NotAuthorizedException;
 
 /**
  * Provides content nodes for {@link IMap} and {@link ILayer} and a 'projects' node
@@ -48,6 +64,10 @@ public class EdbsContentProvider
     private IContentSite            contentSite;
     
     private File                    dir;
+    
+    private EdbsFolder              folder;
+    
+    EdbsConfigFile                  configFile;
     
     
     public EdbsContentProvider() {
@@ -67,12 +87,19 @@ public class EdbsContentProvider
 
 
     public List<? extends IContentNode> getChildren( IPath path, IContentSite site ) {
+        // check admin
+        if (!SecurityUtils.isAdmin( Polymap.instance().getPrincipals())) {
+            return null;
+        }
+        
         this.contentSite = site;
         
         // folder
         if (path.segmentCount() == 0) {
-            String name = "EDBS";
-            return Collections.singletonList( new EdbsFolder( name, path, this ) );
+            if (folder == null) {
+                folder = new EdbsFolder( "EDBS", path, this );
+            }
+            return Collections.singletonList( folder );
         }
 
         // files
@@ -80,8 +107,10 @@ public class EdbsContentProvider
         if (parent instanceof EdbsFolder) {
             List<IContentNode> result = new ArrayList();
             
-            result.add( new EdbsConfigFile( parent.getPath(), this,
-                    new File( dir, "import.conf" ) ) );
+            if (configFile == null) {
+                configFile = new EdbsConfigFile( parent.getPath(), this, dir );
+            }
+            result.add( configFile );
             
             for (File f : dir.listFiles()) {
                 if (f.getName().endsWith( ".report" )) {
@@ -95,5 +124,80 @@ public class EdbsContentProvider
         }
         return null;
     }
+
+
+    /**
+     * Creates a new EDBS file for the given input. The file is imported and features
+     * are created by the {@link EdbsImporter} according the import.conf in the
+     * folder. A report file is created containing the result.
+     * 
+     * @param newName
+     * @param in
+     * @return Newly created {@link EdbsFile} reflecting the created file.
+     */
+    public IContentFile createNew( String newName, InputStream in )
+    throws IOException, NotAuthorizedException, BadRequestException {
+        OutputStream fileOut = null;
+        OutputStream reportOut = null;
+        try {
+            File f = new File( dir, newName );
+
+            // fileOut
+            fileOut = new BufferedOutputStream( new FileOutputStream( f ) );
+            TeeInputStream teeIn = new TeeInputStream( in, fileOut );
+
+            // reportOut
+            reportOut = new BufferedOutputStream( 
+                    new FileOutputStream( new File( dir, newName + ".report" ) ) );
+
+            // run import
+            EdbsImporter importer = new EdbsImporter( configFile.properties(), 
+                    new InputStreamReader( teeIn, "ISO-8859-1" ), 
+                    new PrintStream( reportOut, false, "ISO-8859-1" ) );
+            importer.run();
+            fileOut.flush();
+
+            // reload node
+            getContentSite().invalidateFolder( folder );
+
+            return new EdbsFile( folder.getPath(), this, f );
+        }
+        finally {
+            IOUtils.closeQuietly( fileOut );
+            IOUtils.closeQuietly( reportOut );
+        }
+    }
+
+    
+    /**
+     * 
+     */
+    public void reImport( String name )
+    throws IOException, NotAuthorizedException, BadRequestException {
+        InputStream fileIn = null;
+        OutputStream reportOut = null;
+        try {
+            File f = new File( dir, name );
+            fileIn = new BufferedInputStream( new FileInputStream( f ) );
+            
+            // reportOut
+            reportOut = new BufferedOutputStream( 
+                    new FileOutputStream( new File( dir, name + ".report" ) ) );
+
+            // run import
+            EdbsImporter importer = new EdbsImporter( configFile.properties(), 
+                    new InputStreamReader( fileIn, "ISO-8859-1" ), 
+                    new PrintStream( reportOut, false, "ISO-8859-1" ) );
+            importer.run();
+
+            // reload folder
+            getContentSite().invalidateFolder( folder );
+        }
+        finally {
+            IOUtils.closeQuietly( fileIn );
+            IOUtils.closeQuietly( reportOut );
+        }
+    }
+
 
 }
