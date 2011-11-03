@@ -64,7 +64,7 @@ public class EdbsConfigFile
             Properties conf = new Properties();
             conf.put( "serviceURL", "jdbc.h2:ALK-Mittelsachsen" );
             //conf.put( "serviceURL", "jdbc.postgis://postgres:lka2010@10.0.16.15:5432/osm" );
-            //conf.put( "serviceURL", "mysql.jdbc://polymap:polymap4327@polymap.org:3306/polymap" );
+            //conf.put( "serviceURL", "mysql.jdbc://polymap:root_pwd_ohne_z@polymap.org:3306/polymap" );
             conf.put( "param", "wert" );
             
             FileWriterWithEncoding out = null;

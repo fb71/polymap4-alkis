@@ -122,6 +122,8 @@ public class EdbsImporter
                     throw new IOException( "Kein DataStore für Service: " + service );
                 }
                 
+                // XXX write down lines and points
+                
                 // create feature type
                 SimpleFeatureType schema = builder.polygonBuilder.schema;
                 FeatureStore fs = null;
