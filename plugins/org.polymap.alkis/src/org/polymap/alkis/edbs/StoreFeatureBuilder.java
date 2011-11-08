@@ -26,17 +26,17 @@ import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.GeometryFactory;
 import org.polymap.core.runtime.Timer;
+import org.polymap.core.runtime.recordstore.IRecordFieldSelector;
+import org.polymap.core.runtime.recordstore.IRecordState;
+import org.polymap.core.runtime.recordstore.IRecordStore;
+import org.polymap.core.runtime.recordstore.RecordQuery;
+import org.polymap.core.runtime.recordstore.SimpleQuery;
+import org.polymap.core.runtime.recordstore.IRecordStore.ResultSet;
+import org.polymap.core.runtime.recordstore.IRecordStore.Updater;
+import org.polymap.core.runtime.recordstore.lucene.LuceneRecordStore;
 
 import org.polymap.alkis.edbs.Objektdaten.LinieRecord;
 import org.polymap.alkis.edbs.Objektdaten.ObjektRecord;
-import org.polymap.alkis.recordstore.IRecordFieldSelector;
-import org.polymap.alkis.recordstore.IRecordState;
-import org.polymap.alkis.recordstore.IRecordStore;
-import org.polymap.alkis.recordstore.RecordQuery;
-import org.polymap.alkis.recordstore.SimpleQuery;
-import org.polymap.alkis.recordstore.IRecordStore.ResultSet;
-import org.polymap.alkis.recordstore.IRecordStore.Updater;
-import org.polymap.alkis.recordstore.lucene.LuceneRecordStore;
 
 /**
  * Builds {@link Feature}s from the EDBS records. Holding and searching the

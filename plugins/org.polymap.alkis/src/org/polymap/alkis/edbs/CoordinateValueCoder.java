@@ -21,10 +21,12 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import org.polymap.alkis.recordstore.QueryExpression;
-import org.polymap.alkis.recordstore.QueryExpression.Equal;
-import org.polymap.alkis.recordstore.lucene.LuceneValueCoder;
-import org.polymap.alkis.recordstore.lucene.NumericValueCoder;
+
+import org.polymap.core.runtime.recordstore.QueryExpression;
+import org.polymap.core.runtime.recordstore.QueryExpression.Equal;
+import org.polymap.core.runtime.recordstore.lucene.LuceneValueCoder;
+import org.polymap.core.runtime.recordstore.lucene.NumericValueCoder;
+
 
 /**
  * En/Decode {@link Coordinate} values using {@link NumericField} build-in support of

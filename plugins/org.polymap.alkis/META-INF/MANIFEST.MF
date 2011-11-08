@@ -17,10 +17,7 @@ Require-Bundle: org.eclipse.core.runtime,
  net.refractions.udig.core;bundle-version="1.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: .,
- lib/lucene-core-3.4.0.jar
+Bundle-ClassPath: .
 Export-Package: org.polymap.alkis.edbs,
  org.polymap.alkis.edbs.fs,
- org.polymap.alkis.geocoder,
- org.polymap.alkis.recordstore,
- org.polymap.alkis.recordstore.lucene
+ org.polymap.alkis.geocoder

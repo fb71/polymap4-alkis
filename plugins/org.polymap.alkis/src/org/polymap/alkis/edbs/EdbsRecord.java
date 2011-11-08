@@ -25,8 +25,9 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.alkis.recordstore.IRecordState;
-import org.polymap.alkis.recordstore.RecordModel;
+import org.polymap.core.runtime.recordstore.IRecordState;
+import org.polymap.core.runtime.recordstore.RecordModel;
+
 
 /**
  * Modelliert einen EDBS Datensatz als {@link RecordModel}. Tatsächlich is kein Store

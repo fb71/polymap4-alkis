@@ -26,7 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import org.polymap.alkis.recordstore.IRecordState;
+
+import org.polymap.core.runtime.recordstore.IRecordState;
 
 
 /**

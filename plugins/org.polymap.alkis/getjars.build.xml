@@ -34,10 +34,10 @@
 			<!-- remote repositories as defined above -->
 			<remoteRepository refid="central.repository" />
 
-            <!--  no longer needed -->
-            <dependency groupId="org.apache.lucene" artifactId="lucene-core" version="3.4.0" />
+            <!-- now in core.libs -->
+            <!-- dependency groupId="org.apache.lucene" artifactId="lucene-core" version="3.4.0" />
             <dependency groupId="commons-collections" artifactId="commons-collections" version="3" scope="provided" />
-            <dependency groupId="commons-logging" artifactId="commons-logging" version="1" scope="provided" />
+            <dependency groupId="commons-logging" artifactId="commons-logging" version="1" scope="provided" /-->
             
 		</artifact:dependencies>
 	</target>
