@@ -17,6 +17,7 @@ package org.polymap.alkis.edbs.fs;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -43,11 +44,11 @@ import org.polymap.core.security.SecurityUtils;
 import org.polymap.alkis.edbs.EdbsImporter;
 
 import org.polymap.service.fs.spi.BadRequestException;
+import org.polymap.service.fs.spi.DefaultContentProvider;
 import org.polymap.service.fs.spi.IContentFile;
 import org.polymap.service.fs.spi.IContentFolder;
 import org.polymap.service.fs.spi.IContentNode;
 import org.polymap.service.fs.spi.IContentProvider;
-import org.polymap.service.fs.spi.IContentSite;
 import org.polymap.service.fs.spi.NotAuthorizedException;
 
 /**
@@ -57,12 +58,11 @@ import org.polymap.service.fs.spi.NotAuthorizedException;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class EdbsContentProvider
+        extends DefaultContentProvider
         implements IContentProvider {
 
     private static Log log = LogFactory.getLog( EdbsContentProvider.class );
 
-    private IContentSite            contentSite;
-    
     private File                    dir;
     
     private EdbsFolder              folder;
@@ -81,19 +81,12 @@ public class EdbsContentProvider
     }
 
     
-    public IContentSite getContentSite() {
-        return contentSite;
-    }
-
-
-    public List<? extends IContentNode> getChildren( IPath path, IContentSite site ) {
+    public List<? extends IContentNode> getChildren( IPath path ) {
         // check admin
         if (!SecurityUtils.isAdmin( Polymap.instance().getPrincipals())) {
             return null;
         }
-        
-        this.contentSite = site;
-        
+
         // folder
         if (path.segmentCount() == 0) {
             if (folder == null) {
@@ -103,7 +96,7 @@ public class EdbsContentProvider
         }
 
         // files
-        IContentFolder parent = site.getFolder( path );
+        IContentFolder parent = getSite().getFolder( path );
         if (parent instanceof EdbsFolder) {
             List<IContentNode> result = new ArrayList();
             
@@ -158,7 +151,7 @@ public class EdbsContentProvider
             fileOut.flush();
 
             // reload node
-            getContentSite().invalidateFolder( folder );
+            getSite().invalidateFolder( folder );
 
             return new EdbsFile( folder.getPath(), this, f );
         }
@@ -191,7 +184,7 @@ public class EdbsContentProvider
             importer.run();
 
             // reload folder
-            getContentSite().invalidateFolder( folder );
+            getSite().invalidateFolder( folder );
         }
         finally {
             IOUtils.closeQuietly( fileIn );

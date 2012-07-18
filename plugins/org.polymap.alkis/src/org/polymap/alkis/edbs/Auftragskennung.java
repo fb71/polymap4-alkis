@@ -14,13 +14,13 @@
  */
 package org.polymap.alkis.edbs;
 
+import java.util.Collections;
 import java.util.List;
 
 import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 
 
@@ -73,7 +73,7 @@ class Auftragskennung
     }
 
 
-    public List<EdbsRecord> handle( RecordTokenizer record ) throws IOException {
+    public List<? extends EdbsRecord> handle( RecordTokenizer record ) throws IOException {
             Record result = new Record();
 
             if (record.nextWhf() != 1 ) {

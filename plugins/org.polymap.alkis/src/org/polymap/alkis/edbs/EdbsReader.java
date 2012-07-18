@@ -289,7 +289,7 @@ public class EdbsReader {
     }
 
     
-    public List<EdbsRecord> parse( RecordTokenizer satz ) 
+    public List<? extends EdbsRecord> parse( RecordTokenizer satz ) 
     throws IOException {
         for (IEdbsRecordParser handler : parsers) {
             if (handler.canHandle( satz ) != 0) {
@@ -358,7 +358,7 @@ public class EdbsReader {
             //System.out.println( "--------------------------\n" + satz.data.toString() );
             
             try {
-                List<EdbsRecord> records = reader.parse( satz );
+                List<? extends EdbsRecord> records = reader.parse( satz );
                 if (records.isEmpty()) {
                     throw new EdbsParseException( "Unbekannter Satztyp: " + satz );
                 }

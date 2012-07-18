@@ -49,7 +49,7 @@ public interface IEdbsRecordParser {
      * @throws EdbsParseException
      * @throws IOException
      */
-    public List<EdbsRecord> handle( RecordTokenizer record )
+    public List<? extends EdbsRecord> handle( RecordTokenizer record )
     throws IOException;
     
 }

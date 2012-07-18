@@ -186,7 +186,7 @@ public class EdbsImporter
         while ((satz = reader.next()) != null) {
             try {
                 count++;
-                List<EdbsRecord> records = reader.parse( satz );
+                List<? extends EdbsRecord> records = reader.parse( satz );
                 if (records.isEmpty()) {
                     report.warn( "Unbekannter Satztyp: " + satz );
                 }
