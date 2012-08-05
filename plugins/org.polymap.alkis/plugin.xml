@@ -17,9 +17,9 @@
    <extension
          point="org.polymap.service.fs.contentProviders">
       <contentProvider
-            class="org.polymap.alkis.edbs.fs.EdbsContentProvider"
-            id="org.polymap.alkis.edbs.fs.EdbsContentProvider"
-            name="EDBS">
+            class="org.polymap.alkis.importer.fs.ImportContentProvider"
+            id="org.polymap.alkis.ImportContentProvider"
+            name="ALKIS Import">
       </contentProvider>
    </extension>
 

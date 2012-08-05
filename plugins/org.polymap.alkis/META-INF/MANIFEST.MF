@@ -18,6 +18,6 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
-Export-Package: org.polymap.alkis.edbs,
- org.polymap.alkis.edbs.fs,
- org.polymap.alkis.geocoder
+Export-Package: org.polymap.alkis.geocoder,
+ org.polymap.alkis.importer.edbs,
+ org.polymap.alkis.importer.fs
