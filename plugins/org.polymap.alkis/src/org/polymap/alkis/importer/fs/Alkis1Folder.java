@@ -62,9 +62,9 @@ public class Alkis1Folder
         implements IContentPutable, IContentWriteable {
 
     public Alkis1Folder( String name, IPath parentPath, IContentProvider provider ) {
-        super( name, parentPath, provider, null );
+        super( name, parentPath, provider, new File( ImportContentProvider.getDataDir(), "alkis1" ) );
+        getDataDir().mkdir();
     }
-
     
     public ImportContentProvider getProvider() {
         return (ImportContentProvider)super.getProvider();
@@ -74,7 +74,10 @@ public class Alkis1Folder
         return getProvider().getConfigFile();
     }
 
-    
+    protected File getDataDir() {
+        return (File)getSource();
+    }
+
     public void sendDescription( OutputStream out, Range range, Map<String, String> params,
             String contentType )
             throws IOException {
@@ -161,8 +164,7 @@ public class Alkis1Folder
         OutputStream reportOut = null;
         try {
             getProvider();
-            File alkis1Dir = new File( ImportContentProvider.getDataDir(), "alkis" );
-            File f = new File( alkis1Dir, newName );
+            File f = new File( getDataDir(), newName );
 
             // fileOut
             fileOut = new BufferedOutputStream( new FileOutputStream( f ) );
@@ -170,7 +172,7 @@ public class Alkis1Folder
 
             // reportOut
             reportOut = new BufferedOutputStream( 
-                    new FileOutputStream( new File( alkis1Dir, newName + ".report" ) ) );
+                    new FileOutputStream( new File( getDataDir(), newName + ".report" ) ) );
             ReportLog report = new ReportLog( new PrintStream( reportOut, false, "ISO-8859-1" ) );
 
             // run import
@@ -181,14 +183,14 @@ public class Alkis1Folder
             fileOut.flush();
             reportOut.flush();
 
-            // reload node
-            getSite().invalidateFolder( this );
-
             return new DataFile( getPath(), getProvider(), f );
         }
         finally {
             IOUtils.closeQuietly( fileOut );
             IOUtils.closeQuietly( reportOut );
+            
+            // reload node
+            getSite().invalidateFolder( this );
         }
     }
 

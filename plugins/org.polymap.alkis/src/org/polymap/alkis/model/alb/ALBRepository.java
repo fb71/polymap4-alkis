@@ -29,6 +29,7 @@ import net.refractions.udig.core.internal.CorePlugin;
 import org.geotools.data.DataAccess;
 import org.geotools.data.DataStore;
 import org.geotools.factory.CommonFactoryFinder;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.FilterFactory;
 
 import org.apache.commons.logging.Log;
@@ -36,9 +37,11 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 
+import org.polymap.core.model2.Entity;
+import org.polymap.core.model2.engine.EntityRepositoryImpl;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
-import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
+
 import org.polymap.alkis.importer.fs.ImportConfigFile;
 
 /**
@@ -47,7 +50,7 @@ import org.polymap.alkis.importer.fs.ImportConfigFile;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class ALBRepository
-        extends EntityRepository {
+        extends EntityRepositoryImpl {
 
     private static Log log = LogFactory.getLog( ALBRepository.class );
     
@@ -119,6 +122,11 @@ public class ALBRepository
 
         store = (FeatureStoreAdapter)config.getStore();
         ds = store.getStore();
+    }
+
+
+    public FeatureType getSchema( Class<? extends Entity> entityClass ) {
+        return store.simpleFeatureType( entityClass );
     }
 
 }

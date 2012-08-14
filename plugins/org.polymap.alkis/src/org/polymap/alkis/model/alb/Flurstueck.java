@@ -14,7 +14,10 @@
  */
 package org.polymap.alkis.model.alb;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import java.io.IOException;
 
@@ -22,13 +25,19 @@ import org.geotools.data.FeatureStore;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.opengis.feature.Feature;
+import org.opengis.feature.FeatureVisitor;
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
 
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.NameInStore;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 import org.polymap.core.model2.store.feature.FeatureStoreUnitOfWork;
 
 /**
@@ -40,12 +49,21 @@ import org.polymap.core.model2.store.feature.FeatureStoreUnitOfWork;
 public class Flurstueck
         extends Entity {
 
+    private static Log log = LogFactory.getLog( Flurstueck.class );
+
     public static final String          TABLE_NAME = "ALBFLU";
 
     public Property<MultiPolygon>       geom;
+    
+    /**
+     * 
+     */
+    //@Immutable
+    @NameInStore("ALBFLU_ID")
+    public Property<String>             id;
 
     @NameInStore("ALBFLU_SCHLUESSEL")
-    public Property<String>             schluessel;
+    public Property<String>             flur;
     
     @NameInStore("ALBFLU_RW")
     public Property<Integer>            rw;
@@ -53,48 +71,83 @@ public class Flurstueck
     @NameInStore("ALBFLU_HW")
     public Property<Integer>            hw;
     
+    /** Zähler des Flurstücks. */
+    @Queryable
     @NameInStore("ALBFLU_NENNER")
     public Property<String>             nenner;
     
+    @Queryable
     @NameInStore("ALBFLU_ZAEHLER")
     public Property<String>             zaehler;
     
+    @Queryable
     @NameInStore("ALBFLU_HAUSNR")
     public Property<Integer>            hnr;
         
+    @Queryable
     @NameInStore("ALBFLU_STRANAME")
     public Property<String>             lagehinweis;
     
+    @Queryable
     @NameInStore("ALBFLU_ZUSATZ")
     public Property<String>             hnrZusatz;
     
+    @Queryable
     @NameInStore("ALBFLU_GEMANAME")
     public Property<String>             gemarkungName;
     
+    @Queryable
     @NameInStore("ALBFLU_GEMARKUNG")
     public Property<String>             gemarkungNr;
     
     @NameInStore("ALBFLU_FLAECHE")
     public Property<Float>              flaeche;
     
+    @Queryable
     @NameInStore("ALBFLU_STATUS")
     public Property<String>             status;
     
-    @NameInStore("ALBFLU_GISKEY")
-    public Property<String>             gisKey;
+//    @NameInStore("ALBFLU_GISKEY")
+//    public Property<String>             gisKey;
 
     /**
      * 1:1 Association: {@link Gemarkung}
      */
     @NameInStore("ALBFLU_IDALBGEMA")
+    @Queryable
     public Property<String>             gemarkungId;    
 
+
+    /**
+     * 
+     */
+    public Collection<Lagehinweis2> lagehinweise() throws IOException {
+        final FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
+        FeatureStore fs = suow.featureSource( Lagehinweis2.class );
+        
+        FilterFactory ff = ALBRepository.ff;
+        Filter filter = ff.equals( ff.property( "ALBHINF_IDALBFLU" ), ff.literal( id.get() ) );
+        log.debug( "Filter: " + filter );
+        FeatureCollection features = fs.getFeatures( filter );
+        
+        final List<Lagehinweis2> result = new ArrayList();
+        features.accepts( new FeatureVisitor() {
+            public void visit( Feature feature ) {
+                result.add( context.getUnitOfWork().entityForState( Lagehinweis2.class, feature ) );
+            }
+        }, null );
+        return result;
+    }
+
     
+    /**
+     * 
+     */
     public Gemarkung gemarkung() throws IOException {
         FilterFactory ff = ALBRepository.ff;
         
-        FeatureStoreUnitOfWork uow = (FeatureStoreUnitOfWork)context.unitOfWork();
-        FeatureStore gemarkungFs = uow.featureSource( Gemarkung.class );
+        FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
+        FeatureStore gemarkungFs = suow.featureSource( Gemarkung.class );
         
         FeatureCollection features = gemarkungFs.getFeatures( ff.id( 
                 Collections.singleton( ff.featureId( gemarkungId.get() ) ) ) );
@@ -102,7 +155,7 @@ public class Flurstueck
         FeatureIterator it = features.features();
         try {
             Feature feature = it.hasNext() ? it.next() : null;
-            return uow.entityForState( Gemarkung.class, feature );
+            return context.getUnitOfWork().entityForState( Gemarkung.class, feature );
         }
         finally {
             it.close();

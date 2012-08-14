@@ -50,7 +50,10 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.runtime.UnitOfWork;
+import org.polymap.core.runtime.Timer;
+
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
@@ -138,7 +141,7 @@ public class Alkis1Importer
                 log.info( "Zip-Eintrag: " + zipEntry.getName() );
 
                 if (zipEntry.getName().endsWith( ".f" )) {
-                    log.info( "************ .f file..." );
+                    log.info( "#### parsing: " + zipEntry.getName() + " ..." );
                     parseFile( zip, new FParser() );
                 }
                 //    zip.closeEntry();
@@ -164,23 +167,27 @@ public class Alkis1Importer
      */
     protected void parseFile( ZipInputStream zip, LineParser parser )
     throws IOException {
-        log.info( "************" );
         assert uow == null;
         uow = repo.newUnitOfWork();
+        Timer timer = new Timer();
         try {
             LineNumberReader reader = new LineNumberReader( new InputStreamReader( zip, "ISO-8859-1" ) );
+            int count = 0;
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                 try {
-                    log.debug( ":: " + line );
+                    log.debug( "Zeile:" + count++ + " -> " + line );
                     parser.parseLine( line );
                 }
                 catch (Exception e) {
                     log.warn( "Fehler beim Import: " + e.toString(), e );
-                    throw new RuntimeException( e.toString(), e );
-                    //exceptions.add( e );
+                    report.error( "Fehler bei Zeile: " + count + " -> " + line );
                 }
             }
+            report.info( "Zeilen verarbeitet: " + count + ". Zeit: " + timer.elapsedTime() + "ms." );
+            log.info( "    " + count + " lines parsed. (" + timer.elapsedTime() + "ms)" );
+            log.info( "    committing..." );
             uow.commit();
+            log.info( "    done." );
         }
         catch (Exception e) {
             report.error( "Fehler beim Lesen .", e );
@@ -197,23 +204,23 @@ public class Alkis1Importer
      */
     public interface LineParser {
 
-        public void parseLine( String line ) throws Exception;
+        public Entity parseLine( String line ) throws Exception;
 
     }
 
 
     /**
-     * The .f file parser. 
+     * Parser for *.f files. 
      *
      */
-    class FParser
+    protected class FParser
             implements LineParser {
 
         private int             flushCount = 0, count = 0;
 
         private Pattern         pattern = Pattern.compile( "(F)" // satzkennzeichen
                 + "([\\s\\d]{4})"       // gemarkungsschlüssel 
-                + "([\\s\\d]{4})"       // flurstücksschlüssel
+                + "([\\s\\d]{4})"       // flurschlüssel
                 + "([\\s\\d]{5})"       // zähler
                 + "([\\s\\d\\w]{4})"    // nenner 
                 + "([\\s\\d]{3})"       // version 
@@ -247,6 +254,12 @@ public class Alkis1Importer
         //F 9874167    1   a  1$$A$$4167-22$$$$8600#5630###$5630$$$
         //F1101   0    1   0  0$457114834#560544292$A$$$$$Fleischerplatz 1#Markt 1$1990#1530###$1530$$$";
 
+        // Mittelsachsen (ALB)
+        //F2001    1   4  0$     $A$0$Korr-FoVN    $             $7$Hauptstraße 148$199#    532###$      532$$entspr. VN-Nr. 4/72$152,212,271,372,376
+        
+        // Musterdaten
+        //F39874167    1   0  1$$A$$4167-22$$$$8600#5630###$5630$$$
+        
         private Pattern         hinweisPattern = Pattern.compile( "(\\D+)(\\d*)(\\S*)" );  // (.+)(\\d*)(\\S*)
 
         private FeatureSource<SimpleFeatureType, SimpleFeature> flaechenFs;
@@ -262,7 +275,7 @@ public class Alkis1Importer
         }
 
         
-        public void parseLine( String line )
+        public Flurstueck parseLine( String line )
         throws IOException {
             Matcher matcher = pattern.matcher( line );            
             matcher.find();
@@ -272,7 +285,7 @@ public class Alkis1Importer
                 System.out.println( "   : " + matcher.group() );
                 System.out.println( "--Satzkennzeichen: " + matcher.group( 1 ) );
                 System.out.println( "--Gemarkungsschlüssel: " + matcher.group( 2 ) );
-                System.out.println( "--Flurstücksschlüssel: " + matcher.group( 3 ) );
+                System.out.println( "--Flur: " + matcher.group( 3 ) );
                 System.out.println( "--Zähler: " + matcher.group( 4 ).trim() );
                 System.out.println( "--Nenner: " + matcher.group( 5 ).trim() );
                 System.out.println( "--Version: " + matcher.group( 6 ).trim() );
@@ -289,28 +302,24 @@ public class Alkis1Importer
                 System.out.println( "--Info: " + matcher.group( 18 ) );
             }
             Flurstueck flurstueck = null;
-            try {
-                String id = "flurstueck." + String.valueOf( count++ );
-                flurstueck = uow.newEntity( Flurstueck.class, null, null );
-                flurstueck.gemarkungNr.set( matcher.group( 2 ).trim() );
-                flurstueck.schluessel.set( matcher.group( 3 ).trim() );
-                flurstueck.zaehler.set( matcher.group( 4 ).trim() );
-                flurstueck.nenner.set( matcher.group( 5 ).trim() );
-                flurstueck.rw.set( coord( matcher.group( 7 ) ) );
-                flurstueck.hw.set( coord( matcher.group( 8 ) ) );
-                flurstueck.status.set( matcher.group( 9 ).trim() );
-                flurstueck.flaeche.set( Float.valueOf( matcher.group( 16 ) ) );
-                flurstueck.lagehinweis.set( matcher.group( 14 ) );
+            String id = "flurstueck." + String.valueOf( count++ );
+            flurstueck = uow.createEntity( Flurstueck.class, null, null );
+            flurstueck.id.set( id );
+            flurstueck.gemarkungNr.set( matcher.group( 2 ).trim() );
+            flurstueck.flur.set( matcher.group( 3 ).trim() );
+            flurstueck.zaehler.set( matcher.group( 4 ).trim() );
+            flurstueck.nenner.set( matcher.group( 5 ).trim() );
+            flurstueck.rw.set( coord( matcher.group( 7 ) ) );
+            flurstueck.hw.set( coord( matcher.group( 8 ) ) );
+            flurstueck.status.set( matcher.group( 9 ).trim() );
+            flurstueck.flaeche.set( Float.valueOf( matcher.group( 16 ) ) );
+            flurstueck.lagehinweis.set( matcher.group( 14 ) );
 
-                parseLagehinweise( matcher.group( 14 ), id );
-                parseAbschnitte( matcher.group( 15 ), id );
-            }
-            catch (Exception e) {
-                report.error( "Fehler bei Zeile: " + count, e );
-            }
+            parseLagehinweise( matcher.group( 14 ), id );
+            parseAbschnitte( matcher.group( 15 ), id );
 
             // find ALK_Flaeche
-            SimpleFeature flaeche = findAlkFlaeche( flurstueck.schluessel.get() );
+            SimpleFeature flaeche = findAlkFlaeche( flurstueck.flur.get() );
             if (flaeche != null) {
                 flurstueck.geom.set( (MultiPolygon)flaeche.getDefaultGeometry() );
             }
@@ -320,6 +329,7 @@ public class Alkis1Importer
                 //uow.apply();
                 flushCount = 0;
             }
+            return flurstueck;
         }
 
         
@@ -369,7 +379,7 @@ public class Alkis1Importer
                     System.out.println( "-----Zusatz: " + m.group( 3 ).trim() );
                 }
                 String id = "lagehinweis." + i + "." + flurstueckId;
-                Lagehinweis2 lagehinweis = uow.newEntity( Lagehinweis2.class, id, null );
+                Lagehinweis2 lagehinweis = uow.createEntity( Lagehinweis2.class, id, null );
                 lagehinweis.hinweis.set( hinweis );
                 lagehinweis.flurstueckId.set( flurstueckId );
             }
@@ -394,7 +404,7 @@ public class Alkis1Importer
                         System.out.println( "----dummy1: " + dummy1 );
                     }
                     String id = "abschnitt." + i + "." + flurstueckId;
-                    Abschnitt abschnitt = uow.newEntity( Abschnitt.class, id, null );
+                    Abschnitt abschnitt = uow.createEntity( Abschnitt.class, id, null );
                     abschnitt.flaeche.set( flaeche );
                     abschnitt.flurstueckId.set( flurstueckId );
 
@@ -418,20 +428,5 @@ public class Alkis1Importer
             }
         }
     }
-
-
-    // Test ***********************************************
-    
-//    public static void main( String[] args )
-//    throws Exception {
-//        //String line = "F 9874167    1   a  1$$A$$4167-22$$$$8600#5630###$5630$$$";
-//        //String line = "F1101    1   0  0$     $A$0$Korr-FoVN    $             $13$Fleischerpl. 1, Markt 1$199#   1530###$     1530$$$N47,398,956,1007,1081";    
-//        //String line = "F1101   0    1   0  0$457114834#560544292$A$$$$$Fleischerplatz 1#Markt 1$1990#1530###$1530$$$";
-//        String line = "F1101   0   53   0  0$457124948#560553068$A$$$$$Obere Schmiedegasse 11$1990#270####6300#140###$410$$$";
-//        System.out.println( "Line: " + line );
-//
-//        new FParser().parseLine( line );
-//    }
-
 
 }

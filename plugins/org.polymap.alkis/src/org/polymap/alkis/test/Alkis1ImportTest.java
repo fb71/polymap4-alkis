@@ -14,12 +14,13 @@
  */
 package org.polymap.alkis.test;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.IOException;
 import java.io.Serializable;
 
 import junit.framework.TestCase;
@@ -34,11 +35,11 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
+import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
 
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.importer.alkis1.Alkis1Importer;
-import org.polymap.alkis.importer.edbs.EdbsImporter;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
 import org.polymap.alkis.model.alb.Flurstueck;
@@ -113,29 +114,62 @@ public class Alkis1ImportTest
         // EDBS
         FileInputStream in = new FileInputStream( new File(
                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/edbs.ALK_Muster_EDBS_BSPE.dbout.1.001" ) );
-       
-        EdbsImporter importer = new EdbsImporter( (DataStore)repo.ds, 
-                new InputStreamReader( in, "ISO-8859-1" ), 
-                new PrintStream( System.out, false, "ISO-8859-1" ) );
-        importer.run();
+//       
+//        EdbsImporter importer = new EdbsImporter( (DataStore)repo.ds, 
+//                new InputStreamReader( in, "ISO-8859-1" ), 
+//                new PrintStream( System.out, false, "ISO-8859-1" ) );
+//        importer.run();
 
         // ALKIS1
         in = new FileInputStream( new File( 
                 "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/ALKIS1_Erstdaten.zip" ) );
+                //"/home/falko/Data/mittelsachen-alkis/ALB_Gemarkung_2xxx.zip" ) );
         ReportLog report = new ReportLog( System.out );
         new Alkis1Importer( in, report, repo ).run();
         in.close();
+        
+        UnitOfWork uow = repo.newUnitOfWork();
+        // FIXME "object already closed" when iterating directly over result :(
+        Collection<Flurstueck> flurstuecke = new ArrayList( uow.find( Flurstueck.class ) );
+        for (Flurstueck flurstueck : flurstuecke) {
+            assertTrue( flurstueck.id.get().startsWith( "flurstueck" ) );
+            
+            Collection<Lagehinweis2> lagehinweise = flurstueck.lagehinweise();
+            for (Lagehinweis2 hinweis : lagehinweise) {
+                log.info( "    Hinweis: " + hinweis );
+            }
+            assertTrue( lagehinweise.size() >= 0 && lagehinweise.size() < 100 );
+        }
     }
     
     
-//    public void tstFParser() throws Exception {
-//        importer = new Alkis1Importer( config, in, report );
-//          //String line = "F 9874167    1   a  1$$A$$4167-22$$$$8600#5630###$5630$$$";
-//          //String line = "F1101    1   0  0$     $A$0$Korr-FoVN    $             $13$Fleischerpl. 1, Markt 1$199#   1530###$     1530$$$N47,398,956,1007,1081";    
-//          //String line = "F1101   0    1   0  0$457114834#560544292$A$$$$$Fleischerplatz 1#Markt 1$1990#1530###$1530$$$";
-//          String line = "F1101   0   53   0  0$457124948#560553068$A$$$$$Obere Schmiedegasse 11$1990#270####6300#140###$410$$$";
-//          System.out.println( "Line: " + line );
-//          new FParser().parseLine( line );
-//    }
+    public void testFParser() throws Exception {
+        TestAlkis1Importer importer = new TestAlkis1Importer( repo );
+        
+        //String line = "F 9874167    1   a  1$$A$$4167-22$$$$8600#5630###$5630$$$";
+        //String line = "F1101    1   0  0$     $A$0$Korr-FoVN    $             $13$Fleischerpl. 1, Markt 1$199#   1530###$     1530$$$N47,398,956,1007,1081";    
+        //String line = "F1101   0    1   0  0$457114834#560544292$A$$$$$Fleischerplatz 1#Markt 1$1990#1530###$1530$$$";
+        String line = "F1101   0   53   0  0$457124948#560553068$A$$$$$Obere Schmiedegasse 11$1990#270####6300#140###$410$$$";
+        log.info( "Line: " + line );
+        
+        Flurstueck flurstueck = importer.parseFLine( line );
+        assertEquals( "Obere Schmiedegasse 11", flurstueck.lagehinweis.get() );
+    }
+    
+    
+    /**
+     * Just give access to the inner classes of {@link Alkis1Importer}.  
+     */
+    class TestAlkis1Importer
+            extends Alkis1Importer {
+
+        public TestAlkis1Importer( ALBRepository repo ) throws IOException {
+            super( null, null, repo );
+        }
+        
+        public Flurstueck parseFLine( String line ) throws IOException {
+            return new FParser().parseLine( line );
+        }
+    }
     
 }

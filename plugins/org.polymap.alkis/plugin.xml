@@ -22,5 +22,13 @@
             name="ALKIS Import">
       </contentProvider>
    </extension>
+   <extension
+         point="org.polymap.rhei.form.pageProviders">
+      <pageProvider
+            class="org.polymap.alkis.ui.FlurstueckFormPageProvider"
+            id="org.polymap.alkis.FlurstueckFormPageProvider"
+            name="ALB-Flurstueck">
+      </pageProvider>
+   </extension>
 
 </plugin>

@@ -77,7 +77,7 @@ public class ImportContentProvider
     
     public ImportConfigFile getConfigFile() {
         if (configFile == null) {
-            configFile = new ImportConfigFile( Path.fromPortableString( "/" ), this, dataDir );
+            configFile = new ImportConfigFile( Path.fromPortableString( "/" ), this, getDataDir() );
         }
         return configFile;
     }
@@ -110,6 +110,20 @@ public class ImportContentProvider
             for (File f : ((EdbsFolder)parent).getDataDir().listFiles()) {
                 if (f.getName().endsWith( ".report" )) {
                     result.add( new EdbsReportFile( parent.getPath(), this, f ) );
+                }
+                else {
+                    result.add( new DataFile( parent.getPath(), this, f ) );
+                }
+            }
+            return result;
+        }
+
+        // ALKIS1 files
+        else if (parent instanceof Alkis1Folder) {
+            List<IContentNode> result = new ArrayList();
+            for (File f : ((Alkis1Folder)parent).getDataDir().listFiles()) {
+                if (f.getName().endsWith( ".report" )) {
+                    result.add( new Alkis1ReportFile( parent.getPath(), this, f ) );
                 }
                 else {
                     result.add( new DataFile( parent.getPath(), this, f ) );

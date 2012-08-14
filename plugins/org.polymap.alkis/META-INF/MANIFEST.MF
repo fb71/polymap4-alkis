@@ -14,10 +14,13 @@ Require-Bundle: org.eclipse.core.runtime,
  org.polymap.core.model;bundle-version="3.1.0",
  org.polymap.service.fs;bundle-version="3.1.0";resolution:=optional,
  net.refractions.udig.catalog;bundle-version="1.2.0",
- net.refractions.udig.core;bundle-version="1.2.0"
+ net.refractions.udig.core;bundle-version="1.2.0",
+ org.polymap.rhei.form;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
 Export-Package: org.polymap.alkis.geocoder,
  org.polymap.alkis.importer.edbs,
- org.polymap.alkis.importer.fs
+ org.polymap.alkis.importer.fs,
+ org.polymap.alkis.model,
+ org.polymap.alkis.model.alb
