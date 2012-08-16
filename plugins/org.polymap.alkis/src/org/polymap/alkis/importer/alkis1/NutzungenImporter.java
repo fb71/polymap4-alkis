@@ -14,95 +14,133 @@
  */
 package org.polymap.alkis.importer.alkis1;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 
+import org.opengis.filter.FilterFactory;
+
 import org.apache.commons.lang.text.StrTokenizer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+
+import org.polymap.core.model2.runtime.UnitOfWork;
+import org.polymap.core.runtime.Timer;
+
+import org.polymap.alkis.importer.ReportLog;
+import org.polymap.alkis.model.alb.ALBRepository;
+import org.polymap.alkis.model.alb.Nutzungsart;
 
 /**
  * 
  * 
  * @author <a href="mailto:falko@polymap.de">Falko Braeutigam</a>
  *         <li>16.09.2008: created</li>
+ *         <li>16.08.2012: adopted to org.polymap.alkis module</li>
  */
 public class NutzungenImporter
         extends Job {
 
-    static final org.apache.commons.logging.Log log = 
-            org.apache.commons.logging.LogFactory.getLog( Alkis1Importer.class );
+    private static Log log = LogFactory.getLog( Alkis1Importer.class );
 
-    private FsAlbProvider           provider;
+    public static final FilterFactory   ff = Alkis1Importer.ff;
     
-    private TDMetaData              metaData;
+    private ALBRepository           repo;
     
+    private UnitOfWork              uow;
 
-    public NutzungenImporter( FsAlbProvider provider, InputStream in )
-            throws Exception {
-        super( "GmkImporter" );
-        this.provider = provider;
+    private ReportLog               report;
 
-        // database schema
-        if (!provider.isActive()) {
-            provider.login();
-        }
-        this.metaData = provider.metaDataOf( "polymap2.fs_alb.hibernate.Nutzungsart" );
+    private InputStream             in;
 
-        provider.createDatabaseSchema( true, true );
+
+    /**
+     * 
+     * @param in Stream input of the importer: CSV data
+     * @param report
+     * @param repo The repo to use, or null if {@link ALBRepository#instance()} is to
+     *        be used.
+     * @throws IOException
+     */
+    public NutzungenImporter( InputStream in, ReportLog report, ALBRepository repo )
+    throws IOException {
+        super( "Nutzungen" );
+        setPriority( LONG );
+        setSystem( true );
+
+        this.report = report;
+        this.in = in;
         
-        // import data
-        log.info( "Importing into: " + provider.getProviderId() );
-        parseFile( new BufferedInputStream( in ) );
+        try {
+            this.repo = repo != null ? repo : ALBRepository.instance();
+        }
+        catch (Exception e) {
+            report.error( "Fehler beim Öffnen der Import-Datenquelle.", e );
+            throw new IOException( e );
+        }
     }
 
+    /**
+     * Import data.
+     */
+    protected IStatus run( IProgressMonitor monitor ) {
+        try {
+            parseFile( in );
+            return Status.OK_STATUS;
+        }
+        catch (IOException e) {
+            report.error( "Fehler beim Verarbeiten des ZIP-Files: " + e, e );
+            return Status.CANCEL_STATUS;
+        }
+    }
 
+    
+    public void run() {
+        run( new NullProgressMonitor() );
+    }
+
+    
     /**
      * Parse the next entry from the given zip stream and apply the given
      * parser.
      */
-    protected Exception[] parseFile( InputStream in0 )
-            throws IOException {
-        log.info( "************" );
-        TDConversation conversation = provider.newConversation();
+    protected void parseFile( InputStream in0 )
+    throws IOException {
+        Timer timer = new Timer();
+        uow = repo.newUnitOfWork();
 
-        List exceptions = new ArrayList();
-        LineNumberReader in = new LineNumberReader( new InputStreamReader( in0, "ISO-8859-1" ) );
         int count = 0;
-        for (String line=in.readLine(); line!=null; line=in.readLine()) {
+        LineNumberReader reader = new LineNumberReader( new InputStreamReader( in0, "ISO-8859-1" ) );
+        for (String line=reader.readLine(); line!=null; line=reader.readLine()) {
             try {
                 log.debug( ":: " + line );
-                StrTokenizer tkn = new StrTokenizer( line, ";" );
+                StrTokenizer tkn = new StrTokenizer( line, ";" ).setIgnoredChar( '"' );
                 String nutzung = tkn.nextToken();
                 String nr = tkn.nextToken();
                 log.info( "--Nutzung: " + nr + ":" + nutzung );
 
-                Object entity = conversation.createEntity( metaData );
-                metaData.getIdField().set( entity, nr );
-                metaData.getField( "nutzungsart" ).set( entity, nutzung );
-                
-                conversation.saveEntity( entity );
+                Nutzungsart nutzungsart = uow.createEntity( Nutzungsart.class, null, null );
+                nutzungsart.id.set( nr );
+                nutzungsart.nutzung.set( nutzung );
             }
             catch (Exception e) {
                 log.warn( "Fehler beim Import: " + e.toString(), e );
-                throw new RuntimeException( e.toString(), e );
-                //exceptions.add( e );
+                report.error( "Fehler bei Zeile: " + count + " -> " + line );
             }
         }
-        conversation.flush();
-        // conversation.close();
-
-        return (Exception[])exceptions.toArray( new Exception[exceptions.size()] );
-    }
-
-
-    public int run()
-            throws Exception {
-        throw new RuntimeException( "not yet implemented." );
+        report.info( "Zeilen verarbeitet: " + count + ". Zeit: " + timer.elapsedTime() + "ms." );
+        log.info( "    " + count + " lines parsed. (" + timer.elapsedTime() + "ms)" );
+        log.info( "    committing..." );
+        uow.commit();
+        uow.close();
+        log.info( "    done." );
     }
 
 }

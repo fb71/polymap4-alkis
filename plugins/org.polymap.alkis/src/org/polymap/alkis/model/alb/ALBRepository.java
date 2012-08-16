@@ -98,7 +98,8 @@ public class ALBRepository
                                 Flurstueck.class, 
                                 Abschnitt.class, 
                                 Gemarkung.class, 
-                                Lagehinweis2.class} )
+                                Lagehinweis2.class,
+                                Nutzungsart.class} )
                         .setStore( new FeatureStoreAdapter( ds ) );
                 instance = new ALBRepository( repoConfig );
             }

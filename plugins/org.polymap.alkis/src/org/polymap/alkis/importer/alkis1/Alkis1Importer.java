@@ -65,7 +65,7 @@ import org.polymap.alkis.model.alb.Flurstueck;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  *         <li>05.09.2008: created</li>
- *         <li>18.07.2012: start adapting to POLYMAP3</li>
+ *         <li>18.07.2012: start adopting to org.polymap.alkis</li>
  */
 public class Alkis1Importer
         extends Job
@@ -94,7 +94,7 @@ public class Alkis1Importer
      */
     public Alkis1Importer( InputStream in, ReportLog report, ALBRepository repo )
     throws IOException {
-        super( "ALKIS-Import" );
+        super( "ALKIS1-Import" );
         setPriority( LONG );
         setSystem( true );
 
@@ -109,26 +109,6 @@ public class Alkis1Importer
             throw new IOException( e );
         }
     }
-
-
-//    public Alkis1Importer( FsAlbProvider provider, int fakeCount )
-//    throws Exception {
-//
-//        // database schema
-//        if (!provider.isActive()) {
-//            provider.login();
-//        }
-//        provider.createDatabaseSchema( true, true );
-//
-//        // import data
-//        log.info( "Fake importing into: " + provider.getProviderId() );
-//        LineParser parser = new FParser( provider, conversation );
-//        for (int i=0; i<fakeCount; i++) {
-//            parser.parseLine( "F 9874167    1   a  1$$A$$4167-22$$$$8600#5630###$5630$$$" );
-//        }
-//        conversation.flush();
-//        //conversation.close();
-//    }
 
 
     /**
@@ -393,21 +373,27 @@ public class Alkis1Importer
             tokenizer.setIgnoreEmptyTokens( false );
             for (int i=0; tokenizer.hasNext(); i++) {
                 try {
-                    String nutzung = tokenizer.nextToken().substring( 0, 3 );
+                    String nutzungsart = tokenizer.nextToken().substring( 0, 3 );
                     Float flaeche = Float.valueOf( tokenizer.nextToken() );
                     String dummy1 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     String dummy2 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     String dummy3 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     if (log.isDebugEnabled()) {
-                        System.out.println( "----Nutzung: " + nutzung );
+                        System.out.println( "----Nutzungsart: " + nutzungsart );
                         System.out.println( "----Fläche: " + flaeche );
                         System.out.println( "----dummy1: " + dummy1 );
                     }
                     String id = "abschnitt." + i + "." + flurstueckId;
                     Abschnitt abschnitt = uow.createEntity( Abschnitt.class, id, null );
                     abschnitt.flaeche.set( flaeche );
+                    abschnitt.nutzungsartId.set( nutzungsart );
                     abschnitt.flurstueckId.set( flurstueckId );
 
+//                    Query query = uow.newQuery( Nutzungsart.class ).setMaxResults( 1 );
+//                    query.filter( and( eq( Nutzungsart.class ).id.set( nutzungsart );
+//                    query.and().
+//                    ff.equal( ff.property( "ALBNUART_ID" ) )
+                    
                     // FIXME
 //                    Criteria criteria = ((HibernateConversation)conversation).createCriteria( nutzungMetaData );
 //                    criteria.add( Restrictions.eq( "id", nutzung ) );

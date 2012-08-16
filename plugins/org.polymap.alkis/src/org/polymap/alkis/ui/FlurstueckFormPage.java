@@ -48,6 +48,7 @@ import org.polymap.rhei.form.IFormEditorPageSite;
 
 import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.alb.ALBRepository;
+import org.polymap.alkis.model.alb.Abschnitt;
 import org.polymap.alkis.model.alb.Flurstueck;
 import org.polymap.alkis.model.alb.Lagehinweis2;
 
@@ -121,8 +122,26 @@ public class FlurstueckFormPage
 
     protected Section createAbschnitteSection( Flurstueck flurstueck ) {
         Section section = newSection( "Abschnitte", false, null );
-        
-        //log.info( "Abschnitte: " + flurstueck.lagehinweise() )
+        try {
+            Collection<Abschnitt> abschnitte = flurstueck.abschnitte();
+            FeatureType schema = repo.getSchema( Abschnitt.class );
+
+            // viewer
+            FeatureTableViewer viewer = new FeatureTableViewer( (Composite)section.getClient(), SWT.NONE );
+            viewer.setContent( new CollectionContentProvider( null ) );
+            viewer.setInput( Iterables.transform( abschnitte, Entities.toStates( Feature.class ) ) );
+            
+            // columns
+//            PropertyDescriptor prop1 = schema.getDescriptor( "ALBANUA_NUTZUNG" );
+//            viewer.addColumn( new DefaultFeatureTableColumn( prop1 ).setHeader( "Nutzung" ));
+            PropertyDescriptor prop2 = schema.getDescriptor( "ALBANUA_FLAECHE" );
+            viewer.addColumn( new DefaultFeatureTableColumn( prop2 ).setHeader( "Fläche" ));
+        }
+        catch (IOException e) {
+            PolymapWorkbench.handleError( AlkisPlugin.PLUGIN_ID, this, "", e );
+            Label msg = new Label( (Composite)section.getClient(), SWT.None );
+            msg.setText( "Fehler beim Ermitteln der Lagehinweise." );
+        }
         return section;
     }
 
@@ -131,12 +150,11 @@ public class FlurstueckFormPage
         Section section = newSection( "Lagehinweise", false, null );
         try {
             Collection<Lagehinweis2> hinweise = flurstueck.lagehinweise();
-            log.info( "Lagehinweise: " + hinweise.size() );
             FeatureType schema = repo.getSchema( Lagehinweis2.class );
 
             // viewer
             FeatureTableViewer viewer = new FeatureTableViewer( (Composite)section.getClient(), SWT.NONE );
-            viewer.setContent( new CollectionContentProvider( null, schema ) );
+            viewer.setContent( new CollectionContentProvider( null ) );
             viewer.setInput( Iterables.transform( hinweise, Entities.toStates( Feature.class ) ) );
             
             // columns

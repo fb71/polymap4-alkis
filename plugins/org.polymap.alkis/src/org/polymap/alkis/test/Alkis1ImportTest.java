@@ -40,11 +40,13 @@ import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
 
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.importer.alkis1.Alkis1Importer;
+import org.polymap.alkis.importer.alkis1.NutzungenImporter;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
 import org.polymap.alkis.model.alb.Flurstueck;
 import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.alkis.model.alb.Lagehinweis2;
+import org.polymap.alkis.model.alb.Nutzungsart;
 
 /**
  * 
@@ -99,7 +101,8 @@ public class Alkis1ImportTest
                         Flurstueck.class, 
                         Abschnitt.class, 
                         Gemarkung.class, 
-                        Lagehinweis2.class} )
+                        Lagehinweis2.class,
+                        Nutzungsart.class } )
                 .setStore( new FeatureStoreAdapter( ds ) );
         repo = new ALBRepository( repoConfig );
     }
@@ -120,25 +123,48 @@ public class Alkis1ImportTest
 //                new PrintStream( System.out, false, "ISO-8859-1" ) );
 //        importer.run();
 
+        // Nutzungen
+        in = new FileInputStream( new File( 
+                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/Schluessel_Nutzungen_0706.csv" ) );
+        ReportLog report = new ReportLog( System.out );
+        new NutzungenImporter( in, report, repo ).run();
+        in.close();
+        
+        // check Nutzung
+        UnitOfWork uow = repo.newUnitOfWork();
+        for (Nutzungsart nutzungsart : uow.find( Nutzungsart.class )) {
+            assertNotNull( nutzungsart.id.get() );
+            assertNotNull( nutzungsart.nutzung.get() );
+        }
+        
         // ALKIS1
         in = new FileInputStream( new File( 
                 "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/ALKIS1_Erstdaten.zip" ) );
                 //"/home/falko/Data/mittelsachen-alkis/ALB_Gemarkung_2xxx.zip" ) );
-        ReportLog report = new ReportLog( System.out );
+        report = new ReportLog( System.out );
         new Alkis1Importer( in, report, repo ).run();
         in.close();
         
-        UnitOfWork uow = repo.newUnitOfWork();
+        // check Flurstuecke
+        uow = repo.newUnitOfWork();
         // FIXME "object already closed" when iterating directly over result :(
         Collection<Flurstueck> flurstuecke = new ArrayList( uow.find( Flurstueck.class ) );
         for (Flurstueck flurstueck : flurstuecke) {
             assertTrue( flurstueck.id.get().startsWith( "flurstueck" ) );
             
+            // Lagehinweise
             Collection<Lagehinweis2> lagehinweise = flurstueck.lagehinweise();
             for (Lagehinweis2 hinweis : lagehinweise) {
                 log.info( "    Hinweis: " + hinweis );
             }
             assertTrue( lagehinweise.size() >= 0 && lagehinweise.size() < 100 );
+            
+            // Abschnitte
+            for (Abschnitt abschnitt : flurstueck.abschnitte() ) {
+                log.info( "    Abschnitt: " + abschnitt );
+                log.info( "        Nutzungsart: " + abschnitt.nutzungsart() );
+                //assertNotNull( abschnitt.nutzungsart() );
+            }
         }
     }
     

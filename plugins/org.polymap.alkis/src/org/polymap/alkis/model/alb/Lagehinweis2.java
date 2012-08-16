@@ -17,6 +17,7 @@ package org.polymap.alkis.model.alb;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.NameInStore;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 
 /**
  * 
@@ -27,12 +28,14 @@ import org.polymap.core.model2.Property;
 public class Lagehinweis2
         extends Entity {
 
+    @Queryable
     @NameInStore("ALBHINF_TEXT")
     public Property<String>             hinweis;
 
     /**
      * n:1 Association: {@link Flurstueck}
      */
+    @Queryable
     @NameInStore("ALBHINF_IDALBFLU")
     public Property<String>             flurstueckId;    
 

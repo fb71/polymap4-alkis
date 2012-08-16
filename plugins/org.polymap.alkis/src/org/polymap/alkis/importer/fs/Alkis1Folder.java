@@ -48,6 +48,7 @@ import org.polymap.service.fs.spi.Range;
 
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.importer.alkis1.Alkis1Importer;
+import org.polymap.alkis.importer.alkis1.NutzungenImporter;
 import org.polymap.alkis.importer.edbs.EdbsImporter;
 
 /**
@@ -112,9 +113,13 @@ public class Alkis1Folder
     throws IOException, NotAuthorizedException, BadRequestException {
         ImportContentProvider provider = getProvider();
         
-        // ZIP
+        // ALKIS1 ZIP
         if (newName.toLowerCase().endsWith( "zip" )) {
-            createNew( newName, in );
+            importAlkis1( newName, in );
+            return null;
+        }
+        else if (newName.toLowerCase().contains( "nutzung" )) {
+            importNutzungen( newName, in );
             return null;
         }
         // import.conf
@@ -125,7 +130,7 @@ public class Alkis1Folder
         }
         // plain file
         else {
-            throw new IOException( "ALKIS-Daten müssen als ZIP-Datei übergeben werden." );
+            throw new BadRequestException( "ALKIS-Daten müssen als ZIP-Datei übergeben werden." );
         }
     }
 
@@ -158,7 +163,7 @@ public class Alkis1Folder
      * @param in
      * @return Newly created {@link DataFile} reflecting the created file.
      */
-    protected IContentFile createNew( String newName, InputStream in )
+    protected IContentFile importAlkis1( String newName, InputStream in )
     throws IOException, NotAuthorizedException, BadRequestException {
         OutputStream fileOut = null;
         OutputStream reportOut = null;
@@ -226,5 +231,51 @@ public class Alkis1Folder
             IOUtils.closeQuietly( reportOut );
         }
     }
+
+    
+    /**
+     * The stream should contain a CSV file. The file is imported and features
+     * are created by the {@link Alkis1Importer} according the import.conf in the
+     * edbsFolder. A report file is created containing the result.
+     * 
+     * @param newName
+     * @param in
+     * @return Newly created {@link DataFile} reflecting the created file.
+     */
+    protected IContentFile importNutzungen( String newName, InputStream in )
+    throws IOException, NotAuthorizedException, BadRequestException {
+        OutputStream fileOut = null;
+        OutputStream reportOut = null;
+        try {
+            getProvider();
+            File f = new File( getDataDir(), newName );
+
+            // fileOut
+            fileOut = new BufferedOutputStream( new FileOutputStream( f ) );
+            TeeInputStream teeIn = new TeeInputStream( in, fileOut );
+
+            // reportOut
+            reportOut = new BufferedOutputStream( 
+                    new FileOutputStream( new File( getDataDir(), newName + ".report" ) ) );
+            ReportLog report = new ReportLog( new PrintStream( reportOut, false, "ISO-8859-1" ) );
+
+            // run import
+            Properties properties = getProvider().getConfigFile().properties();
+            NutzungenImporter importer = new NutzungenImporter( teeIn, report, null );
+            importer.run();
+            
+            fileOut.flush();
+            reportOut.flush();
+
+            return new DataFile( getPath(), getProvider(), f );
+        }
+        finally {
+            IOUtils.closeQuietly( fileOut );
+            IOUtils.closeQuietly( reportOut );
+            
+            // reload node
+            getSite().invalidateFolder( this );
+        }
+    }    
 
 }

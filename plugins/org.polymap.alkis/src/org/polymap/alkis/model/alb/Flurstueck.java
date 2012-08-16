@@ -32,6 +32,8 @@ import org.opengis.filter.FilterFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.qi4j.api.property.Immutable;
+
 import com.vividsolutions.jts.geom.MultiPolygon;
 
 import org.polymap.core.model2.Entity;
@@ -45,12 +47,15 @@ import org.polymap.core.model2.store.feature.FeatureStoreUnitOfWork;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
+@Immutable
 @NameInStore(Flurstueck.TABLE_NAME)
 public class Flurstueck
         extends Entity {
 
     private static Log log = LogFactory.getLog( Flurstueck.class );
 
+    public static final FilterFactory   ff = ALBRepository.ff;
+    
     public static final String          TABLE_NAME = "ALBFLU";
 
     public Property<MultiPolygon>       geom;
@@ -58,7 +63,7 @@ public class Flurstueck
     /**
      * 
      */
-    //@Immutable
+    @Queryable
     @NameInStore("ALBFLU_ID")
     public Property<String>             id;
 
@@ -76,7 +81,7 @@ public class Flurstueck
     @NameInStore("ALBFLU_NENNER")
     public Property<String>             nenner;
     
-    @Queryable
+    @Queryable 
     @NameInStore("ALBFLU_ZAEHLER")
     public Property<String>             zaehler;
     
@@ -113,8 +118,8 @@ public class Flurstueck
     /**
      * 1:1 Association: {@link Gemarkung}
      */
-    @NameInStore("ALBFLU_IDALBGEMA")
     @Queryable
+    @NameInStore("ALBFLU_IDALBGEMA")
     public Property<String>             gemarkungId;    
 
 
@@ -125,7 +130,6 @@ public class Flurstueck
         final FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
         FeatureStore fs = suow.featureSource( Lagehinweis2.class );
         
-        FilterFactory ff = ALBRepository.ff;
         Filter filter = ff.equals( ff.property( "ALBHINF_IDALBFLU" ), ff.literal( id.get() ) );
         log.debug( "Filter: " + filter );
         FeatureCollection features = fs.getFeatures( filter );
@@ -143,9 +147,28 @@ public class Flurstueck
     /**
      * 
      */
-    public Gemarkung gemarkung() throws IOException {
-        FilterFactory ff = ALBRepository.ff;
+    public Collection<Abschnitt> abschnitte() throws IOException {
+        final FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
+        FeatureStore fs = suow.featureSource( Abschnitt.class );
         
+        Filter filter = ff.equals( ff.property( "ALBANUA_IDALBFLU" ), ff.literal( id.get() ) );
+        log.debug( "Filter: " + filter );
+        FeatureCollection features = fs.getFeatures( filter );
+        
+        final List<Abschnitt> result = new ArrayList();
+        features.accepts( new FeatureVisitor() {
+            public void visit( Feature feature ) {
+                result.add( context.getUnitOfWork().entityForState( Abschnitt.class, feature ) );
+            }
+        }, null );
+        return result;
+    }
+
+    
+    /**
+     * 
+     */
+    public Gemarkung gemarkung() throws IOException {
         FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
         FeatureStore gemarkungFs = suow.featureSource( Gemarkung.class );
         
