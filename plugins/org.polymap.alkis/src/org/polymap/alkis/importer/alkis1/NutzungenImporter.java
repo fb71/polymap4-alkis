@@ -48,7 +48,7 @@ import org.polymap.alkis.model.alb.Nutzungsart;
 public class NutzungenImporter
         extends Job {
 
-    private static Log log = LogFactory.getLog( Alkis1Importer.class );
+    private static Log log = LogFactory.getLog( NutzungenImporter.class );
 
     public static final FilterFactory   ff = Alkis1Importer.ff;
     

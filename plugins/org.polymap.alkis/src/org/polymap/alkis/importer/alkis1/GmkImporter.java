@@ -125,19 +125,22 @@ public class GmkImporter
         int count = 0;
         for (String line=reader.readLine(); line!=null; line=reader.readLine()) {
             try {
-                log.debug( ":: " + line );
+                //log.debug( ":: " + line );
                 StrTokenizer tkn = new StrTokenizer( line, ";" );
                 String gemeindeNr = tkn.nextToken();
                 String gemeinde = tkn.nextToken();
                 String gemarkungNr = tkn.nextToken();
                 String gemarkung = tkn.nextToken();
-                log.debug( "--Gemarkung: " + gemarkungNr + ":" + gemarkung );
+                //log.debug( "--Gemarkung: " + gemarkungNr + ":" + gemarkung );
 
-                Gemarkung entity = uow.createEntity( Gemarkung.class, null, null );
-                String id = String.valueOf( count++ );
-                entity.gemeinde.set( gemeinde );
-                entity.gemarkung.set( gemarkung );
-                entity.nummer.set( gemarkungNr );
+                // check if head line
+                if (gemarkung != null) {
+                    Gemarkung entity = uow.createEntity( Gemarkung.class, null, null );
+                    String id = String.valueOf( count++ );
+                    entity.gemeinde.set( gemeinde );
+                    entity.gemarkung.set( gemarkung );
+                    entity.nummer.set( gemarkungNr );
+                }
                 
 //                // check flurstueck
 //                Criteria criteria = ((HibernateConversation)conversation).createCriteria( flurstueckMetaData );

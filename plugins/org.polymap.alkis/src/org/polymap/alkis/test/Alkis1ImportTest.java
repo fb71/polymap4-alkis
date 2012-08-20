@@ -40,6 +40,7 @@ import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
 
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.importer.alkis1.Alkis1Importer;
+import org.polymap.alkis.importer.alkis1.GmkImporter;
 import org.polymap.alkis.importer.alkis1.NutzungenImporter;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
@@ -137,6 +138,20 @@ public class Alkis1ImportTest
             assertNotNull( nutzungsart.nutzung.get() );
         }
         
+        // Gemarkungen
+        in = new FileInputStream( new File( 
+                "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/gmk_sachsen.csv" ) );
+        report = new ReportLog( System.out );
+        new GmkImporter( in, report, repo ).run();
+        in.close();
+        
+        // check Gemarkungen
+        uow = repo.newUnitOfWork();
+        for (Gemarkung gemarkung : uow.find( Gemarkung.class )) {
+            assertNotNull( gemarkung.gemarkung.get() );
+            assertNotNull( gemarkung.gemeinde.get() );
+        }
+        
         // ALKIS1
         in = new FileInputStream( new File( 
                 "/home/falko/workspace-biotop/polymap3-alkis/plugins/org.polymap.alkis/doc/ALKIS1_Erstdaten.zip" ) );
@@ -179,7 +194,7 @@ public class Alkis1ImportTest
         log.info( "Line: " + line );
         
         Flurstueck flurstueck = importer.parseFLine( line );
-        assertEquals( "Obere Schmiedegasse 11", flurstueck.lagehinweis.get() );
+        assertEquals( "Obere Schmiedegasse 11", flurstueck.strasse.get() );
     }
     
     

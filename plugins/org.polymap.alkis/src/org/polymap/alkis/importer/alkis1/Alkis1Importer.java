@@ -16,6 +16,7 @@
  */
 package org.polymap.alkis.importer.alkis1;
 
+import java.util.Date;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+
 import org.geotools.data.DefaultQuery;
 import org.geotools.data.FeatureSource;
 import org.geotools.data.Query;
@@ -57,9 +59,9 @@ import org.polymap.core.runtime.Timer;
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
+import org.polymap.alkis.model.alb.Flurstueck;
 import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.alkis.model.alb.Lagehinweis2;
-import org.polymap.alkis.model.alb.Flurstueck;
 import org.polymap.alkis.model.alb.Nutzungsart;
 
 /**
@@ -245,6 +247,8 @@ public class Alkis1Importer
         private Pattern         hinweisPattern = Pattern.compile( "(\\D+)(\\d*)(\\S*)" );  // (.+)(\\d*)(\\S*)
 
         private FeatureSource<SimpleFeatureType, SimpleFeature> flaechenFs;
+        
+        private Date            now = new Date();
 
         
         public FParser() {
@@ -295,7 +299,13 @@ public class Alkis1Importer
             flurstueck.hw.set( coord( matcher.group( 8 ) ) );
             flurstueck.status.set( matcher.group( 9 ).trim() );
             flurstueck.flaeche.set( Float.valueOf( matcher.group( 16 ) ) );
-            flurstueck.lagehinweis.set( matcher.group( 14 ) );
+            // FIXME: Strasse/HNr vom ersten Lagehinweis 
+            flurstueck.strasse.set( matcher.group( 14 ) );
+//            flurstueck.hnr.set();
+//            flurstueck.hnrZusatz.set();
+            
+            flurstueck.erfasst.set( now );
+            flurstueck.geaendert.set( now );
 
             parseLagehinweise( matcher.group( 14 ), id );
             parseAbschnitte( matcher.group( 15 ), id );

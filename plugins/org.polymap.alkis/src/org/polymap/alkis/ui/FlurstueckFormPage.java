@@ -45,7 +45,6 @@ import org.polymap.core.workbench.PolymapWorkbench;
 import org.polymap.rhei.form.DefaultFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPageSite;
-
 import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
@@ -92,24 +91,48 @@ public class FlurstueckFormPage
         gsection.setLayoutData( new SimpleFormData( SECTION_SPACING ).left( 50 ).right( 100 ).top( 0, 0 ).create() );
 
         Section asection = createAbschnitteSection( flurstueck );
-        asection.setLayoutData( new SimpleFormData( SECTION_SPACING ).left( 50 ).right( 100 ).top( gsection ).create() );
+        asection.setLayoutData( new SimpleFormData( SECTION_SPACING ).left( 50 ).right( 100 ).top( gsection, 15 ).create() );
 
         Section lsection = createLagehinweiseSection( flurstueck );
-        lsection.setLayoutData( new SimpleFormData( SECTION_SPACING ).left( 0 ).right( 50 ).top( fsection ).create() );
+        lsection.setLayoutData( new SimpleFormData( SECTION_SPACING ).left( 0 ).right( 50 ).top( fsection, 15 ).create() );
     }
     
     
+    @Override
+    protected FormFieldBuilder newFormField( String propName ) {
+        return super.newFormField( propName ).setEnabled( false );
+    }
+
+
     protected Section createFlurstueckSection( Flurstueck flurstueck ) {
         Section section1 = newSection( "Basisdaten", false, null );
         
+        newFormField( flurstueck.status.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Status" ).create();
+
         newFormField( flurstueck.zaehler.getInfo().getNameInStore() )
                 .setParent( section1 ).setLabel( "Z‰hler" ).create();
-        
+
         newFormField( flurstueck.nenner.getInfo().getNameInStore() )
                 .setParent( section1 ).setLabel( "Nenner" ).create();
         
-        newFormField( flurstueck.lagehinweis.getInfo().getNameInStore() )
-                .setParent( section1 ).setLabel( "Straﬂe" ).create();
+        newFormField( flurstueck.strasse.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Strasse" ).create();
+
+        newFormField( flurstueck.hnr.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Hausnr." ).create();
+
+        newFormField( flurstueck.hnrZusatz.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Zusatz" ).create();
+        
+        newFormField( flurstueck.flaeche.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Fl‰che (m≤)" ).create();
+
+        newFormField( flurstueck.erfasst.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Erfasst" ).create();
+
+        newFormField( flurstueck.geaendert.getInfo().getNameInStore() )
+                .setParent( section1 ).setLabel( "Ge‰ndert" ).create();
         return section1;
     }
 
@@ -119,12 +142,13 @@ public class FlurstueckFormPage
 
         Gemarkung gemarkung = flurstueck.gemarkung();
         if (gemarkung != null) {
+            @SuppressWarnings("hiding")
             Feature feature = (Feature)gemarkung.state();
             
             newFormField( gemarkung.gemeinde.getInfo().getNameInStore() )
                     .setFeature( feature ).setParent( section ).setLabel( "Gemeinde" ).create();
             
-            newFormField( gemarkung.gemeinde.getInfo().getNameInStore() )
+            newFormField( gemarkung.gemarkung.getInfo().getNameInStore() )
                     .setFeature( feature ).setParent( section ).setLabel( "Gemarkung" ).create();
         }        
         return section;
@@ -139,6 +163,7 @@ public class FlurstueckFormPage
 
             // viewer
             FeatureTableViewer viewer = new FeatureTableViewer( (Composite)section.getClient(), SWT.NONE );
+            //viewer.getTable().setLayoutData( new SimpleFormData( ) )
             viewer.setContent( new CollectionContentProvider( null ) );
             viewer.setInput( Iterables.transform( abschnitte, Entities.toStates( Feature.class ) ) );
             

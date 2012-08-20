@@ -16,9 +16,12 @@ package org.polymap.alkis.model.alb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import java.io.IOException;
+
+import javax.annotation.Nullable;
 
 import org.geotools.data.FeatureStore;
 import org.geotools.feature.FeatureCollection;
@@ -89,7 +92,7 @@ public class Flurstueck
         
     @Queryable
     @NameInStore("ALBFLU_STRANAME")
-    public Property<String>             lagehinweis;
+    public Property<String>             strasse;
     
     @Queryable
     @NameInStore("ALBFLU_ZUSATZ")
@@ -113,7 +116,15 @@ public class Flurstueck
 //    @NameInStore("ALBFLU_GISKEY")
 //    public Property<String>             gisKey;
 
+    @Nullable
+    @NameInStore("ALBFLU_DATESTAMPNEW")
+    public Property<Date>               erfasst;
+    
+    @Nullable
+    @NameInStore("ALBFLU_DATESTAMPEDIT")
+    public Property<Date>               geaendert;
 
+    
     /**
      * 
      */
