@@ -16,6 +16,8 @@ package org.polymap.alkis.model.alb;
 
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.NameInStore;
+import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 
 /**
  * 
@@ -28,24 +30,31 @@ public class Gemarkung
     
     public static final String      TABLE_NAME = "ALBGEMA";
     
-}
+    /**
+     * Generierte ID, nicht die Gemarkungsnummer.
+     */
+    @Queryable
+    @NameInStore("ALBGEM_ID")
+    public Property<String>             id;
 
-//table="ALBGEMA"
-//    dynamic-update="false"
-//    mutable="false"
-//    >
-//    <cache usage="read-only" region="polymap2.fs_alb.hibernate" />
-//    
-//    <id
-//       name="id"
-//       column="ALBGEM_ID"
-//       type="java.lang.String"
-//       >
-//       <generator class="assigned" />
-//    </id>
-//    
-//    <property name="gemarkung"    type="java.lang.String" column="ALBGEM_GEMARKUNG" />
-//    <property name="gemeinde"     type="java.lang.String" column="ALBGEM_GEMEINDE" />
-//    <property name="nr"           type="java.lang.String" column="ALBGEM_NR" />
-//    <property name="gericht"      type="java.lang.String" column="ALBGEM_GERICHT" />
-//    <property name="gemeindeteil" type="java.lang.String" column="ALBGEM_GEMTEIL" />
+    @Queryable
+    @NameInStore("ALBGEM_GEMARKUNG")
+    public Property<String>             gemarkung;
+
+    @Queryable
+    @NameInStore("ALBGEM_GEMEINDE")
+    public Property<String>             gemeinde;
+    
+    @Queryable
+    @NameInStore("ALBGEM_NR")
+    public Property<String>             nummer;
+
+    @Queryable
+    @NameInStore("ALBGEM_GERICHT")
+    public Property<String>             gericht;
+
+    @Queryable
+    @NameInStore("ALBGEM_GEMTEIL")
+    public Property<String>             gemeindeteil;
+    
+}

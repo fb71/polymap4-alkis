@@ -57,8 +57,10 @@ import org.polymap.core.runtime.Timer;
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
+import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.alkis.model.alb.Lagehinweis2;
 import org.polymap.alkis.model.alb.Flurstueck;
+import org.polymap.alkis.model.alb.Nutzungsart;
 
 /**
  * Importer for ALKIS1 files.
@@ -298,6 +300,15 @@ public class Alkis1Importer
             parseLagehinweise( matcher.group( 14 ), id );
             parseAbschnitte( matcher.group( 15 ), id );
 
+            Gemarkung gemarkung = flurstueck.gemarkung();
+            if (gemarkung != null) {
+                flurstueck.gemarkungName.set( gemarkung.gemarkung.get() );
+            }
+            else {
+                log.debug( "Keine Gemarkung gefunden für Gemarkungsnummer: " + flurstueck.gemarkungNr.get() );
+                report.warn( "Keine Gemarkung gefunden für Gemarkungsnummer: " + flurstueck.gemarkungNr.get() );
+            }
+                    
             // find ALK_Flaeche
             SimpleFeature flaeche = findAlkFlaeche( flurstueck.flur.get() );
             if (flaeche != null) {
@@ -373,21 +384,25 @@ public class Alkis1Importer
             tokenizer.setIgnoreEmptyTokens( false );
             for (int i=0; tokenizer.hasNext(); i++) {
                 try {
-                    String nutzungsart = tokenizer.nextToken().substring( 0, 3 );
+                    String nutzungsartId = tokenizer.nextToken().substring( 0, 3 );
                     Float flaeche = Float.valueOf( tokenizer.nextToken() );
                     String dummy1 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     String dummy2 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     String dummy3 = tokenizer.hasNext() ? tokenizer.nextToken() : null;
                     if (log.isDebugEnabled()) {
-                        System.out.println( "----Nutzungsart: " + nutzungsart );
+                        System.out.println( "----Nutzungsart: " + nutzungsartId );
                         System.out.println( "----Fläche: " + flaeche );
                         System.out.println( "----dummy1: " + dummy1 );
                     }
                     String id = "abschnitt." + i + "." + flurstueckId;
                     Abschnitt abschnitt = uow.createEntity( Abschnitt.class, id, null );
                     abschnitt.flaeche.set( flaeche );
-                    abschnitt.nutzungsartId.set( nutzungsart );
+                    abschnitt.nutzungsartId.set( nutzungsartId );
                     abschnitt.flurstueckId.set( flurstueckId );
+                    
+                    //Nutzungsart nutzungsart = repo.nutzungsart( nutzungsartId );
+                    Nutzungsart nutzungsart = abschnitt.nutzungsart();
+                    abschnitt.nutzung.set( nutzungsart != null ? nutzungsart.nutzung.get() : null );
 
 //                    Query query = uow.newQuery( Nutzungsart.class ).setMaxResults( 1 );
 //                    query.filter( and( eq( Nutzungsart.class ).id.set( nutzungsart );

@@ -48,6 +48,7 @@ import org.polymap.service.fs.spi.Range;
 
 import org.polymap.alkis.importer.ReportLog;
 import org.polymap.alkis.importer.alkis1.Alkis1Importer;
+import org.polymap.alkis.importer.alkis1.GmkImporter;
 import org.polymap.alkis.importer.alkis1.NutzungenImporter;
 import org.polymap.alkis.importer.edbs.EdbsImporter;
 
@@ -118,8 +119,14 @@ public class Alkis1Folder
             importAlkis1( newName, in );
             return null;
         }
+        // Nutzungsarten
         else if (newName.toLowerCase().contains( "nutzung" )) {
             importNutzungen( newName, in );
+            return null;
+        }
+        // Gemarkungen
+        else if (newName.toLowerCase().startsWith( "gmk" )) {
+            importGemarkungen( newName, in );
             return null;
         }
         // import.conf
@@ -262,6 +269,52 @@ public class Alkis1Folder
             // run import
             Properties properties = getProvider().getConfigFile().properties();
             NutzungenImporter importer = new NutzungenImporter( teeIn, report, null );
+            importer.run();
+            
+            fileOut.flush();
+            reportOut.flush();
+
+            return new DataFile( getPath(), getProvider(), f );
+        }
+        finally {
+            IOUtils.closeQuietly( fileOut );
+            IOUtils.closeQuietly( reportOut );
+            
+            // reload node
+            getSite().invalidateFolder( this );
+        }
+    }    
+
+    
+    /**
+     * The stream should contain a CSV file. The file is imported and features
+     * are created by the {@link Alkis1Importer} according the import.conf in the
+     * edbsFolder. A report file is created containing the result.
+     * 
+     * @param newName
+     * @param in
+     * @return Newly created {@link DataFile} reflecting the created file.
+     */
+    protected IContentFile importGemarkungen( String newName, InputStream in )
+    throws IOException, NotAuthorizedException, BadRequestException {
+        OutputStream fileOut = null;
+        OutputStream reportOut = null;
+        try {
+            getProvider();
+            File f = new File( getDataDir(), newName );
+
+            // fileOut
+            fileOut = new BufferedOutputStream( new FileOutputStream( f ) );
+            TeeInputStream teeIn = new TeeInputStream( in, fileOut );
+
+            // reportOut
+            reportOut = new BufferedOutputStream( 
+                    new FileOutputStream( new File( getDataDir(), newName + ".report" ) ) );
+            ReportLog report = new ReportLog( new PrintStream( reportOut, false, "ISO-8859-1" ) );
+
+            // run import
+            Properties properties = getProvider().getConfigFile().properties();
+            GmkImporter importer = new GmkImporter( teeIn, report, null );
             importer.run();
             
             fileOut.flush();

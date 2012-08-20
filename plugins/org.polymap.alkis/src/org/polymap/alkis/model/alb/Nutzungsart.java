@@ -24,9 +24,11 @@ import org.polymap.core.model2.runtime.UnitOfWork;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@NameInStore("ALBNUART")
+@NameInStore(Nutzungsart.TABLE_NAME)
 public class Nutzungsart
         extends Entity {
+
+    public static final String      TABLE_NAME = "ALBNUART";
 
     /** Schlüssel der Nutzungsart aus dem Katalog. */
     @NameInStore("ALBNUART_ID")

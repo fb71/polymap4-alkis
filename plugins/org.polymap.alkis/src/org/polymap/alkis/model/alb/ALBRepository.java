@@ -28,8 +28,13 @@ import net.refractions.udig.core.internal.CorePlugin;
 
 import org.geotools.data.DataAccess;
 import org.geotools.data.DataStore;
+import org.geotools.data.FeatureStore;
 import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.NameImpl;
 import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
 
 import org.apache.commons.logging.Log;
@@ -40,7 +45,12 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.engine.EntityRepositoryImpl;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
+import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
+import org.polymap.core.runtime.cache.Cache;
+import org.polymap.core.runtime.cache.CacheConfig;
+import org.polymap.core.runtime.cache.CacheLoader;
+import org.polymap.core.runtime.cache.CacheManager;
 
 import org.polymap.alkis.importer.fs.ImportConfigFile;
 
@@ -113,9 +123,15 @@ public class ALBRepository
         
     // instance *******************************************
     
-    private FeatureStoreAdapter  store;
+    public DataAccess                   ds;
     
-    public DataAccess            ds;
+    private FeatureStoreAdapter         store;
+    
+    private Cache<String,Nutzungsart>   nutzungsarten = CacheManager.instance().newCache( CacheConfig.DEFAULT.initSize( 1024 ) );
+    
+    private Cache<String,Gemarkung>     gemarkungen = CacheManager.instance().newCache( CacheConfig.DEFAULT.initSize( 1024 ) );
+    
+    private UnitOfWork                  cacheUow;
     
 
     public ALBRepository( EntityRepositoryConfiguration config ) throws IOException {
@@ -123,11 +139,92 @@ public class ALBRepository
 
         store = (FeatureStoreAdapter)config.getStore();
         ds = store.getStore();
+        cacheUow = newUnitOfWork();
     }
 
 
     public FeatureType getSchema( Class<? extends Entity> entityClass ) {
         return store.simpleFeatureType( entityClass );
+    }
+
+
+    public void close() {
+        super.close();
+        nutzungsarten.clear();
+        gemarkungen.clear();
+        cacheUow.close();
+    }
+
+
+    public Nutzungsart nutzungsart( String schluessel ) {
+        assert schluessel != null;
+        return nutzungsarten.get( schluessel, new CacheLoader<String,Nutzungsart,RuntimeException>() {
+            
+//            public Map<String, Nutzungsart> get() {
+//                UnitOfWork uow = newUnitOfWork();
+//                Map<String,Nutzungsart> result = new HashMap( 1024 );
+//                for (Nutzungsart entity : uow.find( Nutzungsart.class )) {
+//                    result.put( entity.id.get(), entity );
+//                }
+//                uow.close();
+//                return result;
+//            }
+
+            public Nutzungsart load( String key ) throws RuntimeException {
+                FeatureIterator it = null;
+                try {
+                    log.info( "Loading Nutzungsart: " + key );
+                    FeatureStore fs = (FeatureStore)ds.getFeatureSource( new NameImpl( Nutzungsart.TABLE_NAME ) );
+
+                    Filter filter = ff.equals( ff.property( "ALBNUART_ID" ), ff.literal( key ) );
+                    FeatureCollection features = fs.getFeatures( filter );
+
+                    it = features.features();
+                    return it.hasNext() ? cacheUow.entityForState( Nutzungsart.class, it.next() ) : null;
+                }
+                catch (IOException e) {
+                    throw new RuntimeException( e );
+                }
+                finally {
+                    if (it != null) { it.close(); }
+                }
+            }
+
+            public int size() throws RuntimeException {
+                return 1024;
+            }
+        });
+    }
+
+
+    public Gemarkung gemarkung( String nummer ) {
+        assert nummer != null;
+        return gemarkungen.get( nummer, new CacheLoader<String,Gemarkung,RuntimeException>() {
+            
+            public Gemarkung load( String key ) throws RuntimeException {
+                FeatureIterator it = null;
+                try {
+                    log.info( "Loading Gemarkung: " + key );
+                    FeatureStore fs = (FeatureStore)ds.getFeatureSource( new NameImpl( Gemarkung.TABLE_NAME ) );
+
+                    Filter filter = ff.equals( ff.property( "ALBGEM_NR" ), ff.literal( key ) );
+                    FeatureCollection features = fs.getFeatures( filter );
+
+                    it = features.features();
+                    return it.hasNext() ? cacheUow.entityForState( Gemarkung.class, it.next() ) : null;
+                }
+                catch (IOException e) {
+                    throw new RuntimeException( e );
+                }
+                finally {
+                    if (it != null) { it.close(); }
+                }
+            }
+
+            public int size() throws RuntimeException {
+                return 1024;
+            }
+        });
     }
 
 }

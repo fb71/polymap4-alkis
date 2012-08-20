@@ -50,6 +50,7 @@ import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
 import org.polymap.alkis.model.alb.Flurstueck;
+import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.alkis.model.alb.Lagehinweis2;
 
 /**
@@ -115,7 +116,17 @@ public class FlurstueckFormPage
 
     protected Section createGemarkungSection( Flurstueck flurstueck ) {
         Section section = newSection( "Gemarkung", false, null );
-        
+
+        Gemarkung gemarkung = flurstueck.gemarkung();
+        if (gemarkung != null) {
+            Feature feature = (Feature)gemarkung.state();
+            
+            newFormField( gemarkung.gemeinde.getInfo().getNameInStore() )
+                    .setFeature( feature ).setParent( section ).setLabel( "Gemeinde" ).create();
+            
+            newFormField( gemarkung.gemeinde.getInfo().getNameInStore() )
+                    .setFeature( feature ).setParent( section ).setLabel( "Gemarkung" ).create();
+        }        
         return section;
     }
 
@@ -132,8 +143,8 @@ public class FlurstueckFormPage
             viewer.setInput( Iterables.transform( abschnitte, Entities.toStates( Feature.class ) ) );
             
             // columns
-//            PropertyDescriptor prop1 = schema.getDescriptor( "ALBANUA_NUTZUNG" );
-//            viewer.addColumn( new DefaultFeatureTableColumn( prop1 ).setHeader( "Nutzung" ));
+            PropertyDescriptor prop1 = schema.getDescriptor( "ALBANUA_NUTZUNG" );
+            viewer.addColumn( new DefaultFeatureTableColumn( prop1 ).setHeader( "Nutzung" ));
             PropertyDescriptor prop2 = schema.getDescriptor( "ALBANUA_FLAECHE" );
             viewer.addColumn( new DefaultFeatureTableColumn( prop2 ).setHeader( "Fläche" ));
         }

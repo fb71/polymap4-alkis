@@ -16,14 +16,12 @@ package org.polymap.alkis.model.alb;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import java.io.IOException;
 
 import org.geotools.data.FeatureStore;
 import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.FeatureIterator;
 import org.opengis.feature.Feature;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.filter.Filter;
@@ -115,13 +113,6 @@ public class Flurstueck
 //    @NameInStore("ALBFLU_GISKEY")
 //    public Property<String>             gisKey;
 
-    /**
-     * 1:1 Association: {@link Gemarkung}
-     */
-    @Queryable
-    @NameInStore("ALBFLU_IDALBGEMA")
-    public Property<String>             gemarkungId;    
-
 
     /**
      * 
@@ -168,21 +159,9 @@ public class Flurstueck
     /**
      * 
      */
-    public Gemarkung gemarkung() throws IOException {
-        FeatureStoreUnitOfWork suow = (FeatureStoreUnitOfWork)context.getStoreUnitOfWork();
-        FeatureStore gemarkungFs = suow.featureSource( Gemarkung.class );
-        
-        FeatureCollection features = gemarkungFs.getFeatures( ff.id( 
-                Collections.singleton( ff.featureId( gemarkungId.get() ) ) ) );
-        
-        FeatureIterator it = features.features();
-        try {
-            Feature feature = it.hasNext() ? it.next() : null;
-            return context.getUnitOfWork().entityForState( Gemarkung.class, feature );
-        }
-        finally {
-            it.close();
-        }
+    public Gemarkung gemarkung() {
+        String key = gemarkungNr.get();
+        return ((ALBRepository)context.getRepository()).gemarkung( key );
     }
     
 }
