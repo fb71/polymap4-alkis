@@ -36,8 +36,8 @@ import org.polymap.alkis.geocoder.Flurstueck;
 import org.polymap.alkis.geocoder.GeocoderSPI;
 import org.polymap.core.data.PipelineFeatureSource;
 import org.polymap.core.project.ILayer;
+import org.polymap.core.project.LayerVisitor;
 import org.polymap.core.project.ProjectRepository;
-import org.polymap.core.project.ProjectRepository.ProjectVisitor;
 
 /**
  * 
@@ -105,7 +105,7 @@ public class FlurlisteGeocoder
 
     
     protected List<ILayer> findLayers() {
-        List<ILayer> layers = ProjectRepository.instance().visitProjects( new ProjectVisitor<List<ILayer>>() {
+        List<ILayer> layers = ProjectRepository.instance().visit( new LayerVisitor<List<ILayer>>() {
             public void visit( ILayer l ) {
                 if (l.getLabel().equals( "flurliste" )) {
                     if (result == null) {
