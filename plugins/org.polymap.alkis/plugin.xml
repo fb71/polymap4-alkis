@@ -30,5 +30,13 @@
             name="ALB-Flurstueck">
       </pageProvider>
    </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <wizard
+            class="org.polymap.alkis.importer.nas.NasImportWizard"
+            id="org.polymap.alkis.wizard1"
+            name="ALKIS/NAS">
+      </wizard>
+   </extension>
 
 </plugin>

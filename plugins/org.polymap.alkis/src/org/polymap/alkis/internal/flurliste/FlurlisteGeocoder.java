@@ -106,13 +106,14 @@ public class FlurlisteGeocoder
     
     protected List<ILayer> findLayers() {
         List<ILayer> layers = ProjectRepository.instance().visit( new LayerVisitor<List<ILayer>>() {
-            public void visit( ILayer l ) {
+            public boolean visit( ILayer l ) {
                 if (l.getLabel().equals( "flurliste" )) {
                     if (result == null) {
                         result = new ArrayList();
                     }
                     result.add( l );
                 }
+                return true;
             }
         });
 
