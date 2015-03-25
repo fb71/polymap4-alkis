@@ -44,8 +44,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.polymap.alkis.geocoder.Flurstueck;
 import org.polymap.alkis.geocoder.Geocoder;
 
-import org.polymap.core.data.ui.csvimport.CsvImporter;
-import org.polymap.core.data.ui.csvimport.CsvOperation;
+import org.polymap.core.data.imex.csv.CsvImporter;
+import org.polymap.core.data.imex.csv.CsvOperation;
 import org.polymap.core.runtime.Polymap;
 
 /**

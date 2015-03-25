@@ -18,16 +18,16 @@ package org.polymap.alkis.importer.nas;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import java.io.InputStream;
 import java.io.Serializable;
 
-import net.refractions.udig.catalog.CatalogPluginSession;
-
+import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FeatureStore;
+import org.geotools.data.Transaction;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.gml3.ApplicationSchemaConfiguration;
 import org.geotools.xml.Configuration;
-import org.geotools.xml.Parser;
 import org.geotools.xml.StreamingParser;
 import org.opengis.feature.Feature;
 import org.opengis.feature.simple.SimpleFeature;
@@ -50,7 +50,6 @@ import org.eclipse.core.runtime.Status;
 import org.polymap.core.data.feature.recordstore.RDataStore;
 import org.polymap.core.data.feature.recordstore.catalog.RDataStoreFactory;
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
-import org.polymap.core.data.feature.recordstore.catalog.RServiceImpl;
 import org.polymap.core.qi4j.event.AbstractModelChangeOperation;
 
 /**
@@ -74,8 +73,9 @@ public class NasImportOperation
 
 
     protected IStatus doExecute( IProgressMonitor monitor, IAdaptable info ) throws Exception {
-        monitor.beginTask( getLabel(), 100 );
+        monitor.beginTask( getLabel(), IProgressMonitor.UNKNOWN );
         InputStream in = null;
+        Transaction tx = new DefaultTransaction( getLabel() );
         try {
             //SubMonitor sub = new SubMonitor( monitor, 10 );
             UploadItem xsd = null;
@@ -95,31 +95,47 @@ public class NasImportOperation
             String schemaLocation = getClass().getClassLoader().getResource( "postnas.xsd" ).toString();
              
             Configuration configuration = new ApplicationSchemaConfiguration( namespace, schemaLocation );
-            configuration.getProperties().add( Parser.Properties.IGNORE_SCHEMA_LOCATION );
-            configuration.getProperties().add( Parser.Properties.PARSE_UNKNOWN_ELEMENTS);
+            //configuration.getProperties().add( Parser.Properties.IGNORE_SCHEMA_LOCATION );
+            //configuration.getProperties().add( Parser.Properties.PARSE_UNKNOWN_ELEMENTS);
             
             RDataStore store = createStore( "Alkis" );
-            Map<String,FeatureType> schemas = new HashMap( 256 );
+            Map<String,FeatureStore> schemas = new HashMap( 256 );
             
             in = gml.getFileInputStream();
             StreamingParser parser = new StreamingParser( configuration, in, Feature.class );
             Feature feature = null;
+            int count = 0;
             while ((feature = (Feature)parser.parse()) != null) {
-                log.info( "    Feature: " + feature );
+                //log.info( "    Feature: " + feature );
+                
                 // check/create schema
                 FeatureType schema = feature.getType();
-                if (!schemas.containsKey( schema.getName().getLocalPart() )) {
+                FeatureStore fs = schemas.get( schema.getName().getLocalPart() );
+                if (fs == null) {
                     store.createSchema( schema );
-                    schemas.put( schema.getName().getLocalPart(), schema );
+                    fs = (FeatureStore)store.getFeatureSource( schema.getName() );
+                    fs.setTransaction( tx );
+                    schemas.put( schema.getName().getLocalPart(), fs );
+                    log.info( "    Schema created: " + schema.getName().getLocalPart() );
                 }
                 // create feature
-                FeatureStore fs = (FeatureStore)store.getFeatureSource( schema.getName() );
                 DefaultFeatureCollection fc = new DefaultFeatureCollection( null, (SimpleFeatureType)schema );
                 fc.add( (SimpleFeature)feature );
                 fs.addFeatures( fc );
+                
+                if (++count % 100 == 0) {
+                    monitor.worked( 100 );
+                    monitor.subTask( "Objekte verarbeitet: " + count );
+                }
             }
+            tx.commit();
+        }
+        catch (Exception e) {
+            tx.rollback();
+            throw e;
         }
         finally {
+            tx.close();
             IOUtils.closeQuietly( in );
         }
 
@@ -142,8 +158,8 @@ public class NasImportOperation
             throw new RuntimeException( e );
         }
 
-        RServiceImpl service = (RServiceImpl)new RServiceExtension().createService( null, params );
-        CatalogPluginSession.instance().getLocalCatalog().add( service );
+//        RServiceImpl service = (RServiceImpl)new RServiceExtension().createService( null, params );
+//        CatalogPluginSession.instance().getLocalCatalog().add( service );
         return ds;
     }
     

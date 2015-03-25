@@ -43,10 +43,6 @@ public class NasImportWizard
     private NasImportPage           importPage;
 
 
-    public NasImportWizard() {
-    }
-
-
     public void init( IWorkbench workbench, IStructuredSelection selection ) {
         addPage( importPage = new NasImportPage() );
     }
