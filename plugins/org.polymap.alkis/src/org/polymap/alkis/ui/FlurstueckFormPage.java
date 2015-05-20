@@ -34,23 +34,21 @@ import org.eclipse.swt.widgets.Label;
 
 import org.eclipse.ui.forms.widgets.Section;
 
-import org.polymap.core.data.ui.featuretable.CollectionContentProvider;
-import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
-import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
-import org.polymap.core.model2.runtime.Entities;
-import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.project.ui.util.SimpleFormData;
-import org.polymap.core.workbench.PolymapWorkbench;
-
 import org.polymap.rhei.form.DefaultFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.table.CollectionContentProvider;
+import org.polymap.rhei.table.DefaultFeatureTableColumn;
+import org.polymap.rhei.table.FeatureTableViewer;
+
 import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.alb.ALBRepository;
 import org.polymap.alkis.model.alb.Abschnitt;
 import org.polymap.alkis.model.alb.Flurstueck;
 import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.alkis.model.alb.Lagehinweis2;
+import org.polymap.model2.runtime.Entities;
+import org.polymap.model2.runtime.UnitOfWork;
 
 /**
  * 
@@ -174,7 +172,7 @@ public class FlurstueckFormPage
             viewer.addColumn( new DefaultFeatureTableColumn( prop2 ).setHeader( "Fläche" ));
         }
         catch (IOException e) {
-            PolymapWorkbench.handleError( AlkisPlugin.PLUGIN_ID, this, "", e );
+            PolymapWorkbench.handleError( AlkisPlugin.ID, this, "", e );
             Label msg = new Label( (Composite)section.getClient(), SWT.None );
             msg.setText( "Fehler beim Ermitteln der Lagehinweise." );
         }
@@ -198,7 +196,7 @@ public class FlurstueckFormPage
             viewer.addColumn( new DefaultFeatureTableColumn( prop ).setHeader( "Hinweis" ));
         }
         catch (IOException e) {
-            PolymapWorkbench.handleError( AlkisPlugin.PLUGIN_ID, this, "", e );
+            PolymapWorkbench.handleError( AlkisPlugin.ID, this, "", e );
             Label msg = new Label( (Composite)section.getClient(), SWT.None );
             msg.setText( "Fehler beim Ermitteln der Lagehinweise." );
         }

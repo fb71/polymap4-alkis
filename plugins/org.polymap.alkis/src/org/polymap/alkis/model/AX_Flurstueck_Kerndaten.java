@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright 2012, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2012-2015, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -16,15 +16,15 @@ package org.polymap.alkis.model;
 
 import java.util.Date;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.Point;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
+import org.polymap.model2.Entity;
+import org.polymap.model2.NameInStore;
+import org.polymap.model2.Nullable;
+import org.polymap.model2.Property;
 
 /**
  * 'Flurstück_Kerndaten' enthält Eigenschaften des Flurstücks, die auch für andere
@@ -56,6 +56,11 @@ public abstract class AX_Flurstueck_Kerndaten
      */
     public Property<AX_Flurstuecksnummer>      flurstuecksnummer;
 
+    protected Property<Integer>                zaehler;
+    
+    @Nullable
+    protected Property<String>                 nenner;
+    
     /**
      * 'Flurstückskennzeichen' ist ein von der Katasterbehörde zur eindeutigen Be-
      * zeichnung des Flurstücks vergebenes Ordnungsmerkmal. Bildungsregel: Die
@@ -86,6 +91,7 @@ public abstract class AX_Flurstueck_Kerndaten
      * des Flurstücks in [qm]. Flurstücksflächen kleiner 0,5 qm können mit bis zu
      * zwei Nachkommastellen geführt werden, ansonsten ohne Nachkommastellen.
      */
+    @NameInStore("amtlicheflaeche")
     public Property<Float>                     amtlicheFlaeche;
 
     /**
@@ -143,6 +149,7 @@ public abstract class AX_Flurstueck_Kerndaten
      * Regelungen hierzu sind länderspezifisch gefasst.
      */
     @Nullable
+    @NameInStore("zeitpunktderentstehung")
     public Property<Date>                      zeitpunktDerEntstehung;
     
     /**

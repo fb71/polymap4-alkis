@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright 2012, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2012-2015, Falko BrÃ¤utigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -20,12 +20,6 @@ import java.util.Properties;
 import java.io.IOException;
 import java.net.URL;
 
-import net.refractions.udig.catalog.CatalogPlugin;
-import net.refractions.udig.catalog.ICatalog;
-import net.refractions.udig.catalog.IResolve;
-import net.refractions.udig.catalog.IService;
-import net.refractions.udig.core.internal.CorePlugin;
-
 import org.geotools.data.DataAccess;
 import org.geotools.data.DataStore;
 import org.geotools.data.FeatureStore;
@@ -42,22 +36,22 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.engine.EntityRepositoryImpl;
-import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
-import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
+import org.polymap.core.CorePlugin;
 import org.polymap.core.runtime.cache.Cache;
 import org.polymap.core.runtime.cache.CacheConfig;
 import org.polymap.core.runtime.cache.CacheLoader;
 import org.polymap.core.runtime.cache.CacheManager;
 
 import org.polymap.alkis.importer.fs.ImportConfigFile;
+import org.polymap.model2.Entity;
+import org.polymap.model2.engine.EntityRepositoryImpl;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.model2.store.geotools.FeatureStoreAdapter;
 
 /**
  * 
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ * @author <a href="http://www.polymap.de">Falko BrÃ¤utigam</a>
  */
 public class ALBRepository
         extends EntityRepositoryImpl {
@@ -76,7 +70,7 @@ public class ALBRepository
             try {
                 // find config file
                 Properties config = ImportConfigFile.configuration();
-                ICatalog catalog = CatalogPlugin.getDefault().getLocalCatalog();
+                ICatalog catalog = CatalogPlugin.instance().getLocalCatalog();
                 
                 // find service to import into
                 IService service = null;
@@ -93,13 +87,13 @@ public class ALBRepository
                     }
                 }
                 if (service == null) {
-                    throw new IOException( "Kein Service im Katalog für URL: " + id );
+                    throw new IOException( "Kein Service im Katalog fï¿½r URL: " + id );
                 }
 
                 // find DataStore from service
                 DataAccess ds = service.resolve( DataStore.class, new NullProgressMonitor() );
                 if (ds == null) {
-                    throw new IOException( "Kein DataStore für Service: " + service );
+                    throw new IOException( "Kein DataStore fï¿½r Service: " + service );
                 }
                 
                 // create repo

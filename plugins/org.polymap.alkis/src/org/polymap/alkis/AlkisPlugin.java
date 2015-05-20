@@ -1,7 +1,6 @@
 /* 
  * polymap.org
- * Copyright 2011, Falko BRäutigam, and individual contributors as
- * indicated by the @authors tag.
+ * Copyright (C) 2011-2015, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -15,38 +14,41 @@
  */
 package org.polymap.alkis;
 
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-public class AlkisPlugin extends AbstractUIPlugin {
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-	// The plug-in ID
-	public static final String PLUGIN_ID = "org.polymap.alkis";
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 
-	// The shared instance
-	private static AlkisPlugin plugin;
+/**
+ *
+ * 
+ * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ */
+public class AlkisPlugin
+        extends AbstractUIPlugin {
+
+	public static final String             ID = "org.polymap.alkis";
+
+	public static final MinWidthConstraint MIN_COLUMN_WIDTH = new MinWidthConstraint( 450, 1 );
+
+	private static AlkisPlugin             instance;
 	
 
-    public AlkisPlugin() {
+    public static AlkisPlugin instance() {
+        return instance;
     }
 
 
-    public void start( BundleContext context )
-            throws Exception {
+    public void start( BundleContext context ) throws Exception {
         super.start( context );
-        plugin = this;
+        instance = this;
     }
 
 
-    public void stop( BundleContext context )
-            throws Exception {
-        plugin = null;
+    public void stop( BundleContext context ) throws Exception {
+        instance = null;
         super.stop( context );
-    }
-
-
-    public static AlkisPlugin getDefault() {
-        return plugin;
     }
 
 }

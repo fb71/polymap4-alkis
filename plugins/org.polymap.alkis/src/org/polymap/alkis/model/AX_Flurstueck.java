@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright 2012, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2012-2015, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -16,8 +16,12 @@ package org.polymap.alkis.model;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
 
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.Property;
+import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
+
+import org.polymap.model2.Association;
+import org.polymap.model2.Mixins;
+import org.polymap.model2.NameInStore;
+import org.polymap.model2.Property;
 
 /**
  * [A] 'Flurstück' ist ein Teil der Erdoberfläche, der von einer im
@@ -34,12 +38,64 @@ import org.polymap.core.model2.Property;
  * @version ALKIS-OK 6.0
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-//@Mixins( TA_MultiSurfaceComponent.class )
+@Mixins({AA_Lebenszeitintervall.class})
+@NameInStore("ax_flurstueck")
 public class AX_Flurstueck
         extends AX_Flurstueck_Kerndaten {
 
+    public static AX_Flurstueck                     TYPE;
+    
+    public static final EntityFeatureTransformer    FulltextTransformer = new EntityFeatureTransformer() {
+        @Override
+        protected void visitAssociation( Association prop ) {
+            // XXX Auto-generated method stub
+            throw new RuntimeException( "not yet implemented." );
+        }
+    };
+    
+
+    @NameInStore("wkb_geometry")
     public Property<MultiPolygon>                   geom;
     
-    public Association<AX_Buchungsstelle>           istGebucht;
+    /**
+     * ist gebucht (11001-21008) - Grunddatenbestand
+     * <p/>
+     * Ein (oder mehrere) Flurstück(e) ist (sind) unter genau einer Buchungsstelle
+     * gebucht. Bei Anteilsbuchungen ist dies nur dann möglich, wenn ein fiktives
+     * Buchungsblatt angelegt wird.
+     * <p/>
+     * Kardinalität: 1
+     */
+    @NameInStore("istgebucht")
+    protected Property<String>                      istGebucht;
+
+    /**
+     * Die {@link #istGebucht} Assoziation.
+     */
+    public AX_Buchungsstelle buchungsstelle() {
+        return context.getUnitOfWork().entity( AX_Buchungsstelle.class, istGebucht.get() );
+    }
+
+//    /**
+//     * Die {@link #istGebucht} Assoziation.
+//     */
+//    public Association<AX_Buchungsstelle>           bst = new ComputedAssociation( AX_Buchungsstelle.class, context, istGebucht );
+    
+    
+    /**
+     * weist auf (11001-12002) - Grunddatenbestand
+     * <p/>
+     * 'Flurstück' weist auf 'Lagebezeichnung mit Hausnummer'.
+     * <p/>
+     * Kardinalität: 0..*
+     */
+    @NameInStore("weistauf")
+    public Property<String>                         weistAuf;
+    
+    /**
+     * Die {@link #weistAuf} Assoziation.
+     */
+    public void lagebezeichnung() {
+    }
     
 }

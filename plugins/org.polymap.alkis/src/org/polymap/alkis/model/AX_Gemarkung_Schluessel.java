@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright 2012, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2012-2015, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -14,8 +14,8 @@
  */
 package org.polymap.alkis.model;
 
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Property;
+import org.polymap.model2.Composite;
+import org.polymap.model2.Property;
 
 /**
  * Amtliche Verschlüsselung der Gemarkung.
