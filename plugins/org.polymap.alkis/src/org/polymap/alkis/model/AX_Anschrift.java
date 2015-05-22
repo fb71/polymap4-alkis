@@ -14,7 +14,7 @@
  */
 package org.polymap.alkis.model;
 
-import org.polymap.model2.Entity;
+import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
@@ -26,19 +26,19 @@ import org.polymap.model2.Property;
  * sind objektbildend. Eine der beiden Relationsarten muss vorhanden sein.
  * 
  *
- * @Abgeleitet AA_NREO
- * @Objekttyp NREO
  * @Modellart DLKM
  * @Grunddatenbestand DLKM
  * @version ALKIS-OK 6.0
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
+@NameInStore("ax_anschrift")
 public class AX_Anschrift
-        extends Entity {
+        extends AA_NREO {
 
     /**
      * 'Ort (Post)' ist der postalische Ortsname.
      */
+    @NameInStore("ort_post")
     public Property<String>         ort_Post;
     
     /**
@@ -66,6 +66,7 @@ public class AX_Anschrift
      * 'Postleitzahl - Postzustellung' ist die Postleitzahl der Postzustellung.
      */
     @Nullable
+    @NameInStore("postleitzahlpostzustellung")
     public Property<String>         postleitzahlPostzustellung;
 
 }

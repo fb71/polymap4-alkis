@@ -77,10 +77,10 @@ public class AX_Flurstuecksnummer
         public Object get() {
             AX_Flurstueck flurstueck = ((AX_Flurstuecksnummer)composite).flurstueck();
             String propName = info.getName();
-            if (propName.equals( AX_Flurstueck.TYPE.nenner.getInfo().getName() )) {
+            if (propName.equals( AX_Flurstueck.TYPE.nenner.info().getName() )) {
                 return flurstueck.nenner.get();
             }
-            else if (propName.equals( AX_Flurstueck.TYPE.zaehler.getInfo().getName() )) {
+            else if (propName.equals( AX_Flurstueck.TYPE.zaehler.info().getName() )) {
                 return flurstueck.zaehler.get();
             }
             else {

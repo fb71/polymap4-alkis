@@ -14,11 +14,11 @@
  */
 package org.polymap.alkis.model;
 
+import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.weistAuf;
 import com.vividsolutions.jts.geom.MultiPolygon;
 
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
-import org.polymap.model2.Association;
 import org.polymap.model2.Mixins;
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Property;
@@ -45,14 +45,20 @@ public class AX_Flurstueck
 
     public static AX_Flurstueck                     TYPE;
     
+    /**
+     * 
+     */
     public static final EntityFeatureTransformer    FulltextTransformer = new EntityFeatureTransformer() {
+
         @Override
-        protected void visitAssociation( Association prop ) {
-            // XXX Auto-generated method stub
+        protected void visitProperty( Property prop ) {
             throw new RuntimeException( "not yet implemented." );
+            //if (prop.getInfo().getName()
         }
     };
     
+    
+    // instance *******************************************
 
     @NameInStore("wkb_geometry")
     public Property<MultiPolygon>                   geom;
@@ -67,35 +73,17 @@ public class AX_Flurstueck
      * Kardinalität: 1
      */
     @NameInStore("istgebucht")
-    protected Property<String>                      istGebucht;
+    protected Property<String>                      istGebuchtId;
 
     /**
      * Die {@link #istGebucht} Assoziation.
      */
-    public AX_Buchungsstelle buchungsstelle() {
-        return context.getUnitOfWork().entity( AX_Buchungsstelle.class, istGebucht.get() );
-    }
+    public Association<AX_Buchungsstelle>           buchungsstelle = new Association( AX_Buchungsstelle.class, ()->istGebuchtId.get() );
 
-//    /**
-//     * Die {@link #istGebucht} Assoziation.
-//     */
-//    public Association<AX_Buchungsstelle>           bst = new ComputedAssociation( AX_Buchungsstelle.class, context, istGebucht );
-    
-    
     /**
-     * weist auf (11001-12002) - Grunddatenbestand
-     * <p/>
-     * 'Flurstück' weist auf 'Lagebezeichnung mit Hausnummer'.
-     * <p/>
-     * Kardinalität: 0..*
+     * 'Flurstück' {@link Beziehungsart#weistAuf} 'Lagebezeichnung mit Hausnummer'.     
      */
-    @NameInStore("weistauf")
-    public Property<String>                         weistAuf;
+    public ManyAssociation<AX_LagebezeichnungMitHausnummer> lagebezeichnung = new ManyAssociation( AX_LagebezeichnungMitHausnummer.class, weistAuf );
     
-    /**
-     * Die {@link #weistAuf} Assoziation.
-     */
-    public void lagebezeichnung() {
-    }
     
 }

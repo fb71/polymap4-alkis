@@ -14,7 +14,8 @@
  */
 package org.polymap.alkis.model;
 
-import org.polymap.model2.Entity;
+import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.hat;
+
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -30,8 +31,6 @@ import org.polymap.model2.Property;
  * wenn auf die 'Person' die rekursive Relation 'zeigtAuf' zeigt. In diesem Fall ist
  * 'zeigtAuf' objektbildend.
  *
- * @Abgeleitet AA_NREO
- * @Objekttyp NREO
  * @Modellart DLKM
  * @Grunddatenbestand DLKM
  * @version ALKIS-OK 6.0
@@ -39,7 +38,7 @@ import org.polymap.model2.Property;
  */
 @NameInStore("ax_person")
 public class AX_Person
-        extends Entity {
+        extends AA_NREO {
 
 //    public static enum AX_Anrede_Person {
 //        Frau( 1000 ),
@@ -88,10 +87,11 @@ public class AX_Person
     
     /**
      * 'Wohnort oder Sitz' ist der Wohnort oder der Sitz einer natürlichen oder
-     * juristi- schen Person (Par. 15 Grundbuchverfügung). Diese Attributart kommt
+     * juristischen Person (Par. 15 Grundbuchverfügung). Diese Attributart kommt
      * nur bei Personen vor, die die Rolle 'Eigentümer' besitzen.
      */
     @Nullable
+    @NameInStore("wohnortordersitz")
     public Property<String>             wohnortOrderSitz;
     
     /**
@@ -105,4 +105,5 @@ public class AX_Person
     
 //    public Property<AX_Anrede_Person>   anrede;
     
+    public ManyAssociation<AX_Anschrift> anschrift = new ManyAssociation( AX_Anschrift.class, hat );
 }

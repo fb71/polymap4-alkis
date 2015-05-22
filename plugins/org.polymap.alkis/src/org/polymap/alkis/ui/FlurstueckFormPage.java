@@ -105,31 +105,31 @@ public class FlurstueckFormPage
     protected Section createFlurstueckSection( Flurstueck flurstueck ) {
         Section section1 = newSection( "Basisdaten", false, null );
         
-        newFormField( flurstueck.status.getInfo().getNameInStore() )
+        newFormField( flurstueck.status.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Status" ).create();
 
-        newFormField( flurstueck.zaehler.getInfo().getNameInStore() )
+        newFormField( flurstueck.zaehler.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Zähler" ).create();
 
-        newFormField( flurstueck.nenner.getInfo().getNameInStore() )
+        newFormField( flurstueck.nenner.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Nenner" ).create();
         
-        newFormField( flurstueck.strasse.getInfo().getNameInStore() )
+        newFormField( flurstueck.strasse.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Strasse" ).create();
 
-        newFormField( flurstueck.hnr.getInfo().getNameInStore() )
+        newFormField( flurstueck.hnr.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Hausnr." ).create();
 
-        newFormField( flurstueck.hnrZusatz.getInfo().getNameInStore() )
+        newFormField( flurstueck.hnrZusatz.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Zusatz" ).create();
         
-        newFormField( flurstueck.flaeche.getInfo().getNameInStore() )
+        newFormField( flurstueck.flaeche.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Fläche (m²)" ).create();
 
-        newFormField( flurstueck.erfasst.getInfo().getNameInStore() )
+        newFormField( flurstueck.erfasst.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Erfasst" ).create();
 
-        newFormField( flurstueck.geaendert.getInfo().getNameInStore() )
+        newFormField( flurstueck.geaendert.info().getNameInStore() )
                 .setParent( section1 ).setLabel( "Geändert" ).create();
         return section1;
     }
@@ -143,10 +143,10 @@ public class FlurstueckFormPage
             @SuppressWarnings("hiding")
             Feature feature = (Feature)gemarkung.state();
             
-            newFormField( gemarkung.gemeinde.getInfo().getNameInStore() )
+            newFormField( gemarkung.gemeinde.info().getNameInStore() )
                     .setFeature( feature ).setParent( section ).setLabel( "Gemeinde" ).create();
             
-            newFormField( gemarkung.gemarkung.getInfo().getNameInStore() )
+            newFormField( gemarkung.gemarkung.info().getNameInStore() )
                     .setFeature( feature ).setParent( section ).setLabel( "Gemarkung" ).create();
         }        
         return section;

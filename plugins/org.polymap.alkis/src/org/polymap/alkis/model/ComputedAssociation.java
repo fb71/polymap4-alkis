@@ -57,7 +57,7 @@ class ComputedAssociation<T extends Entity>
     }
 
     @Override
-    public PropertyInfo getInfo() {
+    public PropertyInfo info() {
         // XXX Auto-generated method stub
         throw new RuntimeException( "not yet implemented." );
     }

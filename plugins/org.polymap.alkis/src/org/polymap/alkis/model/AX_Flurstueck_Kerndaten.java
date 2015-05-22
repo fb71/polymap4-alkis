@@ -21,7 +21,6 @@ import org.apache.commons.logging.LogFactory;
 
 import com.vividsolutions.jts.geom.Point;
 
-import org.polymap.model2.Entity;
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -38,23 +37,23 @@ import org.polymap.model2.Property;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public abstract class AX_Flurstueck_Kerndaten
-        extends Entity {
+        extends AA_NREO {
 
     private static Log log = LogFactory.getLog( AX_Flurstueck_Kerndaten.class );
 
-    /**
-     * 'Gemarkung' enthält die Eigenschaften aus dem 'AX_Gemarkung_Schlüssel': 'land'
-     * und 'gemarkungsnummer'.
-     */
-    public Property<AX_Gemarkung_Schluessel>   gemarkung;
+//    /**
+//     * 'Gemarkung' enthält die Eigenschaften aus dem 'AX_Gemarkung_Schlüssel': 'land'
+//     * und 'gemarkungsnummer'.
+//     */
+//    public Property<AX_Gemarkung_Schluessel>   gemarkung;
     
-    /**
-     * 'Flurstücksnummer' ist die Bezeichnung (Zähler/Nenner), mit der ein Flurstück
-     * innerhalb einer Flur (Flurnummer muss im Land vorhanden sein) oder Gemarkung
-     * identifiziert werden kann. Das Attribut setzt sich zusammen aus: 1. Spalte:
-     * Zähler 2. Spalte: Nenner Die 2. Spalte ist optional.
-     */
-    public Property<AX_Flurstuecksnummer>      flurstuecksnummer;
+//    /**
+//     * 'Flurstücksnummer' ist die Bezeichnung (Zähler/Nenner), mit der ein Flurstück
+//     * innerhalb einer Flur (Flurnummer muss im Land vorhanden sein) oder Gemarkung
+//     * identifiziert werden kann. Das Attribut setzt sich zusammen aus: 1. Spalte:
+//     * Zähler 2. Spalte: Nenner Die 2. Spalte ist optional.
+//     */
+//    public Property<AX_Flurstuecksnummer>      flurstuecksnummer;
 
     protected Property<Integer>                zaehler;
     
@@ -152,12 +151,12 @@ public abstract class AX_Flurstueck_Kerndaten
     @NameInStore("zeitpunktderentstehung")
     public Property<Date>                      zeitpunktDerEntstehung;
     
-    /**
-     * 'Gemeindezugehörigkeit' enthält das Gemeindekennzeichen zur Zuordnung der
-     * Flustücksdaten zu einer Gemeinde.
-     */
-    @Nullable
-    public Property<AX_Gemeindekennzeichen>    gemeindezugehoerigkeit;
+//    /**
+//     * 'Gemeindezugehörigkeit' enthält das Gemeindekennzeichen zur Zuordnung der
+//     * Flustücksdaten zu einer Gemeinde.
+//     */
+//    @Nullable
+//    public Property<AX_Gemeindekennzeichen>    gemeindezugehoerigkeit;
 
     
     public String bildeFlurstueckskennzeichen() {

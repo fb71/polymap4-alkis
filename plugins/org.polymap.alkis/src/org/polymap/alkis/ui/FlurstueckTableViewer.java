@@ -72,7 +72,7 @@ public class FlurstueckTableViewer
         this.uow = uow;
         try {
             // Gemarkung
-            String propName = AX_Flurstueck.TYPE.gemarkung.getInfo().getName();
+            String propName = AX_Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
                 .setWeight( 3, 80 )
@@ -98,7 +98,7 @@ public class FlurstueckTableViewer
                 .sort( SWT.DOWN );
             
             // Flurstücksnummer
-            propName = AX_Flurstueck.TYPE.flurstuecksnummer.getInfo().getName();
+            propName = AX_Flurstueck.TYPE.flurstuecksnummer.info().getName();
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )

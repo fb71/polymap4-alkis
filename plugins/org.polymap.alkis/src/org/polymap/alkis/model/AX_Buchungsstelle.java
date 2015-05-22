@@ -14,7 +14,6 @@
  */
 package org.polymap.alkis.model;
 
-import org.polymap.model2.Entity;
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Property;
 
@@ -31,7 +30,7 @@ import org.polymap.model2.Property;
  */
 @NameInStore("ax_buchungsstelle")
 public class AX_Buchungsstelle
-        extends Entity {
+        extends AA_NREO {
 
 //    public Property<AX_Buchungsart_Buchungsstelle>  buchungsart;
 
@@ -41,5 +40,19 @@ public class AX_Buchungsstelle
      */
     @NameInStore("laufendenummer")
     public Property<String>                         laufendeNummer;
+
+    /**
+     * 'Buchungsstelle' ist Teil von 'Buchungsblatt'. Bei 'Buchungsart' mit einer der
+     * Wertearten für aufgeteilte Buchungen (Wertear- ten 1101, 1102, 1401 bis 1403,
+     * 2201 bis 2205 und 2401 bis 2404) muss die Re- lation zu einem 'Buchungsblatt'
+     * und der 'Blattart' mit der Werteart 'Fiktives Blatt' bestehen.
+     */
+    @NameInStore("istbestandteilvon")
+    protected Property<String>                      istBestandteilVonId;
+
+    /**
+     * Die {@link #istBestandteilVonId} Assoziation. 
+     */
+    public Association<AX_Buchungsblatt>            buchungsblatt = new Association( AX_Buchungsblatt.class, ()->istBestandteilVonId.get() );
 
 }
