@@ -25,28 +25,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.core.runtime.event.Event;
-import org.polymap.core.runtime.event.EventFilter;
-import org.polymap.core.runtime.event.EventHandler;
-import org.polymap.core.runtime.event.EventManager;
-
-import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
-import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
 
 import org.polymap.alkis.model.AX_Flurstueck;
-import org.polymap.alkis.model.AX_Flurstuecksnummer;
-import org.polymap.alkis.model.AX_Gemarkung_Schluessel;
 import org.polymap.alkis.ui.util.CompositesFeatureContentProvider;
 import org.polymap.alkis.ui.util.CompositesFeatureContentProvider.FeatureTableElement;
 import org.polymap.alkis.ui.util.PropertyAdapter;
@@ -72,16 +64,15 @@ public class FlurstueckTableViewer
         this.uow = uow;
         try {
             // Gemarkung
-            String propName = AX_Flurstueck.TYPE.gemarkung.info().getName();
+            String propName = "gm";  //AX_Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
                 .setWeight( 3, 80 )
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
-                        AX_Flurstueck entity = FeatureTableElement.entity( elm );
-                        AX_Gemarkung_Schluessel gmk = entity.gemarkung.get();
-                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
+                        AX_Flurstueck fst = FeatureTableElement.entity( elm );
+                        return Joiner.on( "/" ).join( fst.gemarkung().bezeichnung.get(), fst.gemeinde().bezeichnung.get() );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
@@ -98,7 +89,7 @@ public class FlurstueckTableViewer
                 .sort( SWT.DOWN );
             
             // Flurstücksnummer
-            propName = AX_Flurstueck.TYPE.flurstuecksnummer.info().getName();
+            propName = "nr";  //AX_Flurstueck.TYPE.flurstuecksnummer.info().getName();
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )
@@ -106,7 +97,7 @@ public class FlurstueckTableViewer
                     @Override
                     public String getText( Object elm ) {
                         AX_Flurstueck fst = FeatureTableElement.entity( elm );
-                        return fst.flurstuecksnummer.get().anzeige();
+                        return Joiner.on( "/" ).skipNulls().join( fst.zaehler.get(), fst.nenner.get() );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {

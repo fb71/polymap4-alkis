@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  */
-package org.polymap.alkis.ui;
+package org.polymap.alkis.model.alb;
 
 import java.util.ArrayList;
 import java.util.List;

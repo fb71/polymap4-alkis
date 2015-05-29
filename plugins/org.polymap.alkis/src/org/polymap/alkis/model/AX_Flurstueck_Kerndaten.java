@@ -39,11 +39,27 @@ public abstract class AX_Flurstueck_Kerndaten
 
     private static Log log = LogFactory.getLog( AX_Flurstueck_Kerndaten.class );
 
-//    /**
-//     * 'Gemarkung' enthält die Eigenschaften aus dem 'AX_Gemarkung_Schlüssel': 'land'
-//     * und 'gemarkungsnummer'.
-//     */
-//    public Property<AX_Gemarkung_Schluessel>   gemarkung;
+    /**
+     * 'Land' enthält den Schlüssel für das Bundesland.
+     */
+    public Property<String>                     land;
+
+    /**
+     * 'Gemarkungsnummer' enthält die von der Katasterbehörde zur eindeutigen
+     * Bezeichnung der Gemarkung vergebene Nummer innerhalb eines Bundeslandes.
+     */
+    public Property<String>                     gemarkungsnummer;
+    
+    public AX_Gemarkung gemarkung() {
+        return AlkisRepository.instance.get().gemarkungen.get().get( gemarkungsnummer.get() );
+    }
+    
+    @NameInStore("gemeinde")
+    public Property<String>                     gemeindenummer;
+    
+    public AX_Gemeinde gemeinde() {
+        return AlkisRepository.instance.get().gemeinden.get().get( gemeindenummer.get() );
+    }
     
 //    /**
 //     * 'Flurstücksnummer' ist die Bezeichnung (Zähler/Nenner), mit der ein Flurstück
@@ -53,10 +69,10 @@ public abstract class AX_Flurstueck_Kerndaten
 //     */
 //    public Property<AX_Flurstuecksnummer>      flurstuecksnummer;
 
-    protected Property<Integer>                zaehler;
+    public Property<Integer>                    zaehler;
     
     @Nullable
-    protected Property<String>                 nenner;
+    public Property<String>                     nenner;
     
     /**
      * 'Flurstückskennzeichen' ist ein von der Katasterbehörde zur eindeutigen Be-

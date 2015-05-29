@@ -14,26 +14,39 @@
  */
 package org.polymap.alkis.model;
 
-import org.polymap.model2.Composite;
+import org.polymap.model2.NameInStore;
 import org.polymap.model2.Property;
 
 /**
- * Amtliche Verschlüsselung der Gemarkung.
  *
+ * @Modellart DLKM
+ * @Grunddatenbestand DLKM
+ * @version ALKIS-OK 6.0
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class AX_Gemarkung_Schluessel
-        extends Composite {
+@NameInStore("ax_gemeinde")
+public class AX_Gemeinde
+        extends AA_NREO {
 
     /**
      * 'Land' enthält den Schlüssel für das Bundesland.
      */
-    public Property<String>             land;
+    public Property<String>                     land;
 
     /**
-     * 'Gemarkungsnummer' enthält die von der Katasterbehörde zur eindeutigen
-     * Bezeichnung der Gemarkung vergebene Nummer innerhalb eines Bundeslandes.
+     * 
      */
-    public Property<String>             gemarkungsnummer;
+    @NameInStore("gemeinde")
+    public Property<String>                     gemeindenummer;
+
+    /**
+     * 
+     */
+    public Property<String>                     kreisnummer;
+
+    /**
+     * Name der Gemeinde. 
+     */
+    public Property<String>                     bezeichnung;
     
 }

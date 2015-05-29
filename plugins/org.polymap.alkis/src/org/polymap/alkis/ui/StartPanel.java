@@ -54,8 +54,6 @@ import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.Messages;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
-import org.polymap.alkis.model.alb.Flurstueck;
-import org.polymap.alkis.model.alb.Gemarkung;
 import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.ResultSet;
 
@@ -197,6 +195,7 @@ public class StartPanel
                 viewer.setInput( query.execute() );
             }
         };
+        
 //        search.setSearchOnEnter( false );
 //        search.getText().setText( "Im" );
 //        search.getText().setFocus();

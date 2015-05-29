@@ -14,6 +14,7 @@
  */
 package org.polymap.alkis.model;
 
+import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
 /**
@@ -35,6 +36,7 @@ public abstract class AX_Lage
      * <p/>
      * Aufgelöstes Attribute der AX_Lagebezeichnung.
      */
+    @Nullable
     public Property<String>         unverschluesselt;
 
     public Property<String>         kreis;

@@ -25,7 +25,7 @@
    <extension
          point="org.polymap.rhei.form.pageProviders">
       <pageProvider
-            class="org.polymap.alkis.ui.FlurstueckFormPageProvider"
+            class="org.polymap.alkis.model.alb.FlurstueckFormPageProvider"
             id="org.polymap.alkis.FlurstueckFormPageProvider"
             name="ALB-Flurstueck">
       </pageProvider>

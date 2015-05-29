@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import java.io.File;
 import java.sql.Connection;
@@ -37,7 +38,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.BooleanQuery;
 
+import org.polymap.core.runtime.Lazy;
 import org.polymap.core.runtime.LockedLazyInit;
+import org.polymap.core.runtime.PlainLazyInit;
 
 import org.polymap.rhei.fulltext.FullQueryProposalDecorator;
 import org.polymap.rhei.fulltext.FulltextIndex;
@@ -80,6 +83,17 @@ public class AlkisRepository {
     private LuceneFulltextIndex             fulltextIndex;
 
     private DataStore                       ds;
+    
+    public Lazy<Map<String,AX_Gemarkung>>   gemarkungen = new PlainLazyInit( () -> {
+        return newUnitOfWork().query( AX_Gemarkung.class ).execute().stream()
+                // gemarkungen kommen leider (in Wittenberg) doppelt vor
+                .collect( Collectors.toMap( g -> g.gemarkungsnummer.get(), g -> g, (g1,g2) -> g1 ) );
+    });
+    
+    public Lazy<Map<String,AX_Gemeinde>>    gemeinden = new PlainLazyInit( () -> {
+        return newUnitOfWork().query( AX_Gemeinde.class ).execute().stream()
+                .collect( Collectors.toMap( g -> g.gemeindenummer.get(), g -> g, (g1,g2) -> g1 ) );
+    });
     
     
     /**
@@ -143,6 +157,7 @@ public class AlkisRepository {
                             AX_Anschrift.class,
                             AX_LagebezeichnungMitHausnummer.class,
                             AX_Namensnummer.class,
+                            AX_Gemarkung.class,
                             Alkis_Beziehungen.class} )
                     .store.set( 
                             //new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ), newArrayList( wbTransformer ),
@@ -199,12 +214,24 @@ public class AlkisRepository {
         
         //
         UnitOfWork uow = r.newUnitOfWork();
-        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 1 ).execute();
+        
+//        // Gemarkungen prüfen
+//        Map<String,AX_Gemarkung> gems = new HashMap();
+//        uow.query( AX_Gemarkung.class ).execute().stream().forEach( g -> {
+//            println( "Gemarkung: " + g.gemarkungsnummer.get() + " - " + g.bezeichnung.get() );
+//            if (gems.put( g.gemarkungsnummer.get(), g ) != null) {
+//                println( "   !!!" );
+//            }
+//        });
+
+        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 10 ).execute();
         for (AX_Flurstueck fst : rs) {
-            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> {
-                return true;
-            }).run();
+//            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> {
+//                return true;
+//            }).run();
             
+            println( "Gemarkung: " + fst.gemarkung().bezeichnung.get() );
+            println( "Gemeinde: " + fst.gemeinde().bezeichnung.get() );
             println( new FlurstueckFulltext( fst ).transform().toString( 4 ) );
         }
         

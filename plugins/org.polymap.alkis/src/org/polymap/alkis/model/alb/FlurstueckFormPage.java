@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  */
-package org.polymap.alkis.ui;
+package org.polymap.alkis.model.alb;
 
 import java.util.Collection;
 
@@ -42,11 +42,6 @@ import org.polymap.rhei.table.DefaultFeatureTableColumn;
 import org.polymap.rhei.table.FeatureTableViewer;
 
 import org.polymap.alkis.AlkisPlugin;
-import org.polymap.alkis.model.alb.ALBRepository;
-import org.polymap.alkis.model.alb.Abschnitt;
-import org.polymap.alkis.model.alb.Flurstueck;
-import org.polymap.alkis.model.alb.Gemarkung;
-import org.polymap.alkis.model.alb.Lagehinweis2;
 import org.polymap.model2.runtime.Entities;
 import org.polymap.model2.runtime.UnitOfWork;
 

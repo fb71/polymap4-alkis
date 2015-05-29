@@ -88,7 +88,7 @@ public class FlurstueckPanel
             Composite body = pageSite.getPageBody();
             body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).columns( 1, 1 ).create() );
             
-            createField( body, new PropertyAdapter( fst.flurstuecksnummer.get().zaehler ) )
+            createField( body, new PropertyAdapter( fst.zaehler ) )
                     .setLabel( "Zähler" )
                     .create();
         }

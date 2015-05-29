@@ -28,6 +28,8 @@ public class FlurstueckFulltext {
     public static final String    ZAEHLER = "zaehler";
     public static final String    NENNER = "nenner";
     public static final String    FLUR = "flurnummer";
+    public static final String    GMD = "gemeinde";
+    public static final String    GMK = "gemarkung";
     public static final String    LAGE = "lagebezeichnung";
     public static final String    BESITZER_NAME = "name";
     public static final String    BESITZER_VORNAME = "vorname";
@@ -47,6 +49,8 @@ public class FlurstueckFulltext {
         add( ZAEHLER, fst.zaehler.get() );
         add( NENNER, fst.nenner.get() );
         add( FLUR, fst.flurnummer.get() );
+        add( GMK, fst.gemarkung().bezeichnung.get() );
+        add( GMD, fst.gemeinde().bezeichnung.get() );
         fst.lagebezeichnung.get().stream().forEach( lbz -> {
             add( LAGE, lbz.unverschluesselt.get() );
             add( LAGE, lbz.hausnummer.get() );
