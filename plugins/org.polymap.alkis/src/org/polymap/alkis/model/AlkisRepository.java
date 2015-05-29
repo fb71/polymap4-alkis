@@ -158,6 +158,7 @@ public class AlkisRepository {
                             AX_LagebezeichnungMitHausnummer.class,
                             AX_Namensnummer.class,
                             AX_Gemarkung.class,
+                            AX_Gemeinde.class,
                             Alkis_Beziehungen.class} )
                     .store.set( 
                             //new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ), newArrayList( wbTransformer ),
@@ -224,12 +225,13 @@ public class AlkisRepository {
 //            }
 //        });
 
-        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 10 ).execute();
+        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 1 ).execute();
         for (AX_Flurstueck fst : rs) {
 //            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> {
 //                return true;
 //            }).run();
             
+            println( "Blattart: " + fst.buchungsstelle.get().buchungsblatt.get().blattart.get() );
             println( "Gemarkung: " + fst.gemarkung().bezeichnung.get() );
             println( "Gemeinde: " + fst.gemeinde().bezeichnung.get() );
             println( new FlurstueckFulltext( fst ).transform().toString( 4 ) );

@@ -21,7 +21,6 @@ import org.polymap.model2.Computed;
 import org.polymap.model2.ComputedProperty;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
-import org.polymap.model2.runtime.PropertyInfo;
 
 /**
  * 'AX_Flurstücksnummer' ist ein Datentyp, der alle Eigenschaften für den Aufbau der
@@ -69,10 +68,6 @@ public class AX_Flurstuecksnummer
     static class ComputedNummer
             extends ComputedProperty {
 
-        public ComputedNummer( PropertyInfo info, Composite composite ) {
-            super( info, composite );
-        }
-
         @Override
         public Object get() {
             AX_Flurstueck flurstueck = ((AX_Flurstuecksnummer)composite).flurstueck();
@@ -87,12 +82,6 @@ public class AX_Flurstuecksnummer
                 throw new RuntimeException( "Unbekannter Teil der FLurstücksnummer: " +  propName );
             }
         }
-
-        @Override
-        public void set( Object value ) {
-            throw new UnsupportedOperationException();
-        }
-        
     }
 
 }

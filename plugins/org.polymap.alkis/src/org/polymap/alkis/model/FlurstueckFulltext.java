@@ -34,6 +34,7 @@ public class FlurstueckFulltext {
     public static final String    BESITZER_NAME = "name";
     public static final String    BESITZER_VORNAME = "vorname";
     public static final String    BESITZER_ANSCHRIFT = "anschrift";
+    public static final String    BB = "buchungsblatt";
     
     private JSONObject      result = new JSONObject();
         
@@ -57,6 +58,9 @@ public class FlurstueckFulltext {
         });
         AX_Buchungsstelle bst = fst.buchungsstelle.get();
         AX_Buchungsblatt bb = bst.buchungsblatt.get();
+        add( BB, bb.kennzeichen.get() );
+        add( BB, bb.nummer.get() );
+
 //        for (Object nn : bb.namensnummern.get()) {
 //            System.out.println( nn );
 //        }

@@ -16,6 +16,12 @@ package org.polymap.alkis.model;
 
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.istBestandteilVon;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.polymap.model2.Computed;
+import org.polymap.model2.ComputedProperty;
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Property;
 
@@ -31,6 +37,49 @@ import org.polymap.model2.Property;
 public class AX_Buchungsblatt
         extends AA_NREO {
 
+    public static Map<String,AX_Blattart_Buchungsblatt> blattarten = 
+            Arrays.asList( AX_Blattart_Buchungsblatt.values() ).stream().collect( Collectors.toMap( ba -> ba.wert, ba -> ba ) );
+    
+    /**
+     * 
+     */
+    public enum AX_Blattart_Buchungsblatt {
+        /**
+         * Ein Grundbuchblatt ist ein Buchungsblatt, das die Buchung im Grundbuch
+         * enthält.
+         */
+        Grundbuchblatt( 1000 ),
+        /**
+         * Ein Katasterblatt ist ein Buchungsblatt, das die Buchung im
+         * Liegenschaftskataster enthält.
+         */
+        Katasterblatt( 2000 ),
+        /**
+         * Ein Pseudoblatt ist ein Buchungsblatt, das die Buchung, die bereits vor
+         * Eintrag im Grundbuch Rechtskraft erlangt hat, enthält (z.B. Übernahme von
+         * Flurbereinigungsverfahren, Umlegungsverfahren).
+         */
+        Pseudoblatt( 3000 ),
+        /**
+         * Ein Erwerberblatt ist ein Buchungsblatt, das die Buchung, die bereits im
+         * Liegenschaftskataster, aber noch nicht im Grundbuch gebucht ist, enthält
+         * (Buchungsvorschlag für die Grundbuchverwaltung).Pseudoblatt und
+         * Erwerberblatt werden nach Eintragung in das Grundbuch historisch.
+         */
+        Erwerberblatt( 4000 ),
+        /**
+         * Das fiktive Blatt enthält die aufgeteilten Grundstücke und Rechte als
+         * Ganzes. Es bildet um die Miteigentumsanteile eine fachliche Klammer.
+         */
+        FiktivesBlatt( 5000 );
+
+        private String          wert;
+
+        private AX_Blattart_Buchungsblatt( int wert ) {
+            this.wert = Integer.valueOf( wert ).toString();
+        }
+    }
+
     /**
      * 'Buchungsblattkennzeichen' ist ein eindeutiges Fachkennzeichen für ein Bu-
      * chungsblatt. Aufbau Buchungsblattkennzeichen: 1.) Land (Verschlüsselung
@@ -44,9 +93,27 @@ public class AX_Buchungsblatt
     @NameInStore("buchungsblattkennzeichen")
     public Property<String>                         kennzeichen;
 
+    @NameInStore("buchungsblattnummermitbuchstabenerweiterung")
+    public Property<String>                         nummer;
+
     @NameInStore("bezirk")
     public Property<String>                         bezirk;
 
+    @NameInStore("blattart")
+    public Property<String>                         blattartnummer;
+    
+    @Computed(ComputedBlattart.class)
+    public Property<AX_Blattart_Buchungsblatt>      blattart;
+
     public InverseManyAssociation<AX_Namensnummer>  namensnummern = new InverseManyAssociation( AX_Namensnummer.class, istBestandteilVon );
     
+    
+    public static class ComputedBlattart
+            extends ComputedProperty<AX_Blattart_Buchungsblatt> {
+        @Override
+        public AX_Blattart_Buchungsblatt get() {
+            return blattarten.get( ((AX_Buchungsblatt)composite).blattartnummer.get() );
+        }
+    }
+            
 }
