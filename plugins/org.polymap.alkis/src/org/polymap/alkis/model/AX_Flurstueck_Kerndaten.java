@@ -19,8 +19,6 @@ import java.util.Date;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.vividsolutions.jts.geom.Point;
-
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -107,14 +105,14 @@ public abstract class AX_Flurstueck_Kerndaten
     @Nullable
     public Property<String>                    flurstuecksfolge;
     
-    /**
-     * 'Objektkoordinaten' sind die Koordinaten [mm] eines das Objekt 'Flurstück'
-     * repräsentierenden Punktes in einem amtlichen Lagebezugssystem. Die
-     * 'Objektkoordinaten' sind übergangsweise aus bestehenden Verfahrenslö- sungen
-     * übernommen (Datenmigration).
-     */
-    @Nullable
-    public Property<Point>                     objektkoordinaten;
+//    /**
+//     * 'Objektkoordinaten' sind die Koordinaten [mm] eines das Objekt 'Flurstück'
+//     * repräsentierenden Punktes in einem amtlichen Lagebezugssystem. Die
+//     * 'Objektkoordinaten' sind übergangsweise aus bestehenden Verfahrenslösungen
+//     * übernommen (Datenmigration).
+//     */
+//    @Nullable
+//    public Property<Point>                     objektkoordinaten;
     
     /**
      * 'Sonstige Eigenschaften' sind flurstücksbezogene Informationen, die in dem

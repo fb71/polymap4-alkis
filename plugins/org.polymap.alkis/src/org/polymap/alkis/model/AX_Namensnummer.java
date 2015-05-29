@@ -14,6 +14,7 @@
  */
 package org.polymap.alkis.model;
 
+import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
@@ -27,6 +28,7 @@ import org.polymap.model2.Property;
  * @version ALKIS-OK 6.0
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
+@NameInStore("ax_namensnummer")
 public class AX_Namensnummer
         extends AA_NREO {
 
@@ -35,6 +37,7 @@ public class AX_Namensnummer
      * Rangfolge der Person, die nach den Vorgaben aus DIN 1421 strukturiert ist.
      */
     @Nullable
+    @NameInStore("laufendenummernachdin1421")
     public Property<String>                 laufendeNummerNachDIN1421;
     
     /**
@@ -44,6 +47,7 @@ public class AX_Namensnummer
     @Nullable
     public Property<String>                 nummer;
 
+    @NameInStore("benennt")
     protected Property<String>              benenntId;
 
     /**
@@ -51,6 +55,14 @@ public class AX_Namensnummer
      */
     public OptionalAssociation<AX_Person>   person = new OptionalAssociation( AX_Person.class, ()->benenntId.get() );
 
+    @NameInStore("istbestandteilvon")
+    protected Property<String>              istBestandteilVonId;
+    
+    /**
+     * Die {@link #istBestandteilVonId} Assoziation.
+     */
+    public OptionalAssociation<AX_Buchungsblatt>   buchungsblatt = new OptionalAssociation( AX_Buchungsblatt.class, ()->istBestandteilVonId.get() );
+    
     
 //    @Nullable
 //    public Property<Integer>        eigentuemerartWert;

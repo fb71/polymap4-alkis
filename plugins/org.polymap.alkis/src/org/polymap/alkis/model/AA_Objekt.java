@@ -95,16 +95,16 @@ public abstract class AA_Objekt
     
     
     /**
-     * Stellt eine 0..* Assoziation über dei Tabelle {@link Alkis_Beziehungen} her.
+     * Stellt eine 0..* Assoziation über die Tabelle {@link Alkis_Beziehungen} her.
      * Das Ergebniss wird nicht zwischengespeichert. Möglicher Cache:
      * {@link CachedLazyInit}.
      */
     protected class ManyAssociation<T extends Entity>
             implements Supplier<List<T>> {
 
-        private Class<T>        targetClass;
+        protected Class<T>          targetClass;
 
-        private Beziehungsart   beziehungsart;
+        protected Beziehungsart     beziehungsart;
 
         
         public ManyAssociation( Class<T> targetClass, Beziehungsart beziehungsart ) {
@@ -121,23 +121,50 @@ public abstract class AA_Objekt
                     ff.equals( ff.property( "beziehungsart" ), ff.literal( beziehungsart.name() ) ) );
 
             return context.getUnitOfWork().query( Alkis_Beziehungen.class )
-                    .where( new FilterWrapper( filter ) )
-                    .execute()
-                    .stream()
+                    .where( new FilterWrapper( filter ) ).execute().stream()
                     .map( bz -> {
                         //System.out.println( "    #### Beziehung: " + bz );
                         return context.getUnitOfWork().entity( targetClass, bz.zu.get() );
                     })
                     .collect( Collectors.toList() );
         }
-
     }
+    
+
+    /**
+     * Die inverse Richtung einer {@link ManyAssociation}.
+     */
+    protected class InverseManyAssociation<T extends Entity>
+            extends ManyAssociation<T> {
+
+        public InverseManyAssociation( Class<T> targetClass, Beziehungsart beziehungsart ) {
+            super( targetClass, beziehungsart );
+        }
+
+        @Override
+        public List<T> get() {
+            String id = StringUtils.substringAfterLast( id(), "." );
+            Filter filter = ff.and( 
+                    ff.equals( ff.property( "beziehung_zu" ), ff.literal( id ) ),
+                    ff.equals( ff.property( "beziehungsart" ), ff.literal( beziehungsart.name() ) ) );
+
+            return context.getUnitOfWork().query( Alkis_Beziehungen.class )
+                    .where( new FilterWrapper( filter ) ).execute().stream()
+                    .map( bz -> {
+                        System.out.println( "    #### Beziehung: " + bz.von.get() + " -> " + bz.zu.get() );
+                        return context.getUnitOfWork().entity( targetClass, bz.von.get() );
+                    })
+                    .filter( entity -> entity != null && targetClass.isAssignableFrom( entity.getClass() ) )
+                    .collect( Collectors.toList() );
+        }
+    }
+    
 
     /**
      * Mögliche Beziehungsarten für einen {@link ManyAssociation}. 
      */
     protected enum Beziehungsart {
-        weistAuf, hat
+        weistAuf, hat, istBestandteilVon
     }
 
 }

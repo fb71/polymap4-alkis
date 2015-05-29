@@ -77,6 +77,7 @@ public class AX_Person
      * Prof. Dr.).
      */
     @Nullable
+    @NameInStore("akademischergrad")
     public Property<String>             akademischerGrad;
     
     /**
@@ -85,14 +86,14 @@ public class AX_Person
     @Nullable
     public Property<String>             geburtsname;
     
-    /**
-     * 'Wohnort oder Sitz' ist der Wohnort oder der Sitz einer natürlichen oder
-     * juristischen Person (Par. 15 Grundbuchverfügung). Diese Attributart kommt
-     * nur bei Personen vor, die die Rolle 'Eigentümer' besitzen.
-     */
-    @Nullable
-    @NameInStore("wohnortordersitz")
-    public Property<String>             wohnortOrderSitz;
+//    /**
+//     * 'Wohnort oder Sitz' ist der Wohnort oder der Sitz einer natürlichen oder
+//     * juristischen Person (Par. 15 Grundbuchverfügung). Diese Attributart kommt
+//     * nur bei Personen vor, die die Rolle 'Eigentümer' besitzen.
+//     */
+//    @Nullable
+//    @NameInStore("wohnortodersitz")
+//    public Property<String>             wohnortOderSitz;
     
     /**
      * 'Anrede' ist die Anrede der Person. Diese Attributart ist optional, da Körper-

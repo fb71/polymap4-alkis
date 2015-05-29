@@ -16,6 +16,9 @@ package org.polymap.alkis.model;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
@@ -55,6 +58,9 @@ public class EntityHierachyPrinter {
     
     private AssociationFilter   assocFilter;
     
+    private Set<Object>         seenEntityIds = new HashSet( 128 );
+    
+    
     /**
      * 
      */
@@ -75,9 +81,14 @@ public class EntityHierachyPrinter {
     
     protected void printEntity( Entity entity ) {
         println( entity.info().getName() );
-        printFeature( (SimpleFeature)entity.state() );
-        printProperties( entity );
-        printAssociations( entity );
+        if (seenEntityIds.add( entity.id() )) {
+            printFeature( (SimpleFeature)entity.state() );
+            printProperties( entity );
+            printAssociations( entity );
+        }
+        else {
+            println( "... already seen, skipping." );
+        }
     }
 
     
@@ -88,8 +99,8 @@ public class EntityHierachyPrinter {
         for (Field f : entity.getClass().getFields()) {
             Class<?> type = f.getType();
             if (type.equals( Association.class ) 
-                    || type.equals( ManyAssociation.class ) 
-                    || type.equals( OptionalAssociation.class ) ) {
+                    || type.equals( OptionalAssociation.class )
+                    || ManyAssociation.class.isAssignableFrom( type ) ) {
                 
                 String assocName = f.getName();
                 Class<?> assocType = (Class<?>)((ParameterizedType)f.getGenericType()).getActualTypeArguments()[0];
@@ -99,11 +110,12 @@ public class EntityHierachyPrinter {
                             printEntity( ((Association)f.get( entity )).get() );
                         }
                         else if (type.equals( OptionalAssociation.class )) {
-                            printEntity( ((Association)f.get( entity )).get() );
+                            Optional<Entity> associated = ((OptionalAssociation<Entity>)f.get( entity )).get();
+                            associated.ifPresent( _associated -> printEntity( _associated ) );
                         }
-                        else if (type.equals( ManyAssociation.class )) {
+                        else if (ManyAssociation.class.isAssignableFrom( type )) {
                             ManyAssociation assoc = (ManyAssociation)f.get( entity );
-                            assoc.get().stream().forEach( e -> printEntity( (Entity)e ) );
+                            assoc.get().stream().forEach( associated -> printEntity( (Entity)associated ) );
                         }
                     }
                     catch (Exception e) {

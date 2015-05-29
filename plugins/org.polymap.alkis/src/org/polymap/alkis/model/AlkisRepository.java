@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -39,10 +40,13 @@ import org.apache.lucene.search.BooleanQuery;
 import org.polymap.core.runtime.LockedLazyInit;
 
 import org.polymap.rhei.fulltext.FullQueryProposalDecorator;
-import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
-import org.polymap.rhei.fulltext.store.lucene.LuceneFullTextIndex;
+import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
+import org.polymap.rhei.fulltext.update.UpdateableFulltextIndex;
+import org.polymap.rhei.fulltext.update.UpdateableFulltextIndex.Updater;
 
+import org.polymap.alkis.AlkisPlugin;
 import org.polymap.model2.Composite;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.CompositeInfo;
@@ -73,7 +77,7 @@ public class AlkisRepository {
 
     private EntityRepository                repo;
 
-    private LuceneFullTextIndex             fulltextIndex;
+    private LuceneFulltextIndex             fulltextIndex;
 
     private DataStore                       ds;
     
@@ -91,10 +95,10 @@ public class AlkisRepository {
             BooleanQuery.setMaxClauseCount( 4 * 1024 );
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
-//            // init fulltext
-//            File dataDir = new File( Polymap.getDataDir(), AlkisPlugin.ID );
-//            fulltextIndex = new LuceneFullTextIndex( new File( dataDir, "fulltext" ) );
-//            fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
+            // init fulltext
+            File dataDir = new File( "/tmp"/*Polymap.getDataDir()*/, AlkisPlugin.ID );
+            fulltextIndex = new LuceneFulltextIndex( new File( dataDir, "fulltext" ) );
+            fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
 //            WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();
 //            wbTransformer.setHonorQueryableAnnotation( true );
@@ -127,8 +131,7 @@ public class AlkisRepository {
                 }
             });
 
-            FeatureStoreAdapter store = new FeatureStoreAdapter( ds )
-                    .createOrUpdateSchemas.put( false );
+            FeatureStoreAdapter store = new FeatureStoreAdapter( ds ).createOrUpdateSchemas.put( false );
             
             // repo
             repo = EntityRepository.newConfiguration()
@@ -139,6 +142,7 @@ public class AlkisRepository {
                             AX_Person.class,
                             AX_Anschrift.class,
                             AX_LagebezeichnungMitHausnummer.class,
+                            AX_Namensnummer.class,
                             Alkis_Beziehungen.class} )
                     .store.set( 
                             //new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ), newArrayList( wbTransformer ),
@@ -159,10 +163,9 @@ public class AlkisRepository {
     }
 
     
-    public FullTextIndex fulltextIndex() {
+    public FulltextIndex fulltextIndex() {
         return new FullQueryProposalDecorator(
                new LowerCaseTokenFilter( fulltextIndex ) );
-
     }
 
 
@@ -175,6 +178,11 @@ public class AlkisRepository {
         return repo.newUnitOfWork();
     }
 
+    
+    public void updateFulltextIndex() {
+        Updater updater = ((UpdateableFulltextIndex)fulltextIndex).prepareUpdate();
+    }
+    
     
     /**
      * Simple access test.
@@ -197,26 +205,46 @@ public class AlkisRepository {
                 return true;
             }).run();
             
-//            println( "id: ", fst.id() );            
-//            println( "zaehler: ", fst.zaehler.get() /*+ " - " + fst.flurstuecksnummer.get().zaehler.get()*/ );            
-//            println( "nenner: ", fst.nenner.get() );            
-//            println( "flurnummer: ", fst.flurnummer.get() );            
-//            println( "buchungsstelle: ", fst.buchungsstelle.get() );            
-//            println( "    laufende: ", fst.buchungsstelle.get().laufendeNummer.get() );            
-//            println( "    blatt: ", fst.buchungsstelle.get().buchungsblatt.get() );            
-//            println( "lagebezeichnung: ", fst.lagebezeichnung.get() );
+            println( new FlurstueckFulltext( fst ).transform().toString( 4 ) );
         }
         
-        // id query
-        AX_Flurstueck fst = uow.entity( AX_Flurstueck.class, "DESTLIKA0002XWdg" );
-        println( "-> " + fst.lagebezeichnung.get() );
+//        // id query
+//        AX_Flurstueck fst = uow.entity( AX_Flurstueck.class, "DESTLIKA0002XWdg" );
+//        println( "-> " + fst.lagebezeichnung.get() );
         
-        println( "\n", AX_Person.class.getSimpleName(), " =============================================" );
-        uow.query( AX_Person.class ).maxResults( 3 ).execute().spliterator().forEachRemaining( person -> {
-            EntityHierachyPrinter.on( person, (entity,assocname,assocType) -> {
-                return true;
-            }).run();
-        });
+//        println( "\n", AX_Person.class.getSimpleName(), " =============================================" );
+//        uow.query( AX_Person.class ).maxResults( 1 ).execute().stream().forEach( person -> {
+//            EntityHierachyPrinter.on( person, (entity,assocname,assocType) -> {
+//                return true;
+//            }).run();
+//        });
+
+//        println( "\nAX_Namensnummer =============================================" );
+//        uow.query( AX_Namensnummer.class ).maxResults( 1 ).execute().stream().forEach( nn -> {
+//            EntityHierachyPrinter.on( nn, (entity,assocname,assocType) -> {
+//                return true;
+//            }).run();
+//        });
+
+//        println( "\nAX_Buchungsstelle ===========================================" );
+//        uow.query( AX_Buchungsstelle.class ).maxResults( 1 ).execute().stream().forEach( bs -> {
+//            EntityHierachyPrinter.on( bs, (entity,assocname,assocType) -> {
+//                return true;
+//            }).run();
+//        });
+
+//        println( "\nAX_Buchungsblatt ===========================================" );
+//        uow.query( AX_Buchungsblatt.class ).maxResults( 10 ).execute().stream().forEach( bb -> {
+//            EntityHierachyPrinter.on( bb, (entity,assocname,assocType) -> {
+//                return true;
+//            }).run();
+//        });
+        
+//      AX_Namensnummer nn = uow.entity( AX_Namensnummer.class, "DESTLIKA00028H3S" );
+//      EntityHierachyPrinter.on( nn, (entity,assocname,assocType) -> {
+//          return true;
+//      }).run();
+        
     }
     
     

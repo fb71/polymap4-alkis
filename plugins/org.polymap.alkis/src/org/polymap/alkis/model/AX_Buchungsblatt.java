@@ -14,6 +14,8 @@
  */
 package org.polymap.alkis.model;
 
+import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.istBestandteilVon;
+
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Property;
 
@@ -45,4 +47,6 @@ public class AX_Buchungsblatt
     @NameInStore("bezirk")
     public Property<String>                         bezirk;
 
+    public InverseManyAssociation<AX_Namensnummer>  namensnummern = new InverseManyAssociation( AX_Namensnummer.class, istBestandteilVon );
+    
 }

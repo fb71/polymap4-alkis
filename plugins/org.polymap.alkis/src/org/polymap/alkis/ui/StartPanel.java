@@ -43,7 +43,7 @@ import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
-import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.table.workbench.FeatureTableFilterBar;
@@ -179,7 +179,7 @@ public class StartPanel
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         // searchField
-        FullTextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
+        FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
