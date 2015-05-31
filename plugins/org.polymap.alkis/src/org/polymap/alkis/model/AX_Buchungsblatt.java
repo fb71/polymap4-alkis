@@ -38,7 +38,7 @@ public class AX_Buchungsblatt
         extends AA_NREO {
 
     public static Map<String,AX_Blattart_Buchungsblatt> blattarten = 
-            Arrays.asList( AX_Blattart_Buchungsblatt.values() ).stream().collect( Collectors.toMap( ba -> ba.wert, ba -> ba ) );
+            Arrays.stream( AX_Blattart_Buchungsblatt.values() ).collect( Collectors.toMap( ba -> ba.wert, ba -> ba ) );
     
     /**
      * 

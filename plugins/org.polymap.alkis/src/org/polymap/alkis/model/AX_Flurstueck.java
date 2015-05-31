@@ -85,5 +85,9 @@ public class AX_Flurstueck
      */
     public ManyAssociation<AX_LagebezeichnungMitHausnummer> lagebezeichnung = new ManyAssociation( AX_LagebezeichnungMitHausnummer.class, weistAuf );
     
-    
+    /**
+     * 'Flurstück' {@link Beziehungsart#weistAuf} 'Lagebezeichnung mit Hausnummer'.     
+     */
+    public ManyAssociation<AX_LagebezeichnungOhneHausnummer> lagebezeichnungOhne = new ManyAssociation( AX_LagebezeichnungOhneHausnummer.class, weistAuf );
+        
 }
