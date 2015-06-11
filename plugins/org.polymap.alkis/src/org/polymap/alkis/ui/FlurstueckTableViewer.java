@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
 import org.polymap.rhei.field.NumberValidator;
-import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
@@ -67,6 +66,7 @@ public class FlurstueckTableViewer
             String propName = "gm";  //AX_Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
+                .setHeader( "Gemarkung" )
                 .setWeight( 3, 80 )
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
@@ -91,8 +91,8 @@ public class FlurstueckTableViewer
             // Flurstücksnummer
             propName = "nr";  //AX_Flurstueck.TYPE.flurstuecksnummer.info().getName();
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
+                .setHeader( "Zähler/Nenner" )
                 .setWeight( 1, 60 )
-                .setHeader( "Nummer" )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -109,9 +109,8 @@ public class FlurstueckTableViewer
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( AX_Flurstueck.TYPE.amtlicheFlaeche ) )
                 .setWeight( 1, 60 )
-                .setHeader( "FlÃ¤che\n(in ha)" )
+                .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // suppress deferred loading to fix "empty table" issue

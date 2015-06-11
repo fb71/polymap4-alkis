@@ -20,6 +20,8 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 
+import org.polymap.alkis.model.AlkisRepository;
+
 /**
  *
  * 
@@ -43,6 +45,8 @@ public class AlkisPlugin
     public void start( BundleContext context ) throws Exception {
         super.start( context );
         instance = this;
+        
+        AlkisRepository.init();
     }
 
 

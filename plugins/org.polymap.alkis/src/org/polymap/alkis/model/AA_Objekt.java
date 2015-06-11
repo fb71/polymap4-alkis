@@ -50,7 +50,7 @@ public abstract class AA_Objekt
     /**
      * Stellt eine zu-1 Assoziation über das angegebene Fremdschlüssel-Property her.
      */
-    protected class Association<T extends Entity>
+    public class Association<T extends Entity>
             implements Supplier<T> {
 
         private Class<T>                targetClass;
@@ -72,7 +72,7 @@ public abstract class AA_Objekt
     /**
      * Stellt eine 0..1 Assoziation über das angegebene Fremdschlüssel-Property her.
      */
-    protected class OptionalAssociation<T extends Entity>
+    public class OptionalAssociation<T extends Entity>
             implements Supplier<Optional<T>> {
 
         private Class<T>                targetClass;
@@ -99,7 +99,7 @@ public abstract class AA_Objekt
      * Das Ergebniss wird nicht zwischengespeichert. Möglicher Cache:
      * {@link CachedLazyInit}.
      */
-    protected class ManyAssociation<T extends Entity>
+    public class ManyAssociation<T extends Entity>
             implements Supplier<List<T>> {
 
         protected Class<T>          targetClass;
@@ -134,7 +134,7 @@ public abstract class AA_Objekt
     /**
      * Die inverse Richtung einer {@link ManyAssociation}.
      */
-    protected class InverseManyAssociation<T extends Entity>
+    public class InverseManyAssociation<T extends Entity>
             extends ManyAssociation<T> {
 
         public InverseManyAssociation( Class<T> targetClass, Beziehungsart beziehungsart ) {
@@ -151,7 +151,7 @@ public abstract class AA_Objekt
             return context.getUnitOfWork().query( Alkis_Beziehungen.class )
                     .where( new FilterWrapper( filter ) ).execute().stream()
                     .map( bz -> {
-                        System.out.println( "    #### Beziehung: " + bz.von.get() + " -> " + bz.zu.get() );
+                        //System.out.println( "    #### Beziehung: " + bz.von.get() + " -> " + bz.zu.get() );
                         return context.getUnitOfWork().entity( targetClass, bz.von.get() );
                     })
                     .filter( entity -> entity != null && targetClass.isAssignableFrom( entity.getClass() ) )

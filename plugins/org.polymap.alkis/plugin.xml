@@ -44,6 +44,10 @@
             class="org.polymap.alkis.ui.StartPanel"
             id="org.polymap.alkis.StartPanel">
       </panel>
+      <panel
+            class="org.polymap.alkis.ui.FlurstueckPanel"
+            id="org.polymap.alkis.FlurstueckPanel">
+      </panel>
    </extension>
    <extension
          point="org.polymap.rhei.batik.design">

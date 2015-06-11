@@ -12,20 +12,22 @@
  */
 package org.polymap.alkis.ui;
 
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static org.polymap.alkis.ui.util.UnitOfWorkHolder.Propagation.REQUIRES_NEW_LOCAL;
+import static org.polymap.model2.store.geotools.FeatureStoreUnitOfWork.ff;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.json.JSONObject;
+import org.opengis.filter.identity.Identifier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
@@ -37,8 +39,6 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.DefaultPanel;
-import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
@@ -54,8 +54,7 @@ import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.Messages;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
-import org.polymap.model2.query.Expressions;
-import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.store.geotools.FilterWrapper;
 
 /**
  * 
@@ -85,7 +84,7 @@ public class StartPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 400 ); // table viewer
-        createLoginContents( parent );
+        createMainContents( parent );
     }
     
     
@@ -102,11 +101,10 @@ public class StartPanel
         IPanelSection section = tk.createPanelSection( parent, null );
         section.addConstraint( new PriorityConstraint( 0 ), AlkisPlugin.MIN_COLUMN_WIDTH );
 
-        LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
+        LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), null /*FIXME user*/ ) {
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
-                    getSite().setTitle( i18n.get( "title" ) );
                     //getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
                     getSite().setStatus( new Status( Status.OK, AlkisPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
                     
@@ -133,6 +131,10 @@ public class StartPanel
     
     
     protected void createMainContents( Composite parent ) {
+        newUnitOfWork( REQUIRES_NEW_LOCAL );
+        
+        getSite().setTitle( "Flurstücksuche" /*i18n.get( "title" )*/ );
+
         IPanelToolkit tk = getSite().toolkit();
 
 //        // results table
@@ -143,13 +145,8 @@ public class StartPanel
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
 
-        newUnitOfWork( REQUIRES_NEW_LOCAL );
-        
-        ResultSet<AX_Flurstueck> all = uow().get().query( AX_Flurstueck.class ).execute();
-        log.info( "Query result: " + all.size() );
-        
         Composite tableLayout = body;  //tk.createComposite( body );
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), tableLayout, all, SWT.NONE );
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow().get(), tableLayout, Collections.EMPTY_LIST );
         getContext().propagate( viewer );
         // Details öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -162,83 +159,57 @@ public class StartPanel
             }
         });
 
-        // waldbesitzer anlegen
-        Button createBtn = tk.createButton( body, "Neu", SWT.PUSH );
-        createBtn.setToolTipText( "Einen neuen Waldbesitzer anlegen" );
-        createBtn.addSelectionListener( new SelectionAdapter() {
-            @Override
-            public void widgetSelected( SelectionEvent e ) {
-                selected.set( null );
-                getContext().openPanel( getSite().getPath(), FlurstueckPanel.ID );
-            }
-        });
-
         // filterBar
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         // searchField
         FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
-        EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
+        EntitySearchField search = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
+            @Override
+            protected void doSearch( String queryString ) throws Exception {
+                Set<Identifier> ids = new HashSet( 1024 );
+                for (JSONObject record : index.search( queryString, -1 )) {
+                    String id = substringAfterLast( record.getString( FulltextIndex.FIELD_ID ), "." );
+                    if (id.length() > 0) {
+                        ids.add( ff.featureId( id ) );
+                    }
+                    else {
+                        log.warn( "No FIELD_ID in record: " + record );
+                    }
+                }
+                log.info( "Filter:" + ff.id( ids ) );
+                query = uow.query( entityClass ).where( new FilterWrapper( ff.id( ids ) ) );
+            }
             @Override
             protected void doRefresh() {
-                if (revier.get() != null) {
-                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, AlkisRepository.instance.get().repo() );
-                    Flurstueck fl = Expressions.template( Flurstueck.class, AlkisRepository.instance.get().repo() );
-                    
-                    List<Gemarkung> gemarkungen = revier.get().gemarkungen;
-                    Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
-                    query.andWhere( Expressions.anyOf( wb.flurstuecke, 
-                                    Expressions.isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
-                }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( query.execute() );
+//                viewer.setInput( query.execute() );
             }
         };
         
 //        search.setSearchOnEnter( false );
 //        search.getText().setText( "Im" );
-//        search.getText().setFocus();
-        search.setSearchOnEnter( true );
-        new FulltextProposal( fulltext, search.getText() );
+        search.getText().setFocus();
+        search.searchOnEnter.set( true );
+        new FulltextProposal( fulltext, search.getText() )
+                .activationDelayMillis.put( 500 );
+        
+//        search.getText().addListener( SWT.FocusOut, new Listener() {
+//            @Override
+//            public void handleEvent( Event ev ) {
+//                log.warn( "FOCUS OUT!" );
+//            }
+//        });
+
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
-        createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
-        filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
-        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
+        filterBar.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).noBottom().right( 50 ).create() );
+        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).noBottom().left( filterBar.getControl() ).create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled()
-                .top( createBtn ).height( tableHeight ).width( 300 ).create() );
-        
-//        // map
-//        IPanelSection karte = tk.createPanelSection( parent, null );
-//        karte.addConstraint( new PriorityConstraint( 5 ) );
-//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-//
-//        try {
-//            map = new WbvMapViewer( getSite() );
-//            map.createContents( karte.getBody() )
-//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
-//                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
-//        }
-//        catch (Exception e) {
-//            throw new RuntimeException( e );
-//        }
-//    
-//        // context menu
-//        map.getContextMenu().addProvider( new WaldflaechenMenu() );
-//        map.getContextMenu().addProvider( new IContextMenuProvider() {
-//            @Override
-//            public IContextMenuContribution createContribution() {
-//                return new FindFeaturesMenuContribution() {
-//                    @Override
-//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-//                        log.info( "Feature: " + feature );
-//                    }
-//                };            
-//            }
-//        });
+                .top( search.getControl() ).height( tableHeight ).width( 300 ).create() );
     }
 
 }
