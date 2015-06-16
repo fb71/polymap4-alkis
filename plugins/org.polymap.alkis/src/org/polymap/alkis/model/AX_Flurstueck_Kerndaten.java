@@ -105,7 +105,7 @@ public abstract class AX_Flurstueck_Kerndaten
      * zwei Nachkommastellen geführt werden, ansonsten ohne Nachkommastellen.
      */
     @NameInStore("amtlicheflaeche")
-    public Property<Float>                     amtlicheFlaeche;
+    public Property<Double>                     amtlicheFlaeche;
 
     /**
      * 'Flurnummer' ist die von der Katasterbehörde zur eindeutigen Bezeichnung

@@ -34,9 +34,9 @@ import org.eclipse.swt.widgets.Label;
 
 import org.eclipse.ui.forms.widgets.Section;
 
-import org.polymap.rhei.form.DefaultFormEditorPage;
-import org.polymap.rhei.form.IFormEditorPage;
-import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPage;
+import org.polymap.rhei.form.IFormPageSite;
 import org.polymap.rhei.table.CollectionContentProvider;
 import org.polymap.rhei.table.DefaultFeatureTableColumn;
 import org.polymap.rhei.table.FeatureTableViewer;

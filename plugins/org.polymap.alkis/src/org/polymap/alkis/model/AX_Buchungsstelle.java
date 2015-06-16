@@ -43,8 +43,8 @@ public class AX_Buchungsstelle
 
     /**
      * 'Buchungsstelle' ist Teil von 'Buchungsblatt'. Bei 'Buchungsart' mit einer der
-     * Wertearten für aufgeteilte Buchungen (Wertear- ten 1101, 1102, 1401 bis 1403,
-     * 2201 bis 2205 und 2401 bis 2404) muss die Re- lation zu einem 'Buchungsblatt'
+     * Wertearten für aufgeteilte Buchungen (Wertearten 1101, 1102, 1401 bis 1403,
+     * 2201 bis 2205 und 2401 bis 2404) muss die Relation zu einem 'Buchungsblatt'
      * und der 'Blattart' mit der Werteart 'Fiktives Blatt' bestehen.
      */
     @NameInStore("istbestandteilvon")

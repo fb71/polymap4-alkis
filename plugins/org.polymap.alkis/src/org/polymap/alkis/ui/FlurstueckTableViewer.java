@@ -72,7 +72,7 @@ public class FlurstueckTableViewer
                     @Override
                     public String getText( Object elm ) {
                         AX_Flurstueck fst = FeatureTableElement.entity( elm );
-                        return Joiner.on( "/" ).join( fst.gemarkung().bezeichnung.get(), fst.gemeinde().bezeichnung.get() );
+                        return Joiner.on( " / " ).join( fst.gemarkung().bezeichnung.get(), fst.gemeinde().bezeichnung.get() );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
@@ -91,13 +91,13 @@ public class FlurstueckTableViewer
             // Flurstücksnummer
             propName = "nr";  //AX_Flurstueck.TYPE.flurstuecksnummer.info().getName();
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
-                .setHeader( "Zähler/Nenner" )
+                .setHeader( "Flurstück" )
                 .setWeight( 1, 60 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
                         AX_Flurstueck fst = FeatureTableElement.entity( elm );
-                        return Joiner.on( "/" ).skipNulls().join( fst.zaehler.get(), fst.nenner.get() );
+                        return Joiner.on( " / " ).skipNulls().join( fst.zaehler.get(), fst.nenner.get() );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
@@ -108,8 +108,8 @@ public class FlurstueckTableViewer
             // Fläche
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( AX_Flurstueck.TYPE.amtlicheFlaeche ) )
-                .setWeight( 1, 60 )
-                .setHeader( "Fläche\n(in ha)" )
+                .setWeight( 2, 60 )
+                .setHeader( "Fläche (m²)" )
                 .setLabelProvider( flaecheValidator )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             

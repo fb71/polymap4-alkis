@@ -12,30 +12,32 @@
  */
 package org.polymap.alkis.ui;
 
-import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 import static org.polymap.alkis.ui.util.UnitOfWorkHolder.Propagation.REQUIRES_NEW_LOCAL;
-import static org.polymap.model2.store.geotools.FeatureStoreUnitOfWork.ff;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
-import org.json.JSONObject;
-import org.opengis.filter.identity.Identifier;
+import org.opengis.filter.Filter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.core.ui.StatusDispatcher;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.Context;
@@ -43,10 +45,12 @@ import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.form.batik.BatikFilterContainer;
+import org.polymap.rhei.form.batik.BatikFormContainer;
 import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
-import org.polymap.rhei.table.workbench.FeatureTableFilterBar;
+import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
@@ -54,7 +58,7 @@ import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.Messages;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
-import org.polymap.model2.store.geotools.FilterWrapper;
+import org.polymap.model2.query.Query;
 
 /**
  * 
@@ -84,6 +88,7 @@ public class StartPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 400 ); // table viewer
+//        createLoginContents( parent );
         createMainContents( parent );
     }
     
@@ -126,7 +131,7 @@ public class StartPanel
         loginForm.setShowRegisterLink( false );
         loginForm.setShowStoreCheck( true );
         loginForm.setShowLostLink( true );
-        loginForm.createContents( section );
+        new BatikFormContainer( loginForm ).createContents( section );
     }
     
     
@@ -136,11 +141,6 @@ public class StartPanel
         getSite().setTitle( "Flurstücksuche" /*i18n.get( "title" )*/ );
 
         IPanelToolkit tk = getSite().toolkit();
-
-//        // results table
-//        IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
-//        tableSection.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
-//        tableSection.getBody().setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
 
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
@@ -162,54 +162,83 @@ public class StartPanel
         // filterBar
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
+        Button searchFormBtn = tk.createButton( body, "Suchformular", SWT.TOGGLE );
+        searchFormBtn.setToolTipText( "Suchformular öffnen" );
+        searchFormBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent e ) {
+                // XXX Auto-generated method stub
+                throw new RuntimeException( "not yet implemented." );
+            }
+        });
+                
         // searchField
         FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
-        EntitySearchField search = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
+        EntitySearchField searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
             @Override
             protected void doSearch( String queryString ) throws Exception {
-                Set<Identifier> ids = new HashSet( 1024 );
-                for (JSONObject record : index.search( queryString, -1 )) {
-                    String id = substringAfterLast( record.getString( FulltextIndex.FIELD_ID ), "." );
-                    if (id.length() > 0) {
-                        ids.add( ff.featureId( id ) );
-                    }
-                    else {
-                        log.warn( "No FIELD_ID in record: " + record );
-                    }
-                }
-                log.info( "Filter:" + ff.id( ids ) );
-                query = uow.query( entityClass ).where( new FilterWrapper( ff.id( ids ) ) );
+                query = AlkisRepository.instance.get().fulltextQuery( queryString, uow );
             }
             @Override
             protected void doRefresh() {
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-//                viewer.setInput( query.execute() );
+                viewer.setInput( query.execute() );
             }
         };
-        
-//        search.setSearchOnEnter( false );
-//        search.getText().setText( "Im" );
-        search.getText().setFocus();
-        search.searchOnEnter.set( true );
-        new FulltextProposal( fulltext, search.getText() )
-                .activationDelayMillis.put( 500 );
-        
-//        search.getText().addListener( SWT.FocusOut, new Listener() {
-//            @Override
-//            public void handleEvent( Event ev ) {
-//                log.warn( "FOCUS OUT!" );
-//            }
-//        });
 
+        // search form
+        BatikFilterContainer searchForm = new BatikFilterContainer( new FlurstueckFilterPage() {
+            @Override
+            public Filter doBuildFilter( Filter filter, IProgressMonitor monitor ) throws Exception {
+                super.doBuildFilter( filter, monitor );                
+                log.info( "Query: " + queryString.toString() );
+                
+                Query<AX_Flurstueck> query = AlkisRepository.instance.get().fulltextQuery( queryString, uow().get() );
+
+                // SelectionEvent nach refresh() verhindern
+                viewer.clearSelection();
+                viewer.setInput( query.execute() );
+                return filter;
+            }
+        } );
+        searchForm.createContents( body );
+//        UIUtils.setVariant( tk.adapt( searchForm.getContents() ), "alkis-search" );
+        
+        Button searchBtn = tk.createButton( searchForm.getContents(), "Start", SWT.PUSH );
+        searchBtn.setToolTipText( "Suche starten" );
+        searchBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                try {
+                    searchForm.buildFilter();
+                }
+                catch (Exception e) {
+                    StatusDispatcher.handleError( "", e );
+                }
+            }
+        });
+        
+//        searchField.searchOnEnter.set( false );
+//        searchField.getText().setText( "105 " );
+        searchField.searchOnEnter.set( true );
+        searchField.getText().setFocus();
+        new FulltextProposal( fulltext, searchField.getText() )
+                .activationDelayMillis.put( 500 );
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
-        filterBar.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).noBottom().right( 50 ).create() );
-        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).noBottom().left( filterBar.getControl() ).create() );
+        searchFormBtn.setLayoutData( FormDataFactory.filled()
+                .height( 27 ).noRight().noBottom().create() );
+        filterBar.getControl().setLayoutData( FormDataFactory.filled()
+                .height( 27 ).left( searchFormBtn ).noBottom().right( 50 ).create() );
+        searchField.getControl().setLayoutData( FormDataFactory.filled()
+                .height( 27 ).noBottom().left( filterBar.getControl() ).create() );
+        searchForm.getContents().setLayoutData( FormDataFactory.filled()
+                .height( 200 ).top( searchField.getControl() ).noBottom().create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled()
-                .top( search.getControl() ).height( tableHeight ).width( 300 ).create() );
+                .top( searchForm.getContents() ).height( tableHeight - 160 ).width( 300 ).create() );
     }
 
 }

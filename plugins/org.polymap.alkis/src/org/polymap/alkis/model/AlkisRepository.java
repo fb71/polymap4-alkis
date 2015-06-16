@@ -14,10 +14,14 @@
  */
 package org.polymap.alkis.model;
 
+import static org.apache.commons.lang3.StringUtils.substringAfterLast;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,7 @@ import org.geotools.jdbc.JDBCDataStore;
 import org.geotools.jdbc.PrimaryKey;
 import org.geotools.jdbc.PrimaryKeyFinder;
 import org.opengis.filter.FilterFactory;
+import org.opengis.filter.identity.Identifier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,13 +53,16 @@ import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
 import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
 
 import org.polymap.alkis.AlkisPlugin;
+import org.polymap.alkis.model.fulltext.FlurstueckTransformer;
 import org.polymap.alkis.model.fulltext.FlurstueckUpdater;
 import org.polymap.model2.Composite;
+import org.polymap.model2.query.Query;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.CompositeInfo;
 import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.store.geotools.FeatureStoreAdapter;
+import org.polymap.model2.store.geotools.FilterWrapper;
 
 /**
  * 
@@ -193,6 +201,22 @@ public class AlkisRepository {
     }
 
     
+    public Query<AX_Flurstueck> fulltextQuery( String query, UnitOfWork uow ) throws Exception {
+        Set<Identifier> ids = new HashSet( 1024 );
+        fulltextIndex.search( query, -1 ).forEach( record -> {
+            String id = substringAfterLast( record.getString( FulltextIndex.FIELD_ID ), "." );
+            if (id.length() > 0) {
+                ids.add( ff.featureId( id ) );
+            }
+            else {
+                log.warn( "No FIELD_ID in record: " + record );
+            }
+        });
+        log.info( "Filter:" + ff.id( ids ) );
+        return uow.query( AX_Flurstueck.class ).where( new FilterWrapper( ff.id( ids ) ) );
+    }
+    
+    
     public <T extends Composite> CompositeInfo<T> infoOf( Class<T> compositeClass ) {
         return repo.infoOf( compositeClass );
     }
@@ -216,8 +240,6 @@ public class AlkisRepository {
         println( "\n", AX_Flurstueck.class.getSimpleName(), " =============================================" );
         println( r.ds.getSchema( AX_Flurstueck.TYPE.info().getNameInStore() ) );
         
-//        AlkisRepository.instance.get().updateFulltext();
-        
         //
         UnitOfWork uow = r.newUnitOfWork();
         
@@ -232,16 +254,16 @@ public class AlkisRepository {
 
         ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 1 ).execute();
         for (AX_Flurstueck fst : rs) {
-//            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> {
-//                return true;
-//            }).run();
+            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> true ).run();
             
-            println( "Blattart: " + fst.buchungsstelle.get().buchungsblatt.get().blattart.get() );
-            println( "Gemarkung: " + fst.gemarkung().bezeichnung.get() );
-            println( "Gemeinde: " + fst.gemeinde().bezeichnung.get() );
+            println( "JSON:" + new FlurstueckTransformer().apply( fst ).toString( 4 ) );
+            
+//            println( "Blattart: " + fst.buchungsstelle.get().buchungsblatt.get().blattart.get() );
+//            println( "Gemarkung: " + fst.gemarkung().bezeichnung.get() );
+//            println( "Gemeinde: " + fst.gemeinde().bezeichnung.get() );
         }
         
-//        // id query
+//        // id queryString
 //        AX_Flurstueck fst = uow.entity( AX_Flurstueck.class, "DESTLIKA0002XWdg" );
 //        println( "-> " + fst.lagebezeichnung.get() );
         

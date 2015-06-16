@@ -16,8 +16,6 @@ package org.polymap.alkis.model.fulltext;
 
 import org.json.JSONObject;
 
-import com.google.common.base.Joiner;
-
 import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.indexing.FeatureTransformer;
 
@@ -108,14 +106,13 @@ public class FlurstueckTransformer
 
 
         protected void add( String key, Object value ) {
-            String stringValue = null;
             if (value == null) {
                 return;
             }
             else {
-                stringValue = value.toString();
+                String stringValue = value.toString();
+                result.put( key, result.has( key ) ? result.getString( key ) + " " + stringValue : stringValue );
             }
-            result.put( key, Joiner.on( " " ).skipNulls().join( result.optString( key ), stringValue ) );
         }
     }
     

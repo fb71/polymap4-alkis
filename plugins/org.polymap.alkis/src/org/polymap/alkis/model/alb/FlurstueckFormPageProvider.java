@@ -19,8 +19,8 @@ import java.util.List;
 
 import org.opengis.feature.Feature;
 
-import org.polymap.rhei.form.IFormEditorPage;
-import org.polymap.rhei.form.IFormPageProvider;
+import org.polymap.rhei.form.IFormPage;
+import org.polymap.rhei.form.workbench.form.IFormPageProvider;
 import org.polymap.rhei.form.workbench.FormEditor;
 
 /**

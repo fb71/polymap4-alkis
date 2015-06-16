@@ -59,7 +59,7 @@ public class FlurstueckUpdater
     @DefaultInt( 0 )
     private Config<FlurstueckUpdater,Integer>   first;
     
-    @DefaultInt( 1000 )
+    @DefaultInt( 100 )
     private Config<FlurstueckUpdater,Integer>   max;
 
 
@@ -75,7 +75,6 @@ public class FlurstueckUpdater
             transformed = transformer.apply( transformed );
         }
         assert ((JSONObject)transformed).opt( FulltextIndex.FIELD_ID ) != null;
-        log.info( "Transformed: " + ((JSONObject)transformed).toString( 4 ) );
         return (JSONObject)transformed;
     }
 
@@ -85,7 +84,7 @@ public class FlurstueckUpdater
         log.info( "max: " + max.get() );
         Timer t = new Timer();
         
-        int numThreads = 6;  //Runtime.getRuntime().availableProcessors() * 2;
+        int numThreads = 4;  //Runtime.getRuntime().availableProcessors() * 2;
         ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads,
                 10L, TimeUnit.SECONDS, new SynchronousQueue(), new RejectedExecutionHandlers.Blocking() );
         
@@ -100,8 +99,8 @@ public class FlurstueckUpdater
                     try {
                         log.info( Thread.currentThread().getName() );
                         JSONObject transformed = transform( fst );
-                        //log.info( "transformed: " + transformed );
-                        //updater.store( transformed, false );                    
+                        log.info( "transformed: " + transformed.toString( 4 ) );
+                        updater.store( transformed, false );                    
                     }
                     catch (Throwable e) {
                         log.info( "", e );
@@ -117,6 +116,14 @@ public class FlurstueckUpdater
             updater.apply();
             log.info( "Zeit für Index: " + t.elapsedTime() + "ms" );
         }
+    }
+    
+    
+    /**
+     * Simple access test.
+     */
+    public static void main( String[] args ) throws Exception {
+        AlkisRepository.instance.get().updateFulltext();
     }
     
 }
