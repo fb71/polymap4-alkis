@@ -14,10 +14,15 @@
  */
 package org.polymap.alkis.ui;
 
+import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.BB;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.BESITZER_ANSCHRIFT;
+import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.BESITZER_GEBURTSNAME;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.BESITZER_NAME;
+import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.BESITZER_VORNAME;
+import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.FLUR;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.GMD;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.GMK;
+import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.LAGE;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.NENNER;
 import static org.polymap.alkis.model.fulltext.FlurstueckTransformer.ZAEHLER;
 
@@ -27,6 +32,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+
+import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.filter.DefaultFilterPage;
 import org.polymap.rhei.filter.IFilterPage2;
@@ -54,17 +61,29 @@ public abstract class FlurstueckFilterPage
     @Override
     public void createFilterContents( IFilterPageSite site ) {
         this.pageSite = site;
+        
+        site.getPageBody().setLayout( ColumnLayoutFactory.defaults().margins( 100, 10 ).spacing( 3 ).columns( 1, 2 ).create() );
+        
         PropertyInfo propInfo = AX_Flurstueck.TYPE.zaehler.info();
         site.newFilterField( ZAEHLER, propInfo.getType() ).label.put( "Zähler" ).create();
 
         propInfo = AX_Flurstueck.TYPE.nenner.info();
         site.newFilterField( NENNER, propInfo.getType() ).label.put( "Nenner" ).create();
 
+        site.newFilterField( FLUR, Integer.class ).label.put( "Flur" ).create();
+        site.newFilterField( LAGE, String.class ).label.put( "Lage" )
+                .tooltip.put( "Lagebezeichnung mit/ohne Hausnummer oder verschlüsselte Lage" ).create();
+
         site.newFilterField( GMK, String.class ).label.put( "Gemarkung" ).create();
         site.newFilterField( GMD, String.class ).label.put( "Gemeinde" ).create();        
 
-        site.newFilterField( BESITZER_NAME, String.class ).label.put( "Besitzer Name" ).create();
-        site.newFilterField( BESITZER_ANSCHRIFT, String.class ).label.put( "Anschrift" ).create();        
+        site.newFilterField( BB, String.class ).label.put( "Buchungsblatt" )
+                .tooltip.put( "Buchungsblattnummer oder -Kennzeichen" ).create();        
+
+        site.newFilterField( BESITZER_NAME, String.class ).label.put( "Besitzer-Name" ).create();
+        site.newFilterField( BESITZER_VORNAME, String.class ).label.put( "Besitzer-Vorname" ).create();
+        site.newFilterField( BESITZER_GEBURTSNAME, String.class ).label.put( "Geburtsname" ).create();
+        site.newFilterField( BESITZER_ANSCHRIFT, String.class ).label.put( "Besitzer-Anschrift" ).create();        
     }
 
     
@@ -75,7 +94,12 @@ public abstract class FlurstueckFilterPage
         appendQueryField( NENNER, result, false );
         appendQueryField( GMD, result, false );
         appendQueryField( GMK, result, false );
+        appendQueryField( FLUR, result, false );
+        appendQueryField( BB, result, true );
+        appendQueryField( LAGE, result, true );
         appendQueryField( BESITZER_NAME, result, true );
+        appendQueryField( BESITZER_GEBURTSNAME, result, true );
+        appendQueryField( BESITZER_VORNAME, result, true );
         appendQueryField( BESITZER_ANSCHRIFT, result, true );
         queryString = result.toString();
         return filter;
@@ -90,8 +114,15 @@ public abstract class FlurstueckFilterPage
                 if (result.length() > 0) {
                     result.append( " AND " );
                 }
-                stringValue = isLike ? "*" + stringValue + "*" : stringValue;
-                result.append( field ).append( ":\"").append( stringValue ).append( "\"" );
+                if (stringValue.contains( "*" )) {
+                    result.append( field ).append( ":").append( stringValue );
+                }
+                else if (isLike) {
+                    result.append( field ).append( ":*").append( stringValue ).append( "*" );
+                }
+                else {
+                    result.append( field ).append( ":\"").append( stringValue ).append( "\"" );
+                }
             }
         }
     }

@@ -138,7 +138,7 @@ public class EntityHierachyPrinter {
                 println( pInfo.getName(), " = ", ((Property)pInfo.get( entity )).get() );
             }
             catch (Exception e) {
-                println( "Fehler bei: " + pInfo.getName() );
+                println( "Fehler bei: " + pInfo.getName() + " (" + e.toString() + ")" );
             }
         });
         prefix -= indent*2;

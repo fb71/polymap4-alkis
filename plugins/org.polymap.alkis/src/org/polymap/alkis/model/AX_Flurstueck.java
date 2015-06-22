@@ -15,6 +15,8 @@
 package org.polymap.alkis.model;
 
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.weistAuf;
+import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.zeigtAuf;
+
 import com.vividsolutions.jts.geom.MultiPolygon;
 
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
@@ -86,8 +88,8 @@ public class AX_Flurstueck
     public ManyAssociation<AX_LagebezeichnungMitHausnummer> lagebezeichnung = new ManyAssociation( AX_LagebezeichnungMitHausnummer.class, weistAuf );
     
     /**
-     * 'Flurstück' {@link Beziehungsart#weistAuf} 'Lagebezeichnung mit Hausnummer'.     
+     * 'Flurstück' {@link Beziehungsart#zeigtAuf} 'Lagebezeichnung ohne Hausnummer'.     
      */
-    public ManyAssociation<AX_LagebezeichnungOhneHausnummer> lagebezeichnungOhne = new ManyAssociation( AX_LagebezeichnungOhneHausnummer.class, weistAuf );
+    public ManyAssociation<AX_LagebezeichnungOhneHausnummer> lagebezeichnungOhne = new ManyAssociation( AX_LagebezeichnungOhneHausnummer.class, zeigtAuf );
         
 }

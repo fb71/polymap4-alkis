@@ -109,6 +109,11 @@ public class AlkisRepository {
                 .collect( Collectors.toMap( g -> g.gemeindenummer.get(), g -> g, (g1,g2) -> g1 ) );
     });
     
+    public Lazy<Map<String,AX_LagebezeichnungKatalog>> lageKatalog = new PlainLazyInit( () -> {
+        return newUnitOfWork().query( AX_LagebezeichnungKatalog.class ).execute().stream()
+                .collect( Collectors.toMap( e -> e.lage.get(), e -> e, (e1,e2) -> e1 ) );
+    });
+    
     
     /**
      * Configure and initializing the one and only global instance.
@@ -167,6 +172,8 @@ public class AlkisRepository {
                             AX_Person.class,
                             AX_Anschrift.class,
                             AX_LagebezeichnungMitHausnummer.class,
+                            AX_LagebezeichnungOhneHausnummer.class,
+                            AX_LagebezeichnungKatalog.class,
                             AX_Namensnummer.class,
                             AX_Gemarkung.class,
                             AX_Gemeinde.class,
@@ -252,10 +259,18 @@ public class AlkisRepository {
 //            }
 //        });
 
-        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class ).maxResults( 1 ).execute();
+        ResultSet<AX_Flurstueck> rs = uow.query( AX_Flurstueck.class )
+                //.where( new FilterWrapper( ff.) )
+                .maxResults( 20 ).execute();
         for (AX_Flurstueck fst : rs) {
-            EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> true ).run();
-            
+            //EntityHierachyPrinter.on( fst, (entity,assocname,assocType) -> true ).run();
+
+//            fst.lagebezeichnung.get().forEach( lbz -> 
+//                    EntityHierachyPrinter.on( lbz, (entity,assocname,assocType) -> true ).run() );
+//    
+//            fst.lagebezeichnungOhne.get().forEach( lbz -> 
+//                    EntityHierachyPrinter.on( lbz, (entity,assocname,assocType) -> true ).run() );
+    
             println( "JSON:" + new FlurstueckTransformer().apply( fst ).toString( 4 ) );
             
 //            println( "Blattart: " + fst.buchungsstelle.get().buchungsblatt.get().blattart.get() );
@@ -267,12 +282,17 @@ public class AlkisRepository {
 //        AX_Flurstueck fst = uow.entity( AX_Flurstueck.class, "DESTLIKA0002XWdg" );
 //        println( "-> " + fst.lagebezeichnung.get() );
         
-//        println( "\n", AX_Person.class.getSimpleName(), " =============================================" );
-//        uow.query( AX_Person.class ).maxResults( 1 ).execute().stream().forEach( person -> {
-//            EntityHierachyPrinter.on( person, (entity,assocname,assocType) -> {
-//                return true;
-//            }).run();
+//        println( "\n", AX_LagebezeichnungMitHausnummer.class.getSimpleName(), " =============================================" );
+//        uow.query( AX_LagebezeichnungMitHausnummer.class ).maxResults( 1000 ).execute().stream().forEach( lbz -> {
+//            lbz.katalogeintrag().ifPresent( e -> println( "Lage-Katalog: " + e.bezeichnung.get() ) );
 //        });
+
+//      println( "\n", AX_Person.class.getSimpleName(), " =============================================" );
+//      uow.query( AX_Person.class ).maxResults( 1 ).execute().stream().forEach( person -> {
+//          EntityHierachyPrinter.on( person, (entity,assocname,assocType) -> {
+//              return true;
+//          }).run();
+//      });
 
 //        println( "\nAX_Namensnummer =============================================" );
 //        uow.query( AX_Namensnummer.class ).maxResults( 1 ).execute().stream().forEach( nn -> {

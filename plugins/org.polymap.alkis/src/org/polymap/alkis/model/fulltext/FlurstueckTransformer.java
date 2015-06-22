@@ -40,6 +40,7 @@ public class FlurstueckTransformer
     public static final String    LAGE = "lagebezeichnung";
     public static final String    BESITZER_NAME = "name";
     public static final String    BESITZER_VORNAME = "vorname";
+    public static final String    BESITZER_GEBURTSNAME = "geburtsname";
     public static final String    BESITZER_ANSCHRIFT = "anschrift";
     public static final String    BB = "buchungsblatt";
     
@@ -73,8 +74,12 @@ public class FlurstueckTransformer
             add( GMD, fst.gemeinde().bezeichnung.get() );
 
             fst.lagebezeichnung.get().stream().forEach( lbz -> {
-                add( LAGE, lbz.unverschluesselt.get() );
+                lbz.katalogeintrag().ifPresent( e -> add( LAGE, e.bezeichnung.get() ) );
                 add( LAGE, lbz.hausnummer.get() );
+            });
+            fst.lagebezeichnungOhne.get().stream().forEach( lbz -> {
+                lbz.katalogeintrag().ifPresent( e -> add( LAGE, e.bezeichnung.get() ) );
+                add( LAGE, lbz.unverschluesselt.get() );
             });
 
             AX_Buchungsstelle bst = fst.buchungsstelle.get();
@@ -88,7 +93,7 @@ public class FlurstueckTransformer
             bb.namensnummern.get().stream().forEach( nn -> {
                 nn.person.get().ifPresent( p -> {
                     add( BESITZER_NAME, p.nachnameOderFirma.get() );
-                    add( BESITZER_NAME, p.geburtsname.get() );
+                    add( BESITZER_GEBURTSNAME, p.geburtsname.get() );
                     add( BESITZER_VORNAME, p.vorname.get() );
 
                     p.anschrift.get().stream().forEach( a -> {

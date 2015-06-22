@@ -53,4 +53,21 @@ public class AX_LagebezeichnungMitHausnummer
      */
     public Property<String>         hausnummer;
 
+//    /**
+//     * 'Verschlüsselte Lagebezeichnung' ist ein eindeutiges Fachkennzeichen (siehe
+//     * Katalog der verschlüsselten Lagebezeichnungen). Die Attributart setzt sich
+//     * zusammen aus dem Gemeindekennzeichen mit den Verschlüsselungen für
+//     * <ul> 
+//     * <li>1. Spalte: Land 
+//     * <li>2. Spalte: Regierungsbezirk 
+//     * <li>3. Spalte: Kreis (kreisfreie Stadt) 
+//     * <li>4. Spalte: Gemeinde 
+//     * <li>5. Spalte: Lage
+//     * </ul>
+//     * <p/>
+//     * Aufgelöstes Attribute der AX_Lagebezeichnung.
+//     */
+//    @Nullable
+//    public Property<String>         verschluesselt;
+    
 }

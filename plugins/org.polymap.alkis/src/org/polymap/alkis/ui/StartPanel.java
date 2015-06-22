@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -35,6 +36,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.runtime.i18n.IMessages;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.StatusDispatcher;
@@ -76,6 +78,10 @@ public class StartPanel
     
     /** Das aktuell selektierte {@link AX_Flurstueck}. */
     private Context<AX_Flurstueck>          selected;
+
+    private BatikFilterContainer            searchForm;
+
+    private EntitySearchField<AX_Flurstueck> searchField;
 
     
     @Override
@@ -163,18 +169,29 @@ public class StartPanel
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         Button searchFormBtn = tk.createButton( body, "Suchformular", SWT.TOGGLE );
-        searchFormBtn.setToolTipText( "Suchformular öffnen" );
+        searchFormBtn.setToolTipText( "Suchformular anzeigen" );
+        searchFormBtn.setSelection( false );
         searchFormBtn.addSelectionListener( new SelectionAdapter() {
             @Override
-            public void widgetSelected( SelectionEvent e ) {
-                // XXX Auto-generated method stub
-                throw new RuntimeException( "not yet implemented." );
+            public void widgetSelected( SelectionEvent ev ) {
+                if (searchFormBtn.getSelection()) {
+                    searchForm.getContents().setVisible( true );
+                    searchFormBtn.setToolTipText( "Schließen" );
+                    Point computedSize = searchForm.getContents().computeSize( body.getSize().x, SWT.DEFAULT, true );
+                    FormDataFactory.on( searchForm.getContents() ).bottom( searchField.getControl(), computedSize.y+35 );
+                }
+                else {
+                    searchForm.getContents().setVisible( false );
+                    searchFormBtn.setToolTipText( "Suchformular anzeigen" );
+                    FormDataFactory.on( searchForm.getContents() ).bottom( searchField.getControl(), 30 );                    
+                }
+                parent.layout();
             }
         });
                 
         // searchField
         FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
-        EntitySearchField searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
+        searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
             @Override
             protected void doSearch( String queryString ) throws Exception {
                 query = AlkisRepository.instance.get().fulltextQuery( queryString, uow );
@@ -188,7 +205,7 @@ public class StartPanel
         };
 
         // search form
-        BatikFilterContainer searchForm = new BatikFilterContainer( new FlurstueckFilterPage() {
+        searchForm = new BatikFilterContainer( new FlurstueckFilterPage() {
             @Override
             public Filter doBuildFilter( Filter filter, IProgressMonitor monitor ) throws Exception {
                 super.doBuildFilter( filter, monitor );                
@@ -203,9 +220,12 @@ public class StartPanel
             }
         } );
         searchForm.createContents( body );
+        searchForm.getContents().setVisible( false );
 //        UIUtils.setVariant( tk.adapt( searchForm.getContents() ), "alkis-search" );
-        
-        Button searchBtn = tk.createButton( searchForm.getContents(), "Start", SWT.PUSH );
+
+        Composite searchBtns = tk.createComposite( searchForm.getContents() );
+        searchBtns.setLayout( ColumnLayoutFactory.defaults().columns( 2, 2 ).spacing( 5 ).create() );
+        Button searchBtn = tk.createButton( searchBtns, "Suchen", SWT.PUSH );
         searchBtn.setToolTipText( "Suche starten" );
         searchBtn.addSelectionListener( new SelectionAdapter() {
             @Override
@@ -218,9 +238,17 @@ public class StartPanel
                 }
             }
         });
+        Button searchResetBtn = tk.createButton( searchBtns, "Zurücksetzen", SWT.PUSH );
+        searchResetBtn.setToolTipText( "Formularfelder zurücksetzen" );
+        searchResetBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                searchForm.clearFields();
+            }
+        });
         
-        searchField.searchOnEnter.set( false );
-        searchField.getText().setText( "105 " );
+//        searchField.searchOnEnter.set( false );
+//        searchField.getText().setText( "105 " );
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )
@@ -229,16 +257,16 @@ public class StartPanel
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
-        searchFormBtn.setLayoutData( FormDataFactory.filled()
-                .height( 27 ).noRight().noBottom().create() );
-        filterBar.getControl().setLayoutData( FormDataFactory.filled()
-                .height( 27 ).left( searchFormBtn ).noBottom().right( 50 ).create() );
-        searchField.getControl().setLayoutData( FormDataFactory.filled()
-                .height( 27 ).noBottom().left( filterBar.getControl() ).create() );
-        searchForm.getContents().setLayoutData( FormDataFactory.filled()
-                .height( 200 ).top( searchField.getControl() ).noBottom().create() );
-        viewer.getTable().setLayoutData( FormDataFactory.filled()
-                .top( searchForm.getContents() ).height( tableHeight - 160 ).width( 300 ).create() );
+        FormDataFactory.on( searchFormBtn )
+                .fill().height( 27 ).noRight().noBottom();
+        FormDataFactory.on( filterBar.getControl() )
+                .fill().height( 27 ).left( searchFormBtn ).noBottom().right( 50 );
+        FormDataFactory.on( searchField.getControl() )
+                .fill().height( 27 ).noBottom().left( filterBar.getControl() );
+        FormDataFactory.on( searchForm.getContents() )
+                .fill().top( searchField.getControl() ).bottom( searchField.getControl(), 30 );
+        FormDataFactory.on( viewer.getTable() )
+                .fill().top( searchForm.getContents() ).height( tableHeight - 160 ).width( 300 );
     }
 
 }

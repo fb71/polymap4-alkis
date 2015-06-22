@@ -14,6 +14,8 @@
  */
 package org.polymap.alkis.model;
 
+import java.util.Optional;
+
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
@@ -39,14 +41,25 @@ public abstract class AX_Lage
     @Nullable
     public Property<String>         unverschluesselt;
 
+    @Nullable
     public Property<String>         kreis;
     
+    @Nullable
     public Property<String>         gemeinde;
     
+    @Nullable
     public Property<String>         land;
     
+    @Nullable
     public Property<String>         regierungsbezirk;
     
+    @Nullable
     public Property<String>         lage;
+    
+    public Optional<AX_LagebezeichnungKatalog> katalogeintrag() {
+        return lage.get() != null
+                ? Optional.of( AlkisRepository.instance.get().lageKatalog.get().get( lage.get() ) )
+                : Optional.empty();
+    }
     
 }

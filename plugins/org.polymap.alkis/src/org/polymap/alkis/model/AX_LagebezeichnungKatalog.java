@@ -16,17 +16,12 @@ package org.polymap.alkis.model;
 
 import org.polymap.model2.Mixins;
 import org.polymap.model2.NameInStore;
-import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
 /**
- * [E] 'Lagebezeichnung ohne Hausnummer' ist die ortsübliche oder amtlich
- * festgesetzte Benennung der Lage von Flurstücken, die keine Hausnummer haben (z.B.
- * Namen und Bezeichnungen von Gewannen, Straßen, Gewässern).
- * <p/>
- * <b>Konsistenzbedingungen:</b> 'Verschlüsselte Lagebezeichnung' und
- * 'Unverschlüsselte Lagebezeichnung' schließen sich gegenseitig aus; eine dieser
- * Attributarten muss vorhanden sein.
+ * 'Lagebezeichnung Katalogeintrag' enthält die eindeutige Verschlüsselung von
+ * Lagebezeichnungen und Straßen innerhalb einer Gemeinde mit der entsprechenden
+ * Bezeichnung.
  * 
  * @Abgeleitet AA_NREO
  * @Objekttyp NREO
@@ -36,15 +31,10 @@ import org.polymap.model2.Property;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 @Mixins({AA_Lebenszeitintervall.class})
-@NameInStore("ax_lagebezeichnungohnehausnummer")
-public class AX_LagebezeichnungOhneHausnummer
-        extends AX_Lage {
+@NameInStore("ax_lagebezeichnungkatalogeintrag")
+public class AX_LagebezeichnungKatalog
+        extends AX_Katalogeintrag {
 
-    @Nullable
-    @NameInStore("zusatzzurlagebezeichnung")
-    public Property<String>             zusatz;
-
-//    @Nullable
-//    public Property<String>             ortsteil;
-
+      public Property<String>         lage;
+    
 }

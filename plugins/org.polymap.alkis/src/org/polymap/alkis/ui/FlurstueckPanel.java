@@ -290,12 +290,20 @@ public class FlurstueckPanel
                     .parent.put( row )
                     .label.put( "Amtl. Fläche (m²)" ).create();
 
-            String lage = "???"; //entity.lagebezeichnung.get().stream().map( lbz -> lbz.unverschluesselt.get() ).reduce( (s1,s2) -> s1 + " " + s2 ).orElse( "" );
-            pageSite.newFormField( new PlainValuePropertyAdapter( "lage", lage ) )
+            StringBuilder lage = new StringBuilder( 1024 );
+            entity.lagebezeichnung.get().forEach( lbz -> {
+                    lbz.katalogeintrag().ifPresent( e -> lage.append( e.bezeichnung.get() ).append( " " ) );
+                    lage.append( lbz.hausnummer.get() != null ? lbz.hausnummer.get()+" " : "" );
+            });
+            pageSite.newFormField( new PlainValuePropertyAdapter( "lage", lage.toString() ) )
                     .label.put( "Lage" ).create();
 
-            String hinweis = "???"; //entity.lagebezeichnungOhne.get().stream().map( lbz -> lbz.unverschluesselt.get() ).reduce( (s1,s2) -> "" + s1 + " " + s2 ).orElse( "" );
-            pageSite.newFormField( new PlainValuePropertyAdapter( "hinweis", hinweis ) )
+            StringBuilder hinweis = new StringBuilder( 1024 );
+            entity.lagebezeichnungOhne.get().forEach( lbz -> {
+                    lbz.katalogeintrag().ifPresent( e -> hinweis.append( e.bezeichnung.get() ).append( " " ) );
+                    hinweis.append( lbz.unverschluesselt.get() != null ? lbz.unverschluesselt.get()+" " : "" );
+            });
+            pageSite.newFormField( new PlainValuePropertyAdapter( "hinweis", hinweis.toString() ) )
                     .label.put( "Hinweis" ).create();
         }
     }

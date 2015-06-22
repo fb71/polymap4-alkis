@@ -164,7 +164,7 @@ public abstract class AA_Objekt
      * Mögliche Beziehungsarten für einen {@link ManyAssociation}. 
      */
     protected enum Beziehungsart {
-        weistAuf, hat, istBestandteilVon
+        weistAuf, hat, istBestandteilVon, zeigtAuf
     }
 
 }
