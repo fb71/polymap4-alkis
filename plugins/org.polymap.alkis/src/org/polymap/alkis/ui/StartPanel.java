@@ -219,8 +219,8 @@ public class StartPanel
             }
         });
         
-//        searchField.searchOnEnter.set( false );
-//        searchField.getText().setText( "105 " );
+        searchField.searchOnEnter.set( false );
+        searchField.getText().setText( "105 " );
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )

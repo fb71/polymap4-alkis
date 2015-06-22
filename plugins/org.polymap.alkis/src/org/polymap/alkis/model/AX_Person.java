@@ -16,6 +16,8 @@ package org.polymap.alkis.model;
 
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.hat;
 
+import java.util.Date;
+
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -85,6 +87,9 @@ public class AX_Person
      */
     @Nullable
     public Property<String>             geburtsname;
+    
+    @Nullable
+    public Property<Date>               geburtsdatum;
     
 //    /**
 //     * 'Wohnort oder Sitz' ist der Wohnort oder der Sitz einer natürlichen oder
