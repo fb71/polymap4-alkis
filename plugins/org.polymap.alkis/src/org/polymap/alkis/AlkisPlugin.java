@@ -18,6 +18,11 @@ import org.osgi.framework.BundleContext;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
+
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 
 import org.polymap.alkis.model.AlkisRepository;
@@ -47,6 +52,20 @@ public class AlkisPlugin
         instance = this;
         
         AlkisRepository.init();
+        
+        new Job( "ALKIS-Volltext-Update" ) {
+            @Override
+            protected IStatus run( IProgressMonitor monitor ) {
+                try {
+                    AlkisRepository repo = AlkisRepository.instance.get();
+                    repo.updateFulltext( Integer.MAX_VALUE );
+                    return Status.OK_STATUS;
+                }
+                catch (Exception e) {
+                    throw new RuntimeException( e );
+                }
+            }
+        }.schedule( 3000 );
     }
 
 

@@ -203,8 +203,12 @@ public class AlkisRepository {
     }
 
     
-    public void updateFulltext() throws Exception {
-        new FlurstueckUpdater( AlkisRepository.instance.get(), fulltextIndex ).run();
+    public void updateFulltext( int max ) throws Exception {
+        log.info( "Checking fulltext index..." );
+        if (fulltextIndex.isEmpty()) {
+            log.info( "    Starting update..." );
+            new FlurstueckUpdater( AlkisRepository.instance.get(), fulltextIndex ).max.put( max ).run();
+        }
     }
 
     

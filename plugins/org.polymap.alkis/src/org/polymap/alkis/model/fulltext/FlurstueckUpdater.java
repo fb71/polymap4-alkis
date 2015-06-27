@@ -57,10 +57,10 @@ public class FlurstueckUpdater
     private UpdateableFulltextIndex             index;
 
     @DefaultInt( 0 )
-    private Config<FlurstueckUpdater,Integer>   first;
+    public Config<FlurstueckUpdater,Integer>    first;
     
-    @DefaultInt( 100 )
-    private Config<FlurstueckUpdater,Integer>   max;
+    @DefaultInt( Integer.MAX_VALUE )
+    public Config<FlurstueckUpdater,Integer>    max;
 
 
     public FlurstueckUpdater( AlkisRepository repo, UpdateableFulltextIndex index ) {
@@ -92,7 +92,8 @@ public class FlurstueckUpdater
         
         try (
                 Updater updater = index.prepareUpdate();
-                ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork().query( AX_Flurstueck.class ).firstResult( first.get() ).maxResults( max.get() ).execute()
+                ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork()
+                        .query( AX_Flurstueck.class ).firstResult( first.get() ).maxResults( max.get() ).execute()
             ) {
             rs.forEach( fst -> {
                 executor.execute( () -> {
@@ -123,7 +124,7 @@ public class FlurstueckUpdater
      * Simple access test.
      */
     public static void main( String[] args ) throws Exception {
-        AlkisRepository.instance.get().updateFulltext();
+        AlkisRepository.instance.get().updateFulltext( 100 );
     }
     
 }
