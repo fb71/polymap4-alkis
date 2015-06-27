@@ -142,6 +142,7 @@ public class AlkisRepository {
             params.put( "database", "ALKIS" );
             params.put( "user", "postgres" );
             params.put( "passwd", "postgres" );
+            params.put( "max connections", 25 );
             ds = new PostgisNGDataStoreFactory().createDataStore( params );
 
             // primary key: gml_id

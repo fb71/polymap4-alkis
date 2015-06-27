@@ -48,6 +48,7 @@ public class AX_Namensnummer
     public Property<String>                 nummer;
 
     @NameInStore("benennt")
+    @Nullable
     protected Property<String>              benenntId;
 
     /**

@@ -15,8 +15,8 @@
 package org.polymap.alkis.model.fulltext;
 
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.runtime.RejectedExecutionHandlers;
+import org.polymap.core.runtime.RejectedExecutionHandlers.Blocking;
 import org.polymap.core.runtime.Timer;
 import org.polymap.core.runtime.config.Config;
 import org.polymap.core.runtime.config.Configurable;
@@ -62,6 +63,8 @@ public class FlurstueckUpdater
     @DefaultInt( Integer.MAX_VALUE )
     public Config<FlurstueckUpdater,Integer>    max;
 
+    private List<Throwable>                     exceptions = new CopyOnWriteArrayList();
+    
 
     public FlurstueckUpdater( AlkisRepository repo, UpdateableFulltextIndex index ) {
         this.repo = repo;
@@ -82,18 +85,31 @@ public class FlurstueckUpdater
     public void run() throws Exception {
         log.info( "first: " + first.get() );
         log.info( "max: " + max.get() );
+        
+        int chunkSize = 10000;
+        for (int i=first.get(); i<first.get()+max.get(); i+=chunkSize) {
+            processChunk( i, chunkSize );
+        }
+    }
+    
+    
+    protected void processChunk( int chunkFirst, int chunkMax ) throws InterruptedException {
         Timer t = new Timer();
         
-        int numThreads = 4;  //Runtime.getRuntime().availableProcessors() * 2;
-        ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads,
-                10L, TimeUnit.SECONDS, new SynchronousQueue(), new RejectedExecutionHandlers.Blocking() );
+        //int numThreads = 4;  //Runtime.getRuntime().availableProcessors() * 2;
+        int numThreads = Integer.parseInt( System.getProperty( "org.polymap.alkis.threads", "8" ) );
+        log.info( "threads: " + numThreads );
+        int sleepMillis = Integer.parseInt( System.getProperty( "org.polymap.alkis.sleepMillis", "100" ) );
+        log.info( "sleepMillis: " + sleepMillis );
+        Blocking rejected = new RejectedExecutionHandlers.Blocking().sleepMillis.put( sleepMillis );
         
-        List<Throwable> exceptions = new CopyOnWriteArrayList();
+        ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads,
+                10L, TimeUnit.SECONDS, new ArrayBlockingQueue( numThreads ), rejected );
         
         try (
                 Updater updater = index.prepareUpdate();
                 ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork()
-                        .query( AX_Flurstueck.class ).firstResult( first.get() ).maxResults( max.get() ).execute()
+                        .query( AX_Flurstueck.class ).firstResult( chunkFirst ).maxResults( chunkMax ).execute()
             ) {
             rs.forEach( fst -> {
                 executor.execute( () -> {
@@ -111,7 +127,7 @@ public class FlurstueckUpdater
             });
             executor.shutdown();
             executor.awaitTermination( 1, TimeUnit.MINUTES );
-            log.info( "Zeit für Transformation: " + t.elapsedTime() + "ms" );
+            log.info( "Zeit für Transformation: " + t.elapsedTime() + "ms (" + chunkFirst + "/" + chunkMax + ")" );
             
             t.start();
             updater.apply();
