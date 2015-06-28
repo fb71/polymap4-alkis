@@ -15,6 +15,10 @@
 package org.polymap.alkis;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
+import org.osgi.util.tracker.ServiceTracker;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -47,6 +51,11 @@ public class AlkisPlugin
     }
 
 
+    // instance *******************************************
+    
+    private ServiceTracker httpServiceTracker;
+
+
     public void start( BundleContext context ) throws Exception {
         super.start( context );
         instance = this;
@@ -66,10 +75,30 @@ public class AlkisPlugin
                 }
             }
         }.schedule( 3000 );
+
+        // register HTTP resource
+        httpServiceTracker = new ServiceTracker( context, HttpService.class.getName(), null ) {
+            public Object addingService( ServiceReference reference ) {
+                HttpService httpService = (HttpService)super.addingService( reference );                
+                if (httpService != null) {
+                    try {
+                        httpService.registerResources( "/alkisres", "/resources", null );
+                    }
+                    catch (NamespaceException e) {
+                        throw new RuntimeException( e );
+                    }
+                }
+                return httpService;
+            }
+        };
+        httpServiceTracker.open();
     }
 
 
     public void stop( BundleContext context ) throws Exception {
+        httpServiceTracker.close();
+        httpServiceTracker = null;
+        
         instance = null;
         super.stop( context );
     }

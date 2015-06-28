@@ -28,3 +28,4 @@ Bundle-ClassPath: .,
  lib/gt-jdbc-postgis-13.0.jar
 Export-Package: org.polymap.alkis.model,
  org.polymap.alkis.ui
+Import-Package: org.osgi.service.http

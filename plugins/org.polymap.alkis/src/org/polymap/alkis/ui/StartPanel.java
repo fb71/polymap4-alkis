@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.runtime.i18n.IMessages;
+import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -85,6 +86,8 @@ public class StartPanel
 
     private EntitySearchField<AX_Flurstueck> searchField;
 
+    private Context<UserPrincipal>          user;
+    
     
     @Override
     public boolean wantsToBeShown() {
@@ -96,13 +99,13 @@ public class StartPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 400 ); // table viewer
-//        createLoginContents( parent );
-        createMainContents( parent );
+        createLoginContents( parent );
+//        createMainContents( parent );
     }
     
     
     protected void setTitle( int results ) {
-        getSite().setTitle( "Flurstücksuche:" 
+        getSite().setTitle( i18n.get( "title" ) + ":" 
                 + (results < MAX_RESULTS ? " " + results : " >=" + MAX_RESULTS)
                 + " Ergebniss"
                 + (results != 1 ? "e" : "") );
@@ -113,7 +116,7 @@ public class StartPanel
         // welcome
         getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, "Willkommen" /*i18n.get( "loginTitle" )*/ );
+        IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "loginTitle" ) );
         welcome.addConstraint( new PriorityConstraint( 10 ), AlkisPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
         tk.createFlowText( welcome.getBody(), t );
@@ -122,7 +125,7 @@ public class StartPanel
         IPanelSection section = tk.createPanelSection( parent, null );
         section.addConstraint( new PriorityConstraint( 0 ), AlkisPlugin.MIN_COLUMN_WIDTH );
 
-        LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), null /*FIXME user*/ ) {
+        LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
@@ -146,7 +149,7 @@ public class StartPanel
         };
         loginForm.setShowRegisterLink( false );
         loginForm.setShowStoreCheck( true );
-        loginForm.setShowLostLink( true );
+        loginForm.setShowLostLink( false );
         new BatikFormContainer( loginForm ).createContents( section );
     }
     
@@ -154,7 +157,7 @@ public class StartPanel
     protected void createMainContents( Composite parent ) {
         newUnitOfWork( REQUIRES_NEW_LOCAL );
         
-        getSite().setTitle( "Flurstücksuche" /*i18n.get( "title" )*/ );
+        getSite().setTitle( i18n.get( "title" ) );
 
         IPanelToolkit tk = getSite().toolkit();
 
