@@ -87,13 +87,15 @@ public class FlurstueckUpdater
         log.info( "max: " + max.get() );
         
         int chunkSize = 10000;
-        for (int i=first.get(); i<first.get()+max.get(); i+=chunkSize) {
-            processChunk( i, chunkSize );
+        for (int i=0; i<max.get(); i+=chunkSize) {
+            if (processChunk( first.get()+i, chunkSize ) < chunkSize) {
+                break;
+            }
         }
     }
     
     
-    protected void processChunk( int chunkFirst, int chunkMax ) throws InterruptedException {
+    protected int processChunk( int chunkFirst, int chunkMax ) throws InterruptedException {
         Timer t = new Timer();
         
         //int numThreads = 4;  //Runtime.getRuntime().availableProcessors() * 2;
@@ -111,7 +113,9 @@ public class FlurstueckUpdater
                 ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork()
                         .query( AX_Flurstueck.class ).firstResult( chunkFirst ).maxResults( chunkMax ).execute()
             ) {
-            rs.forEach( fst -> {
+            int count = 0;
+            for (AX_Flurstueck fst : rs) {
+                count ++;
                 executor.execute( () -> {
                     try {
                         log.info( Thread.currentThread().getName() );
@@ -124,7 +128,7 @@ public class FlurstueckUpdater
                         exceptions.add( e );
                     }
                 });
-            });
+            }
             executor.shutdown();
             executor.awaitTermination( 1, TimeUnit.MINUTES );
             log.info( "Zeit für Transformation: " + t.elapsedTime() + "ms (" + chunkFirst + "/" + chunkMax + ")" );
@@ -132,6 +136,7 @@ public class FlurstueckUpdater
             t.start();
             updater.apply();
             log.info( "Zeit für Index: " + t.elapsedTime() + "ms" );
+            return count;
         }
     }
     

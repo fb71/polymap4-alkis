@@ -76,7 +76,11 @@ public class AlkisRepository {
     public static final String              DB_NAME = "ALKIS";
     
     public static final FilterFactory       ff = CommonFactoryFinder.getFilterFactory( null );
+
+    /** Maximale Größe der Ergebnismenge für Volltextsuche und Anzeige in Tabelle. */
+    public static final int                 MAX_RESULTS = Integer.parseInt( System.getProperty( "org.polymap.alkis.maxResults", "1000" ) );
     
+
     /**
      * Initialize global things.
      */
@@ -125,7 +129,7 @@ public class AlkisRepository {
 //            Logging.GEOTOOLS.setLoggerFactory( "org.geotools.util.logging.CommonsLoggerFactory" );
             
             //
-            BooleanQuery.setMaxClauseCount( 4 * 1024 );
+            BooleanQuery.setMaxClauseCount( MAX_RESULTS*2 );
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
             // init fulltext
@@ -213,9 +217,9 @@ public class AlkisRepository {
     }
 
     
-    public Query<AX_Flurstueck> fulltextQuery( String query, UnitOfWork uow ) throws Exception {
+    public Query<AX_Flurstueck> fulltextQuery( String query, int maxResults, UnitOfWork uow ) throws Exception {
         Set<Identifier> ids = new HashSet( 1024 );
-        fulltextIndex.search( query, -1 ).forEach( record -> {
+        fulltextIndex.search( query, maxResults ).forEach( record -> {
             String id = substringAfterLast( record.getString( FulltextIndex.FIELD_ID ), "." );
             if (id.length() > 0) {
                 ids.add( ff.featureId( id ) );

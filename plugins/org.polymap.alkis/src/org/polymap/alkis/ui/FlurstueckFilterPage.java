@@ -71,19 +71,26 @@ public abstract class FlurstueckFilterPage
         site.newFilterField( NENNER, propInfo.getType() ).label.put( "Nenner" ).create();
 
         site.newFilterField( FLUR, Integer.class ).label.put( "Flur" ).create();
-        site.newFilterField( LAGE, String.class ).label.put( "Lage" )
-                .tooltip.put( "Lagebezeichnung mit/ohne Hausnummer oder verschlüsselte Lage" ).create();
+        site.newFilterField( LAGE, String.class ).label.put( "Lage*" )
+                .tooltip.put( "Zeichenkette, die in Lagebezeichnung mit/ohne Hausnummer oder verschlüsselte Lage enthalten ist" ).create();
 
         site.newFilterField( GMK, String.class ).label.put( "Gemarkung" ).create();
         site.newFilterField( GMD, String.class ).label.put( "Gemeinde" ).create();        
 
-        site.newFilterField( BB, String.class ).label.put( "Buchungsblatt" )
-                .tooltip.put( "Buchungsblattnummer oder -Kennzeichen" ).create();        
+        site.newFilterField( BB, String.class ).label.put( "Buchungsblatt*" )
+                .tooltip.put( "Zeichenkette, die in Buchungsblattnummer oder -Kennzeichen enthalten ist" ).create();        
 
-        site.newFilterField( BESITZER_NAME, String.class ).label.put( "Besitzer-Name" ).create();
-        site.newFilterField( BESITZER_VORNAME, String.class ).label.put( "Besitzer-Vorname" ).create();
-        site.newFilterField( BESITZER_GEBURTSNAME, String.class ).label.put( "Geburtsname" ).create();
-        site.newFilterField( BESITZER_ANSCHRIFT, String.class ).label.put( "Besitzer-Anschrift" ).create();        
+        site.newFilterField( BESITZER_NAME, String.class ).label.put( "Besitzer-Name*" )
+                .tooltip.put( "Zeichenkette, die im Namen oder Firma des Besitzers enthalten ist" ).create();
+        
+        site.newFilterField( BESITZER_VORNAME, String.class ).label.put( "Besitzer-Vorname*" )
+                .tooltip.put( "Zeichenkette, die im Vornamen des Besitzers enthalten ist" ).create();        
+        
+        site.newFilterField( BESITZER_GEBURTSNAME, String.class ).label.put( "Geburtsname*" )
+                .tooltip.put( "Zeichenkette, die im Vornamen des Besitzers enthalten ist" ).create();
+        
+        site.newFilterField( BESITZER_ANSCHRIFT, String.class ).label.put( "Besitzer-Anschrift*" )        
+                .tooltip.put( "Zeichenkette, die in Ort, PLZ, Strasse oder Hausnummer enthalten ist" ).create();
     }
 
     

@@ -12,6 +12,7 @@
  */
 package org.polymap.alkis.ui;
 
+import static org.polymap.alkis.model.AlkisRepository.MAX_RESULTS;
 import static org.polymap.alkis.ui.util.UnitOfWorkHolder.Propagation.REQUIRES_NEW_LOCAL;
 
 import java.util.Collections;
@@ -61,6 +62,7 @@ import org.polymap.alkis.Messages;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
 import org.polymap.model2.query.Query;
+import org.polymap.model2.query.ResultSet;
 
 /**
  * 
@@ -75,7 +77,7 @@ public class StartPanel
     public static final PanelIdentifier     ID  = new PanelIdentifier( "start" );
 
     private static final IMessages          i18n = Messages.forPrefix( "StartPanel" );
-    
+
     /** Das aktuell selektierte {@link AX_Flurstueck}. */
     private Context<AX_Flurstueck>          selected;
 
@@ -96,6 +98,14 @@ public class StartPanel
         getSite().setPreferredWidth( 400 ); // table viewer
 //        createLoginContents( parent );
         createMainContents( parent );
+    }
+    
+    
+    protected void setTitle( int results ) {
+        getSite().setTitle( "Flurstücksuche:" 
+                + (results < MAX_RESULTS ? " " + results : " >=" + MAX_RESULTS)
+                + " Ergebniss"
+                + (results != 1 ? "e" : "") );
     }
     
     
@@ -189,18 +199,20 @@ public class StartPanel
             }
         });
                 
-        // searchField
+        // search field
         FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
         searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
             @Override
             protected void doSearch( String queryString ) throws Exception {
-                query = AlkisRepository.instance.get().fulltextQuery( queryString, uow );
+                query = AlkisRepository.instance.get().fulltextQuery( queryString, MAX_RESULTS, uow );
             }
             @Override
             protected void doRefresh() {
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( query.execute() );
+                ResultSet<AX_Flurstueck> rs = query.execute();
+                setTitle( rs.size() );
+                viewer.setInput( rs );
             }
         };
 
@@ -211,11 +223,13 @@ public class StartPanel
                 super.doBuildFilter( filter, monitor );                
                 log.info( "Query: " + queryString.toString() );
                 
-                Query<AX_Flurstueck> query = AlkisRepository.instance.get().fulltextQuery( queryString, uow().get() );
+                Query<AX_Flurstueck> query = AlkisRepository.instance.get().fulltextQuery( queryString, MAX_RESULTS, uow().get() );
 
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( query.execute() );
+                ResultSet<AX_Flurstueck> rs = query.execute();
+                setTitle( rs.size() );
+                viewer.setInput( rs );
                 return filter;
             }
         } );
@@ -252,7 +266,8 @@ public class StartPanel
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )
-                .activationDelayMillis.put( 500 );
+                .activationDelayMillis.put( 500 )
+                .popupSize.set( new Point( 300, 250 ) );
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
