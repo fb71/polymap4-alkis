@@ -203,8 +203,10 @@ public class AlkisRepository {
 
     
     public FulltextIndex fulltextIndex() {
-        return new FullQueryProposalDecorator(
-               new LowerCaseTokenFilter( fulltextIndex ) );
+        FulltextIndex result = new LowerCaseTokenFilter( fulltextIndex );
+        // große Datenbank mit vielen Wörtern: mehr Chancen etwas zu finden
+        return new FullQueryProposalDecorator( result )
+                .proposalIncreaseFactor.put( 10 );
     }
 
     

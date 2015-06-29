@@ -14,4 +14,6 @@
 	<referencedentry exported="true" kind="lib" path="lib/gt-metadata-13.0.jar" sourcepath="lib/sources/gt-metadata-13.0-sources.zip"/>
 	<referencedentry exported="true" kind="lib" path="lib/gt-opengis-13.0.jar" sourcepath="lib/sources/gt-opengis-13.0-sources.zip"/>
 	<referencedentry exported="true" kind="lib" path="lib/gt-main-13.0.jar" sourcepath="lib/sources/gt-main-13.0-sources.zip"/>
+	<referencedentry exported="true" kind="lib" path="lib/gt-referencing-13.0.jar" sourcepath="lib/sources/gt-referencing-13.0-sources.zip"/>
+	<referencedentry exported="true" kind="lib" path="lib/jts-1.13.jar" sourcepath="lib/sources/jts-1.13-sources.zip"/>
 </classpath>

@@ -17,7 +17,7 @@ package org.polymap.alkis.model;
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.weistAuf;
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.zeigtAuf;
 
-import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
@@ -63,7 +63,7 @@ public class AX_Flurstueck
     // instance *******************************************
 
     @NameInStore("wkb_geometry")
-    public Property<MultiPolygon>                   geom;
+    public Property<Polygon>                        geom;
     
     /**
      * ist gebucht (11001-21008) - Grunddatenbestand

@@ -14,19 +14,31 @@
  */
 package org.polymap.alkis.ui;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Joiner;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.ui.forms.widgets.Section;
 
+import org.polymap.core.data.util.Geometries;
 import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -50,6 +62,23 @@ import org.polymap.alkis.model.AX_Buchungsblatt;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AX_Person;
 import org.polymap.alkis.ui.util.PropertyAdapter;
+import org.polymap.rap.openlayers.base.OlFeature;
+import org.polymap.rap.openlayers.base.OlMap;
+import org.polymap.rap.openlayers.format.GeoJSONFormat;
+import org.polymap.rap.openlayers.geom.PolygonGeometry;
+import org.polymap.rap.openlayers.layer.ImageLayer;
+import org.polymap.rap.openlayers.layer.VectorLayer;
+import org.polymap.rap.openlayers.source.ImageWMSSource;
+import org.polymap.rap.openlayers.source.VectorSource;
+import org.polymap.rap.openlayers.style.FillStyle;
+import org.polymap.rap.openlayers.style.StrokeStyle;
+import org.polymap.rap.openlayers.style.Style;
+import org.polymap.rap.openlayers.types.Attribution;
+import org.polymap.rap.openlayers.types.Color;
+import org.polymap.rap.openlayers.types.Coordinate;
+import org.polymap.rap.openlayers.types.Projection;
+import org.polymap.rap.openlayers.types.Projection.Units;
+import org.polymap.rap.openlayers.view.View;
 
 /**
  * 
@@ -90,11 +119,108 @@ public class FlurstueckPanel
         dashboard.addDashlet( dashlet );
         
         dashboard.addDashlet( new EigentuemerDashlet( fst.get() ) );
+        dashboard.addDashlet( new MapDashlet( fst.get() ) );
         
         dashboard.createContents( parent );
     }
         
 
+    /**
+     * 
+     */
+    public static class MapDashlet
+            extends DefaultDashlet {
+        
+        private AX_Flurstueck           fst;
+
+        public MapDashlet( AX_Flurstueck fst ) {
+            this.fst = fst;
+        }
+
+        @Override
+        public void init( DashletSite site ) {
+            super.init( site );
+            dashletSite.title.set( "Karte" );
+            dashletSite.constraints.get().add( new PriorityConstraint( 0 ) );
+            dashletSite.constraints.get().add( AlkisPlugin.MIN_COLUMN_WIDTH );
+            dashletSite.isExpandable.set( true );
+        }
+
+        @Override
+        public void createContents( Composite parent ) {
+            parent.setLayout( FormLayoutFactory.defaults().create() );
+            Button btn = dashletSite.toolkit().createButton( parent, "Anzeigen...", SWT.PUSH );
+            FormDataFactory.on( btn ).left( 0 ).top( 0 );
+            btn.addSelectionListener( new SelectionAdapter() {
+                @Override
+                public void widgetSelected( SelectionEvent e ) {
+                    btn.dispose();
+                    createMapContents( parent );
+                    dashletSite.panelSite().layout( true );
+                }
+            });
+        }
+        
+
+        protected void createMapContents( Composite parent ) {
+            // map
+            OlMap map = new OlMap( parent, SWT.NONE, new View()
+                    .projection.put( new Projection( "EPSG:3857", Units.m ) )
+                    .center.put( new Coordinate( 1387648, 6688702 ) )
+                    .zoom.put( 14 ) );
+            
+            map.setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+
+            // OSM
+            map.addLayer( new ImageLayer()
+                    .source.put( new ImageWMSSource()
+                            .url.put( "http://ows.terrestris.de/osm/service/" )
+                            .params.put( new ImageWMSSource.RequestParams().layers.put( "OSM-WMS" ) ) ) );
+            // DTK
+//            map.addLayer( new ImageLayer()
+//                    .source.put( new ImageWMSSource()
+//                            .url.put( "http://sec.geodatenportal.sachsen-anhalt.de/gateway/gateto/lvermgeo_intern-GDI-LSA_LVermGeo_DTKcolor_OpenData?" )
+//                            .params.put( new ImageWMSSource.RequestParams().layers.put( "DTK100" ) ) ) );
+            
+            // vector source/layer
+            VectorSource vectorSource = new VectorSource()
+                    .format.put( new GeoJSONFormat() )
+                    .attributions.put( Arrays.asList( new Attribution( "ALKIS" ) ) );
+
+            VectorLayer vectorLayer = new VectorLayer()
+                    .style.put( new Style()
+                    .fill.put( new FillStyle().color.put( new Color( 0, 0, 255, 0.2f ) ) )
+                    .stroke.put( new StrokeStyle().color.put( new Color( "red" ) ).width.put( 2f ) ) )
+                    .source.put( vectorSource );
+
+            map.addLayer( vectorLayer );
+
+            // feature
+            try {
+                Polygon geom = fst.geom.get();
+                Polygon transformed = Geometries.transform( geom, "EPSG:25832", "EPSG:3857" );
+                
+                List<Coordinate> coords = Arrays.stream( transformed.getCoordinates() )
+                        .map( c -> new Coordinate( c.x, c.y ) )
+                        .collect( Collectors.toList() );
+
+                OlFeature feature = new OlFeature();
+                feature.name.set( "Flurstück" );
+                feature.geometry.set( new PolygonGeometry( coords ) );
+                vectorSource.addFeature( feature );
+                
+                Point center = transformed.getCentroid();
+                map.view.get()
+                        .center.put( new Coordinate( center.getX(), center.getY() ) );
+            }
+            catch (Exception e) {
+                StatusDispatcher.handleError( "", e );
+                log.error( "", e );
+            }
+        }
+    }
+    
+    
     /**
      * 
      */
