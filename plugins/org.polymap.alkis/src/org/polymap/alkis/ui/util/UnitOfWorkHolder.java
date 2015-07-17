@@ -14,8 +14,6 @@
  */
 package org.polymap.alkis.ui.util;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
-
 import java.util.Optional;
 
 import org.apache.commons.logging.Log;
@@ -23,8 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
-import org.polymap.rhei.batik.PanelPath;
-import org.polymap.rhei.batik.Panels;
+import org.polymap.rhei.batik.tx.TxProvider;
 
 import org.polymap.model2.engine.UnitOfWorkNested;
 import org.polymap.model2.runtime.UnitOfWork;
@@ -32,6 +29,7 @@ import org.polymap.model2.runtime.UnitOfWork;
 /**
  * Provides {@link UnitOfWork} propagation between parent and child panels.
  * 
+ * @deprecated See {@link TxProvider} instead.
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public abstract class UnitOfWorkHolder
@@ -115,7 +113,7 @@ public abstract class UnitOfWorkHolder
         }
         //
         else if (propagation == Propagation.MANDATORY) {
-            UnitOfWorkHolder parent = parentPanel().orElseThrow( () -> new IllegalStateException( "MANDATORY: this is the Start panel, no UnitOfWork." ) );
+            UnitOfWorkHolder parent = _parentPanel().orElseThrow( () -> new IllegalStateException( "MANDATORY: this is the Start panel, no UnitOfWork." ) );
             UnitOfWork parentUow = parent.uow().orElseThrow( () -> new IllegalStateException( "MANDATORY: parent panel has no UnitOfWork started." ) );
             if (parent.propagation == Propagation.REQUIRES_NEW_LOCAL) {
                 new IllegalStateException( "MANDATORY: parent UnitOfWork is REQUIRES_NEW_LOCAL" );
@@ -124,7 +122,7 @@ public abstract class UnitOfWorkHolder
         }
         //
         else if (propagation == Propagation.NESTED) {
-            UnitOfWorkHolder parent = parentPanel().orElseThrow( () -> new IllegalStateException( "NESTED: this is the Start panel, no UnitOfWork." ) );
+            UnitOfWorkHolder parent = _parentPanel().orElseThrow( () -> new IllegalStateException( "NESTED: this is the Start panel, no UnitOfWork." ) );
             UnitOfWork parentUow = parent.uow().orElseThrow( () -> new IllegalStateException( "NESTED: parent panel has no UnitOfWork started." ) );
             if (parent.propagation == Propagation.REQUIRES_NEW_LOCAL) {
                 new IllegalStateException( "NESTED: parent UnitOfWork is REQUIRES_NEW_LOCAL" );
@@ -138,14 +136,17 @@ public abstract class UnitOfWorkHolder
         return uow;
     }
 
-    
-    protected Optional<UnitOfWorkHolder> parentPanel() {
-        PanelPath myPath = getSite().getPath();
-        UnitOfWorkHolder result = myPath.size() > 0
-                ? (UnitOfWorkHolder)getOnlyElement( getContext().findPanels( Panels.is( myPath.removeLast( 1 ) ) ) )
-                : null;
-        return Optional.ofNullable( result );
+    protected Optional<UnitOfWorkHolder> _parentPanel() {
+        return parentPanel().map( parent -> (UnitOfWorkHolder)parent );
     }
+    
+//    protected Optional<UnitOfWorkHolder> parentPanel() {
+//        PanelPath myPath = getSite().getPath();
+//        UnitOfWorkHolder result = myPath.size() > 0
+//                ? (UnitOfWorkHolder)getOnlyElement( getContext().findPanels( Panels.is( myPath.removeLast( 1 ) ) ) )
+//                : null;
+//        return Optional.ofNullable( result );
+//    }
 
     
     /**

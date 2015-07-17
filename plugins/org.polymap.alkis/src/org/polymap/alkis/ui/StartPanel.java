@@ -13,7 +13,6 @@
 package org.polymap.alkis.ui;
 
 import static org.polymap.alkis.model.AlkisRepository.MAX_RESULTS;
-import static org.polymap.alkis.ui.util.UnitOfWorkHolder.Propagation.REQUIRES_NEW_LOCAL;
 
 import java.util.Collections;
 
@@ -49,6 +48,8 @@ import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.batik.tx.TxProvider;
+import org.polymap.rhei.batik.tx.TxProvider.Propagation;
 import org.polymap.rhei.form.batik.BatikFilterContainer;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 import org.polymap.rhei.fulltext.FulltextIndex;
@@ -64,6 +65,7 @@ import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
 import org.polymap.model2.query.Query;
 import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
 
 /**
  * 
@@ -87,6 +89,8 @@ public class StartPanel
     private EntitySearchField<AX_Flurstueck> searchField;
 
     private Context<UserPrincipal>          user;
+
+    private TxProvider<UnitOfWork>.Tx       uow;
     
     
     @Override
@@ -94,13 +98,13 @@ public class StartPanel
         return getSite().getPath().size() == 1;
     }
 
-    
+
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 400 ); // table viewer
-        createLoginContents( parent );
-//        createMainContents( parent );
+//        createLoginContents( parent );
+        createMainContents( parent );
     }
     
     
@@ -155,7 +159,7 @@ public class StartPanel
     
     
     protected void createMainContents( Composite parent ) {
-        newUnitOfWork( REQUIRES_NEW_LOCAL );
+        uow = uowProvider.get().newTx( this ).start( Propagation.REQUIRES_NEW_LOCAL );
         
         getSite().setTitle( i18n.get( "title" ) );
 
@@ -165,7 +169,7 @@ public class StartPanel
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
 
         Composite tableLayout = body;  //tk.createComposite( body );
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow().get(), tableLayout, Collections.EMPTY_LIST );
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow.get(), tableLayout, Collections.EMPTY_LIST );
         getContext().propagate( viewer );
         // Details öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -204,7 +208,7 @@ public class StartPanel
                 
         // search field
         FulltextIndex fulltext = AlkisRepository.instance.get().fulltextIndex();
-        searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow().get(), AX_Flurstueck.class ) {
+        searchField = new EntitySearchField<AX_Flurstueck>( body, fulltext, uow.get(), AX_Flurstueck.class ) {
             @Override
             protected void doSearch( String queryString ) throws Exception {
                 query = AlkisRepository.instance.get().fulltextQuery( queryString, MAX_RESULTS, uow );
@@ -226,7 +230,7 @@ public class StartPanel
                 super.doBuildFilter( filter, monitor );                
                 log.info( "Query: " + queryString.toString() );
                 
-                Query<AX_Flurstueck> query = AlkisRepository.instance.get().fulltextQuery( queryString, MAX_RESULTS, uow().get() );
+                Query<AX_Flurstueck> query = AlkisRepository.instance.get().fulltextQuery( queryString, MAX_RESULTS, uow.get() );
 
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();

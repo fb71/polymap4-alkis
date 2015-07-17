@@ -17,9 +17,11 @@ package org.polymap.alkis.ui;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.alkis.model.AlkisRepository;
-import org.polymap.alkis.ui.util.UnitOfWorkHolder;
-import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.DefaultPanel;
+import org.polymap.rhei.batik.Scope;
+
+import org.polymap.alkis.ui.util.AlkisUowProvider;
 
 /**
  * 
@@ -27,14 +29,18 @@ import org.polymap.model2.runtime.UnitOfWork;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public abstract class AlkisPanel
-        extends UnitOfWorkHolder {
+        extends DefaultPanel {
 
     private static Log log = LogFactory.getLog( AlkisPanel.class );
 
+    @Scope("org.polymap.alkis")
+    protected Context<AlkisUowProvider>     uowProvider;
 
-    @Override
-    protected UnitOfWork newRootUnitOfWork() {
-        return AlkisRepository.instance.get().newUnitOfWork();
-    }
     
+    @Override
+    public void init() {
+        super.init();        
+        uowProvider.compareAndSet( null, new AlkisUowProvider() );
+    }
+
 }
