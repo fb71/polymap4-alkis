@@ -86,7 +86,7 @@ public class FlurstueckUpdater
         log.info( "first: " + first.get() );
         log.info( "max: " + max.get() );
         
-        int chunkSize = 10000;
+        int chunkSize = Math.min( 10000, max.get() );
         for (int i=0; i<max.get(); i+=chunkSize) {
             if (processChunk( first.get()+i, chunkSize ) < chunkSize) {
                 break;
