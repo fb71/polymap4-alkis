@@ -55,6 +55,7 @@ import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
 import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.fulltext.FlurstueckTransformer;
 import org.polymap.alkis.model.fulltext.FlurstueckUpdater;
+import org.polymap.alkis.model.fulltext.ZaehlerNennerQueryDecorator;
 import org.polymap.model2.Composite;
 import org.polymap.model2.query.Query;
 import org.polymap.model2.query.ResultSet;
@@ -205,8 +206,9 @@ public class AlkisRepository {
     public FulltextIndex fulltextIndex() {
         FulltextIndex result = new LowerCaseTokenFilter( fulltextIndex );
         // große Datenbank mit vielen Wörtern: mehr Chancen etwas zu finden
-        return new FullQueryProposalDecorator( result )
-                .proposalIncreaseFactor.put( 10 );
+        result = new FullQueryProposalDecorator( result ).proposalIncreaseFactor.put( 10 );
+        result = new ZaehlerNennerQueryDecorator( result );
+        return result;
     }
 
     
@@ -221,7 +223,7 @@ public class AlkisRepository {
     
     public Query<AX_Flurstueck> fulltextQuery( String query, int maxResults, UnitOfWork uow ) throws Exception {
         Set<Identifier> ids = new HashSet( 1024 );
-        fulltextIndex.search( query, maxResults ).forEach( record -> {
+        fulltextIndex().search( query, maxResults ).forEach( record -> {
             String id = substringAfterLast( record.getString( FulltextIndex.FIELD_ID ), "." );
             if (id.length() > 0) {
                 ids.add( ff.featureId( id ) );

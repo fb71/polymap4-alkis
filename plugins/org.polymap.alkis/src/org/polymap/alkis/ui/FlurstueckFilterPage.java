@@ -121,15 +121,21 @@ public abstract class FlurstueckFilterPage
                 if (result.length() > 0) {
                     result.append( " AND " );
                 }
-                if (stringValue.contains( "*" )) {
-                    result.append( field ).append( ":").append( stringValue );
+                
+                if (!stringValue.contains( "*" )) {
+                    stringValue = "\"" + stringValue + "\"";
                 }
-                else if (isLike) {
-                    result.append( field ).append( ":*").append( stringValue ).append( "*" );
-                }
-                else {
-                    result.append( field ).append( ":\"").append( stringValue ).append( "\"" );
-                }
+                result.append( field ).append( ":").append( stringValue );
+                
+//                if (stringValue.contains( "*" )) {
+//                    result.append( field ).append( ":").append( stringValue );
+//                }
+//                else if (isLike) {
+//                    result.append( field ).append( ":\"*").append( stringValue ).append( "*\"" );
+//                }
+//                else {
+//                    result.append( field ).append( ":\"").append( stringValue ).append( "\"" );
+//                }
             }
         }
     }
