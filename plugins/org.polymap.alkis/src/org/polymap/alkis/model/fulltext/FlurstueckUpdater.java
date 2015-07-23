@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.polymap.core.runtime.RejectedExecutionHandlers;
 import org.polymap.core.runtime.RejectedExecutionHandlers.Blocking;
 import org.polymap.core.runtime.Timer;
-import org.polymap.core.runtime.config.Config;
+import org.polymap.core.runtime.config.Config2;
 import org.polymap.core.runtime.config.Configurable;
 import org.polymap.core.runtime.config.DefaultInt;
 
@@ -58,10 +58,10 @@ public class FlurstueckUpdater
     private UpdateableFulltextIndex             index;
 
     @DefaultInt( 0 )
-    public Config<FlurstueckUpdater,Integer>    first;
+    public Config2<FlurstueckUpdater,Integer>   first;
     
     @DefaultInt( Integer.MAX_VALUE )
-    public Config<FlurstueckUpdater,Integer>    max;
+    public Config2<FlurstueckUpdater,Integer>   max;
 
     private List<Throwable>                     exceptions = new CopyOnWriteArrayList();
     
