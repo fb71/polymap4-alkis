@@ -27,7 +27,10 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import org.polymap.core.security.SecurityContext;
+
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
+import org.polymap.rhei.um.auth.UmSecurityConfiguration;
 
 import org.polymap.alkis.model.AlkisRepository;
 
@@ -59,6 +62,9 @@ public class AlkisPlugin
     public void start( BundleContext context ) throws Exception {
         super.start( context );
         instance = this;
+        
+        // JAAS config
+        SecurityContext.registerConfiguration( () -> new UmSecurityConfiguration() );
         
         AlkisRepository.init();
         

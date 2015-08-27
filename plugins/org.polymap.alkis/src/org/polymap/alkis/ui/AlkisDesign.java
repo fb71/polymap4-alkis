@@ -26,6 +26,7 @@ import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.app.IAppDesign;
 import org.polymap.rhei.batik.engine.DefaultAppDesign;
+import org.polymap.rhei.batik.toolkit.md.MdAppDesign;
 
 /**
  * 
@@ -33,7 +34,7 @@ import org.polymap.rhei.batik.engine.DefaultAppDesign;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class AlkisDesign
-        extends DefaultAppDesign
+        extends MdAppDesign
         implements IAppDesign {
 
     private static Log log = LogFactory.getLog( AlkisDesign.class );
