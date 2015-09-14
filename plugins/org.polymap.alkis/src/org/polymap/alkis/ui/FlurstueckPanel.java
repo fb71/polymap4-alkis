@@ -66,9 +66,7 @@ import org.polymap.rap.openlayers.base.OlFeature;
 import org.polymap.rap.openlayers.base.OlMap;
 import org.polymap.rap.openlayers.format.GeoJSONFormat;
 import org.polymap.rap.openlayers.geom.PolygonGeometry;
-import org.polymap.rap.openlayers.layer.ImageLayer;
 import org.polymap.rap.openlayers.layer.VectorLayer;
-import org.polymap.rap.openlayers.source.ImageWMSSource;
 import org.polymap.rap.openlayers.source.VectorSource;
 import org.polymap.rap.openlayers.style.FillStyle;
 import org.polymap.rap.openlayers.style.StrokeStyle;
@@ -105,6 +103,7 @@ public class FlurstueckPanel
         Dashboard dashboard = new Dashboard( getSite(), ID.id() );
 
         BatikFormDashlet dashlet = new BatikFormDashlet( new FlurstueckPage( fst.get() ) );
+        dashlet.setEnabled( false );
         dashlet.constraints.get().add( new PriorityConstraint( 100 ) );
         dashlet.constraints.get().add( AlkisPlugin.MIN_COLUMN_WIDTH );
         dashlet.title.put( "Basisdaten" ); 
@@ -112,6 +111,7 @@ public class FlurstueckPanel
         dashboard.addDashlet( dashlet );
         
         dashlet = new BatikFormDashlet( new BlattPage( fst.get() ) );
+        dashlet.setEnabled( false );
         dashlet.constraints.get().add( new PriorityConstraint( 90 ) );
         dashlet.constraints.get().add( AlkisPlugin.MIN_COLUMN_WIDTH );
         dashlet.title.put( "Buchungsblatt" ); 
@@ -171,11 +171,11 @@ public class FlurstueckPanel
             
             map.setLayoutData( FormDataFactory.filled().height( 500 ).create() );
 
-            // OSM
-            map.addLayer( new ImageLayer()
-                    .source.put( new ImageWMSSource()
-                            .url.put( "http://ows.terrestris.de/osm/service/" )
-                            .params.put( new ImageWMSSource.RequestParams().layers.put( "OSM-WMS" ) ) ) );
+//            // OSM
+//            map.addLayer( new ImageLayer()
+//                    .source.put( new ImageWMSSource()
+//                            .url.put( "http://ows.terrestris.de/osm/service/" )
+//                            .params.put( new ImageWMSSource.RequestParams().layers.put( "OSM-WMS" ) ) ) );
             // DTK
 //            map.addLayer( new ImageLayer()
 //                    .source.put( new ImageWMSSource()
@@ -267,6 +267,7 @@ public class FlurstueckPanel
             BatikFormContainer form = new BatikFormContainer( new PersonPage( person ) );
             form.createContents( (Composite)section.getClient() );
             form.getContents().setLayoutData( FormDataFactory.filled().create() );
+            form.setEnabled( false );
         }
     }
     
@@ -388,7 +389,8 @@ public class FlurstueckPanel
             String zaehlerNenner = Joiner.on( " / " ).skipNulls().join( entity.zaehler.get(), entity.nenner.get() );
             pageSite.newFormField( new PlainValuePropertyAdapter( "entity", zaehlerNenner ) )
                     .parent.put( row )
-                    .label.put( "Flurstück" ).tooltip.put( "Zähler / Nenner" ).create();
+                    .label.put( "Flurstück" ).tooltip.put( "Zähler / Nenner" )
+                    .create();
             
 //            pageSite.newFormField( new PropertyAdapter( entity.nenner ) )
 //                    .parent.put( row )
