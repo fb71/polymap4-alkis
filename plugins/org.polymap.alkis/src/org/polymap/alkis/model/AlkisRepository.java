@@ -119,6 +119,11 @@ public class AlkisRepository {
                 .collect( Collectors.toMap( e -> e.lage.get(), e -> e, (e1,e2) -> e1 ) );
     });
     
+    public Lazy<Map<String,AX_Buchungsblattbezirk>> bbbezirk = new PlainLazyInit( () -> {
+        return newUnitOfWork().query( AX_Buchungsblattbezirk.class ).execute().stream()
+                .collect( Collectors.toMap( e -> e.bezirknummer.get(), e -> e, (e1,e2) -> e1 ) );
+    });
+    
     
     /**
      * Configure and initializing the one and only global instance.
@@ -175,6 +180,7 @@ public class AlkisRepository {
                             AX_Flurstueck.class,
                             AX_Buchungsstelle.class,
                             AX_Buchungsblatt.class,
+                            AX_Buchungsblattbezirk.class,
                             AX_Person.class,
                             AX_Anschrift.class,
                             AX_LagebezeichnungMitHausnummer.class,

@@ -28,7 +28,6 @@ import org.polymap.model2.Property;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 @Mixins({AA_Lebenszeitintervall.class})
-@NameInStore("ax_lagebezeichnungmithausnummer")
 public class AX_Katalogeintrag
         extends AA_NREO {
 

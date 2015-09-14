@@ -96,8 +96,15 @@ public class AX_Buchungsblatt
     @NameInStore("buchungsblattnummermitbuchstabenerweiterung")
     public Property<String>                         nummer;
 
+    /** 
+     * Schlüssel für {@link #bezirk()}. 
+     */
     @NameInStore("bezirk")
-    public Property<String>                         bezirk;
+    public Property<String>                         bezirknummer;
+
+    public AX_Buchungsblattbezirk bezirk() {
+        return AlkisRepository.instance.get().bbbezirk.get().get( bezirknummer.get() );
+    }
 
     @NameInStore("blattart")
     public Property<String>                         blattartnummer;

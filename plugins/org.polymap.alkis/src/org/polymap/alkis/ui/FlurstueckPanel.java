@@ -358,7 +358,8 @@ public class FlurstueckPanel
                     .parent.put( row )
                     .label.put( "Blattnummer" ).create();
 
-            pageSite.newFormField( new PropertyAdapter( blatt.bezirk ) )
+            String bezirk = Joiner.on( " - " ).join( blatt.bezirk().bezeichnung.get(), blatt.bezirknummer.get() );
+            pageSite.newFormField( new PlainValuePropertyAdapter( "bezirk", bezirk ) )
                     .parent.put( row )
                     .label.put( "Buchungsbezirk" ).create();
         }
