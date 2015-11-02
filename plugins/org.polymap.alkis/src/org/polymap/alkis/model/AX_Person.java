@@ -17,7 +17,7 @@ package org.polymap.alkis.model;
 import static org.polymap.alkis.model.AA_Objekt.Beziehungsart.hat;
 
 import java.util.Date;
-
+import org.polymap.model2.DefaultValue;
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -42,15 +42,25 @@ import org.polymap.model2.Property;
 public class AX_Person
         extends AA_NREO {
 
-//    public static enum AX_Anrede_Person {
-//        Frau( 1000 ),
-//        Herr( 2000 ),
-//        Firma( 3000 );
-//        
-//        public int      wert;
+//    private static final Map<Integer,AX_Anrede_Person>  anreden = new HashMap();
 //
-//        private AX_Anrede_Person( int wert ) {
-//            this.wert = wert;
+//    /**
+//     * 
+//     */
+//    public static enum AX_Anrede_Person {
+//        Leer( 0, "" ),
+//        Frau( 1000, "Frau" ),
+//        Herr( 2000, "Herr" ),
+//        Firma( 3000, "Firma" );
+//        
+//        public int      nummer;
+//        
+//        public String   bezeichnung;
+//
+//        private AX_Anrede_Person( Integer nummer, String bezeichnung ) {
+//            this.nummer = nummer;
+//            this.bezeichnung = bezeichnung;
+//            anreden.put( nummer, this );
 //        }
 //    }
     
@@ -101,15 +111,26 @@ public class AX_Person
 //    public Property<String>             wohnortOderSitz;
     
     /**
-     * 'Anrede' ist die Anrede der Person. Diese Attributart ist optional, da Körper-
-     * schaften und juristischen Person auch ohne Anrede angeschrieben werden kön-
-     * nen.
+     * 'Anrede' ist die Anrede der Person. Diese Attributart ist optional, da
+     * Körperschaften und juristischen Person auch ohne Anrede angeschrieben werden
+     * können.
+     * 
+     * @see AX_Anrede_Person
      */
-    @Nullable
+    @DefaultValue("0")
     @NameInStore("anrede")
-    public Property<Integer>            anredeWert;
+    public Property<Integer>            anredeNummer;
     
-//    public Property<AX_Anrede_Person>   anrede;
+    public String anrede() {
+        switch (anredeNummer.get()) {
+            case 0: return "";
+            case 1000: return "Frau";
+            case 2000: return "Herr";
+            case 3000: return "Firma";
+            default: return "Unbekannt";
+        }
+    }
     
     public ManyAssociation<AX_Anschrift> anschrift = new ManyAssociation( AX_Anschrift.class, hat );
+    
 }

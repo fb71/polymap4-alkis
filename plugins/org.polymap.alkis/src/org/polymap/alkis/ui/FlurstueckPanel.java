@@ -287,7 +287,7 @@ public class FlurstueckPanel
             super.createFormContents( site );
             
             Composite row = createColumnRow( site.getPageBody(), 2 );
-            pageSite.newFormField( new PropertyAdapter( entity.anredeWert ) )
+            pageSite.newFormField( new PlainValuePropertyAdapter( "anrede", entity.anrede() ) )
                     .parent.put( row )
                     .label.put( "Anrede" ).create();
     
