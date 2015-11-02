@@ -354,7 +354,7 @@ public class FlurstueckPanel
             
             Composite row = createColumnRow( site.getPageBody(), 2 );
             AX_Buchungsblatt blatt = entity.buchungsstelle.get().buchungsblatt.get();
-            pageSite.newFormField( new PropertyAdapter( blatt.blattartnummer ) )
+            pageSite.newFormField( new PropertyAdapter( blatt.nummer ) )
                     .parent.put( row )
                     .label.put( "Blattnummer" ).create();
 
