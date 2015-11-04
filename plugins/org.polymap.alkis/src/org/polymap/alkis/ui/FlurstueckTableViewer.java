@@ -59,7 +59,8 @@ public class FlurstueckTableViewer
     
 
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<AX_Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION | SWT.BORDER );
+        //getTable().setBackground( UIUtils.getColor( 0xff, 0xff, 0xff ) );
         this.uow = uow;
         try {
             // Gemarkung

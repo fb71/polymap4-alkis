@@ -25,7 +25,6 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.app.IAppDesign;
-import org.polymap.rhei.batik.engine.DefaultAppDesign;
 import org.polymap.rhei.batik.toolkit.md.MdAppDesign;
 
 /**
@@ -41,13 +40,13 @@ public class AlkisDesign
 
     @Override
     protected Composite fillHeaderArea( Composite parent ) {
-        Composite result = UIUtils.setVariant( new Composite( parent, SWT.NO_FOCUS ), IAppDesign.CSS_HEADER );
+        Composite result = UIUtils.setVariant( new Composite( parent, SWT.NO_FOCUS ), CSS_HEADER );
         result.setLayout( FormLayoutFactory.defaults().margins( 5, 0, 0, 0 ).create() );
 
         boolean showText = UIUtils.sessionDisplay().getClientArea().width > 900;
 
-        Label l = UIUtils.setVariant( new Label( result, SWT.NONE ), IAppDesign.CSS_HEADER );
-        l.setText( showText ? "ALKIS-Recherche" : "ALKIS" );
+        Label l = UIUtils.setVariant( new Label( result, SWT.NONE ), CSS_HEADER );
+        l.setText( showText ? "ALKIS-Auskunft" : "ALKIS" );
 
         return result;
     }

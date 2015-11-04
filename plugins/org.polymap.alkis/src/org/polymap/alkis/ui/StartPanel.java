@@ -103,8 +103,8 @@ public class StartPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 400 ); // table viewer
-//        createLoginContents( parent );
-        createMainContents( parent );
+        createLoginContents( parent );
+//        createMainContents( parent );
     }
     
     
@@ -120,13 +120,13 @@ public class StartPanel
         // welcome
         getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "loginTitle" ) );
+        IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "welcomeTitle" ) );
         welcome.addConstraint( new PriorityConstraint( 10 ), AlkisPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
         tk.createFlowText( welcome.getBody(), t );
 
         // login
-        IPanelSection section = tk.createPanelSection( parent, null );
+        IPanelSection section = tk.createPanelSection( parent, "Anmeldung", SWT.BORDER );
         section.addConstraint( new PriorityConstraint( 0 ), AlkisPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
@@ -166,7 +166,7 @@ public class StartPanel
         IPanelToolkit tk = getSite().toolkit();
 
         Composite body = parent;
-        body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
+        body.setLayout( FormLayoutFactory.defaults().spacing( 0 ).margins( 0, 10 ).create() );
 
         Composite tableLayout = body;  //tk.createComposite( body );
         final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow.get(), tableLayout, Collections.EMPTY_LIST );
@@ -269,7 +269,7 @@ public class StartPanel
         });
         
 //        searchField.searchOnEnter.set( false );
-//        searchField.getText().setText( "105 " );
+//        searchField.getText().setText( "Dorfstraﬂe" );
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )
@@ -288,7 +288,7 @@ public class StartPanel
         FormDataFactory.on( searchForm.getContents() )
                 .fill().top( searchField.getControl() ).bottom( searchField.getControl(), 30 );
         FormDataFactory.on( viewer.getTable() )
-                .fill().top( searchForm.getContents() ).height( tableHeight - 160 ).width( 300 );
+                .fill().top( searchForm.getContents(), 5 ).height( tableHeight - 160 ).width( 300 );
     }
 
 }
