@@ -51,6 +51,8 @@ import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.tx.TxProvider;
 import org.polymap.rhei.batik.tx.TxProvider.Propagation;
+import org.polymap.rhei.field.FormFieldEvent;
+import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.form.batik.BatikFilterContainer;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 import org.polymap.rhei.fulltext.FulltextIndex;
@@ -74,7 +76,8 @@ import org.polymap.model2.runtime.UnitOfWork;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class StartPanel
-        extends AlkisPanel {
+        extends AlkisPanel 
+        implements IFormFieldListener {
 
     private static Log log = LogFactory.getLog( StartPanel.class );
 
@@ -92,6 +95,10 @@ public class StartPanel
     private Context<UserPrincipal>          user;
 
     private TxProvider<UnitOfWork>.Tx       uow;
+
+    private Button searchBtn;
+
+    private Button searchResetBtn;
     
     
     @Override
@@ -246,8 +253,9 @@ public class StartPanel
 //        UIUtils.setVariant( tk.adapt( searchForm.getContents() ), "alkis-search" );
 
         Composite searchBtns = tk.createComposite( searchForm.getContents() );
-        searchBtns.setLayout( ColumnLayoutFactory.defaults().columns( 2, 2 ).spacing( 5 ).create() );
-        Button searchBtn = tk.createButton( searchBtns, "Suchen", SWT.PUSH );
+        searchBtns.setLayout( ColumnLayoutFactory.defaults().columns( 2, 2 ).spacing( 5 ).margins( 2, 5 ).create() );
+        searchBtn = tk.createButton( searchBtns, "Suchen", SWT.PUSH );
+        searchBtn.setEnabled( false );
         searchBtn.setToolTipText( "Suche starten" );
         searchBtn.addSelectionListener( new SelectionAdapter() {
             @Override
@@ -260,7 +268,8 @@ public class StartPanel
                 }
             }
         });
-        Button searchResetBtn = tk.createButton( searchBtns, "Zurücksetzen", SWT.PUSH );
+        searchResetBtn = tk.createButton( searchBtns, "Zurücksetzen", SWT.PUSH );
+        searchResetBtn.setEnabled( false );
         searchResetBtn.setToolTipText( "Formularfelder zurücksetzen" );
         searchResetBtn.addSelectionListener( new SelectionAdapter() {
             @Override
@@ -268,6 +277,7 @@ public class StartPanel
                 searchForm.clearFields();
             }
         });
+        searchForm.addFieldListener( this );
         
         searchField.searchOnEnter.set( false );
         searchField.getText().setText( "Dorfstraße" );
@@ -290,6 +300,16 @@ public class StartPanel
                 .fill().top( searchField.getControl() ).bottom( searchField.getControl(), 30 );
         FormDataFactory.on( viewer.getTable() )
                 .fill().top( searchForm.getContents(), 5 ).height( tableHeight - 160 ).width( 300 );
+    }
+
+
+    /**
+     * Listen to {@link #searchForm} field changes. 
+     */
+    @Override
+    public void fieldChange( FormFieldEvent ev ) {
+        searchBtn.setEnabled( searchForm.isDirty() && searchForm.isValid() );
+        searchResetBtn.setEnabled( searchForm.isDirty() );
     }
 
 }

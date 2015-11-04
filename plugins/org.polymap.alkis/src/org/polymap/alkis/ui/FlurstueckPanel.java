@@ -314,6 +314,13 @@ public class FlurstueckPanel
             pageSite.newFormField( new PropertyAdapter( entity.geburtsdatum ) )
                     .parent.put( row )
                     .field.put( new StringFormField() )
+//                    .validator.put( new NullValidator() {
+//                        @Override
+//                        public Object transform2Field( Object modelValue ) throws Exception {
+//                            DateFormat df = SimpleDateFormat.getDateInstance( SimpleDateFormat.SHORT, Locale.GERMAN );
+//                            return modelValue != null ? df.format( modelValue ) : "";
+//                        }
+//                    })
                     .label.put( "Geburtsdatum" ).create();
             
             // erste Anschrift
