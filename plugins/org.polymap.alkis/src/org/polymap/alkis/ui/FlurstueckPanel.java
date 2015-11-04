@@ -46,6 +46,7 @@ import org.polymap.rhei.batik.dashboard.Dashboard;
 import org.polymap.rhei.batik.dashboard.DashletSite;
 import org.polymap.rhei.batik.dashboard.DefaultDashlet;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.PlainValuePropertyAdapter;
@@ -98,7 +99,8 @@ public class FlurstueckPanel
     
     @Override
     public void createContents( Composite parent ) {
-        getSite().setTitle( "Flurstück" );
+        site().title.set( "Flurstück" );
+        site().preferredWidth.set( 700 );
 
         Dashboard dashboard = new Dashboard( getSite(), ID.id() );
 
@@ -142,7 +144,7 @@ public class FlurstueckPanel
             super.init( site );
             dashletSite.title.set( "Karte" );
             dashletSite.constraints.get().add( new PriorityConstraint( 0 ) );
-            dashletSite.constraints.get().add( AlkisPlugin.MIN_COLUMN_WIDTH );
+            dashletSite.constraints.get().add( new MinWidthConstraint( 550, 1 ) );
             dashletSite.isExpandable.set( true );
         }
 
@@ -238,7 +240,7 @@ public class FlurstueckPanel
             super.init( site );
             dashletSite.title.set( "Eigentümer" );
             dashletSite.constraints.get().add( new PriorityConstraint( 80 ) );
-            dashletSite.constraints.get().add( AlkisPlugin.MIN_COLUMN_WIDTH );
+            dashletSite.constraints.get().add( new MinWidthConstraint( 650, 1 ) );
         }
 
         @Override

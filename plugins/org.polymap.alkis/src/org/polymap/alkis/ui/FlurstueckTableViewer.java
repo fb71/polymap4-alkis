@@ -68,7 +68,7 @@ public class FlurstueckTableViewer
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( propName, String.class ) )
                 .setHeader( "Gemarkung" )
-                .setWeight( 3, 80 )
+                .setWeight( 3, 120 )
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -109,7 +109,7 @@ public class FlurstueckTableViewer
             // Fläche
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( AX_Flurstueck.TYPE.amtlicheFlaeche ) )
-                .setWeight( 2, 60 )
+                .setWeight( 2, 120 )
                 .setHeader( "Fläche (m²)" )
                 .setLabelProvider( flaecheValidator )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null

@@ -47,6 +47,7 @@ import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.tx.TxProvider;
 import org.polymap.rhei.batik.tx.TxProvider.Propagation;
@@ -121,13 +122,13 @@ public class StartPanel
         getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "welcomeTitle" ) );
-        welcome.addConstraint( new PriorityConstraint( 10 ), AlkisPlugin.MIN_COLUMN_WIDTH );
+        welcome.addConstraint( new PriorityConstraint( 10 ), new MinWidthConstraint( 450, 1 ) );
         String t = i18n.get( "welcomeText" );
         tk.createFlowText( welcome.getBody(), t );
 
         // login
         IPanelSection section = tk.createPanelSection( parent, "Anmeldung", SWT.BORDER );
-        section.addConstraint( new PriorityConstraint( 0 ), AlkisPlugin.MIN_COLUMN_WIDTH );
+        section.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 450, 1 ) );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
             @Override
@@ -268,8 +269,8 @@ public class StartPanel
             }
         });
         
-//        searchField.searchOnEnter.set( false );
-//        searchField.getText().setText( "Dorfstraﬂe" );
+        searchField.searchOnEnter.set( false );
+        searchField.getText().setText( "Dorfstraﬂe" );
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )
