@@ -261,10 +261,11 @@ public class StartPanel
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 try {
+                    // ignore result as doBuildFilter (see above) sets viewer input already
                     searchForm.buildFilter();
                 }
                 catch (Exception e) {
-                    StatusDispatcher.handleError( "", e );
+                    StatusDispatcher.handleError( "Fehler beim Ausführen der Suche", e );
                 }
             }
         });
@@ -274,7 +275,13 @@ public class StartPanel
         searchResetBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
-                searchForm.clearFields();
+                try {
+                    searchForm.clear();
+                    searchForm.reload( null );
+                }
+                catch (Exception e) {
+                    StatusDispatcher.handleError( "Fehler beim Zurücksetzen des Formulars", e );
+                }
             }
         });
         searchForm.addFieldListener( this );
@@ -309,7 +316,7 @@ public class StartPanel
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         searchBtn.setEnabled( searchForm.isDirty() && searchForm.isValid() );
-        searchResetBtn.setEnabled( searchForm.isDirty() );
+        searchResetBtn.setEnabled( true /*searchForm.isDirty()*/ );
     }
 
 }
