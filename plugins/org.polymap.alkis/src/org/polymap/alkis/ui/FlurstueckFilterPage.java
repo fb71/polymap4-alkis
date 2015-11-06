@@ -181,22 +181,14 @@ public abstract class FlurstueckFilterPage
                 }
                 
                 if (isLike) {
-                    expression = "\"*" + expression + "*\"";
+                    String[] words = expression.split( "\\s" );
+                    for (int i=0; i<words.length; i++) {
+                        result.append( field ).append( ":" ).append( "*" + words[i] + "* " );
+                    }
                 }
                 else if (!expression.contains( "*" )) {
-                    expression = "\"" + expression + "\"";
+                    result.append( field ).append( ":" ).append( "\"" + expression + "\" " );
                 }
-                result.append( field ).append( ":" ).append( expression );
-                
-//                if (stringValue.contains( "*" )) {
-//                    result.append( field ).append( ":").append( stringValue );
-//                }
-//                else if (isLike) {
-//                    result.append( field ).append( ":\"*").append( stringValue ).append( "*\"" );
-//                }
-//                else {
-//                    result.append( field ).append( ":\"").append( stringValue ).append( "\"" );
-//                }
             }
         }
     }
