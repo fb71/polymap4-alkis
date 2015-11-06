@@ -285,9 +285,12 @@ public class StartPanel
             }
         });
         searchForm.addFieldListener( this );
-        
-        searchField.searchOnEnter.set( false );
-        searchField.getText().setText( "Dorfstraﬂe" );
+
+        String startSearch = System.getenv( "org.polymap.alkis.startSearch" );
+        if (startSearch != null) {
+            searchField.searchOnEnter.set( false );
+            searchField.getText().setText( startSearch );
+        }
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
         new FulltextProposal( fulltext, searchField.getText() )
