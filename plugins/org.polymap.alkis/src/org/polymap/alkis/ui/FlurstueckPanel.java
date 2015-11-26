@@ -171,7 +171,7 @@ public class FlurstueckPanel
                     .center.put( new Coordinate( 1387648, 6688702 ) )
                     .zoom.put( 14 ) );
             
-            map.setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+            map.getControl().setLayoutData( FormDataFactory.filled().height( 500 ).create() );
 
 //            // OSM
 //            map.addLayer( new ImageLayer()

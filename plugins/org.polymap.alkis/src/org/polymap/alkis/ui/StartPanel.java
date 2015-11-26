@@ -96,9 +96,9 @@ public class StartPanel
 
     private TxProvider<UnitOfWork>.Tx       uow;
 
-    private Button searchBtn;
+    private Button                          searchBtn;
 
-    private Button searchResetBtn;
+    private Button                          searchResetBtn;
     
     
     @Override
@@ -110,7 +110,7 @@ public class StartPanel
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
-        getSite().setPreferredWidth( 400 ); // table viewer
+        getSite().setPreferredWidth( 460 ); // table viewer
         createLoginContents( parent );
 //        createMainContents( parent );
     }
@@ -309,7 +309,7 @@ public class StartPanel
         FormDataFactory.on( searchForm.getContents() )
                 .fill().top( searchField.getControl() ).bottom( searchField.getControl(), 30 );
         FormDataFactory.on( viewer.getTable() )
-                .fill().top( searchForm.getContents(), 5 ).height( tableHeight - 160 ).width( 300 );
+                .fill().top( searchForm.getContents(), 5 ).height( tableHeight - 160 ).width( 460 );
     }
 
 
