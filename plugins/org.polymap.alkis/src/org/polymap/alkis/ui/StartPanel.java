@@ -33,8 +33,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Status;
-
 import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.ColumnLayoutFactory;
@@ -49,6 +47,7 @@ import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.batik.tx.TxProvider;
 import org.polymap.rhei.batik.tx.TxProvider.Propagation;
 import org.polymap.rhei.field.FormFieldEvent;
@@ -62,7 +61,6 @@ import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
-import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.Messages;
 import org.polymap.alkis.model.AX_Flurstueck;
 import org.polymap.alkis.model.AlkisRepository;
@@ -141,9 +139,6 @@ public class StartPanel
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
-                    //getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
-                    getSite().setStatus( new Status( Status.OK, AlkisPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
-                    
                     getContext().setUserName( username );
                     
                     for (Control child : parent.getChildren()) {
@@ -154,7 +149,7 @@ public class StartPanel
                     return true;
                 }
                 else {
-                    getSite().setStatus( new Status( Status.ERROR, AlkisPlugin.ID, "Nutzername oder Passwort nicht korrekt." ) );
+                    site().toolkit().createSnackbar( Appearance.FadeIn, "Nutzername oder Passwort nicht korrekt." );
                     return false;
                 }
             }

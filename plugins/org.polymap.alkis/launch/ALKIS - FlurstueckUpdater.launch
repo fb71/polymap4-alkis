@@ -10,5 +10,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.polymap.alkis.model.fulltext.FlurstueckUpdater"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="org.polymap.alkis"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-XX:+TieredCompilation -verbosegc -Xmx512m -Xms100m -XX:+UseG1GC -ea"/>
-<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="/home/falko/Data/WBV"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="/home2/falko/Data/WBV"/>
 </launchConfiguration>
