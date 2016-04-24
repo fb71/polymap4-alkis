@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/gt-jdbc-13.0.jar" sourcepath="lib/sources/gt-jdbc-13.0-sources.zip"/>
-	<classpathentry exported="true" kind="lib" path="lib/gt-jdbc-postgis-13.0.jar" sourcepath="lib/sources/gt-jdbc-postgis-13.0-sources.zip"/>
+	<classpathentry exported="true" kind="lib" path="lib/gt-jdbc-13.2.jar" sourcepath="lib/sources/gt-jdbc-13.2-sources.zip"/>
+	<classpathentry exported="true" kind="lib" path="lib/gt-jdbc-postgis-13.2.jar" sourcepath="lib/sources/gt-jdbc-postgis-13.2-sources.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-dbcp-1.4.jar" sourcepath="lib/sources/commons-dbcp-1.4-sources.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-pool-1.5.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/postgresql-8.4-701.jdbc3.jar" sourcepath="lib/sources/postgresql-8.4-701.jdbc3-sources.zip"/>
@@ -16,4 +16,5 @@
 	<referencedentry exported="true" kind="lib" path="lib/gt-main-13.0.jar" sourcepath="lib/sources/gt-main-13.0-sources.zip"/>
 	<referencedentry exported="true" kind="lib" path="lib/gt-referencing-13.0.jar" sourcepath="lib/sources/gt-referencing-13.0-sources.zip"/>
 	<referencedentry exported="true" kind="lib" path="lib/jts-1.13.jar" sourcepath="lib/sources/jts-1.13-sources.zip"/>
+	<referencedentry exported="true" kind="lib" path="lib/gt-api-13.2.jar" sourcepath="lib/sources/gt-api-13.2-sources.zip"/>
 </classpath>
