@@ -63,6 +63,10 @@ public class FlurstueckTableViewer
         //getTable().setBackground( UIUtils.getColor( 0xff, 0xff, 0xff ) );
         this.uow = uow;
         try {
+            // suppress deferred loading to fix "empty table" issue
+            // setContent( fs.getFeatures( this.baseFilter ) );
+            setContentProvider( new CompositesFeatureContentProvider() );
+            
             // Gemarkung
             String propName = "gm";  //AX_Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
@@ -111,12 +115,9 @@ public class FlurstueckTableViewer
             addColumn( new FormFeatureTableColumn( PropertyAdapter.descriptorFor( AX_Flurstueck.TYPE.amtlicheFlaeche ) )
                 .setWeight( 2, 120 )
                 .setHeader( "Fläche (m²)" )
-                .setLabelProvider( flaecheValidator )
-                .setSortable( false ) );  // standard comparator: ClassCastException wenn null
+                .setLabelsAndValidation( flaecheValidator.forTable() ) );
+                //.setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
-            // suppress deferred loading to fix "empty table" issue
-            // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider( rs ) );
             setInput( rs );
 
 //            /* Register for property change events */
