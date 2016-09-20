@@ -30,6 +30,8 @@ import org.polymap.model2.Property;
 public class AX_Gemarkung
         extends AA_NREO {
 
+    public static AX_Gemarkung                  TYPE;
+    
     /**
      * 'Land' enthält den Schlüssel für das Bundesland.
      */

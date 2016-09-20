@@ -14,6 +14,7 @@
  */
 package org.polymap.alkis.model;
 
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 import java.util.Arrays;
@@ -23,8 +24,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -53,7 +52,6 @@ import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
 import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
 
-import org.polymap.alkis.AlkisPlugin;
 import org.polymap.alkis.model.fulltext.FlurstueckTransformer;
 import org.polymap.alkis.model.fulltext.FlurstueckUpdater;
 import org.polymap.alkis.model.fulltext.ZaehlerNennerQueryDecorator;
@@ -80,7 +78,12 @@ public class AlkisRepository {
     public static final FilterFactory       ff = CommonFactoryFinder.getFilterFactory( null );
 
     /** Maximale Größe der Ergebnismenge für Volltextsuche und Anzeige in Tabelle. */
-    public static final int                 MAX_RESULTS = Integer.parseInt( System.getProperty( "org.polymap.alkis.maxResults", "1000" ) );
+    public static final int                 MAX_RESULTS = Integer.parseInt( System.getProperty(
+            "org.polymap.alkis.maxResults", "1000" ) );
+    
+    /** */
+    public static final String              DATA_DIR = System.getProperty( 
+            "org.polymap.alkis.dataDir", "/home/falko/servers/workspace-alkis/data/org.polymap.alkis" );
     
 
     /**
@@ -104,25 +107,15 @@ public class AlkisRepository {
 
     private DataStore                       ds;
     
-    public Lazy<Map<String,AX_Gemarkung>>   gemarkungen = new PlainLazyInit( () -> {
-        return newUnitOfWork().query( AX_Gemarkung.class ).execute().stream()
-                // gemarkungen kommen leider (in Wittenberg) doppelt vor
-                .collect( Collectors.toMap( g -> g.gemarkungsnummer.get(), g -> g, (g1,g2) -> g1 ) );
-    });
-    
-    public Lazy<Map<String,AX_Gemeinde>>    gemeinden = new PlainLazyInit( () -> {
-        return newUnitOfWork().query( AX_Gemeinde.class ).execute().stream()
-                .collect( Collectors.toMap( g -> g.gemeindenummer.get(), g -> g, (g1,g2) -> g1 ) );
-    });
     
     public Lazy<Map<String,AX_LagebezeichnungKatalog>> lageKatalog = new PlainLazyInit( () -> {
         return newUnitOfWork().query( AX_LagebezeichnungKatalog.class ).execute().stream()
-                .collect( Collectors.toMap( e -> e.lage.get(), e -> e, (e1,e2) -> e1 ) );
+                .collect( toMap( e -> e.lage.get(), e -> e, (e1,e2) -> e1 ) );
     });
     
     public Lazy<Map<String,AX_Buchungsblattbezirk>> bbbezirk = new PlainLazyInit( () -> {
         return newUnitOfWork().query( AX_Buchungsblattbezirk.class ).execute().stream()
-                .collect( Collectors.toMap( e -> e.bezirknummer.get(), e -> e, (e1,e2) -> e1 ) );
+                .collect( toMap( e -> e.bezirknummer.get(), e -> e, (e1,e2) -> e1 ) );
     });
     
     
@@ -140,7 +133,7 @@ public class AlkisRepository {
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
             // init fulltext
-            File dataDir = new File( "/tmp"/*Polymap.getDataDir()*/, AlkisPlugin.ID );
+            File dataDir = new File( DATA_DIR );
             fulltextIndex = new LuceneFulltextIndex( new File( dataDir, "fulltext" ) );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
@@ -153,7 +146,7 @@ public class AlkisRepository {
             params.put( "database", "ALKIS" );
             params.put( "user", "postgres" );
             params.put( "passwd", "postgres" );
-            params.put( JDBCDataStoreFactory.MAXCONN.key, 8 );
+            params.put( JDBCDataStoreFactory.MAXCONN.key, 24 );
             params.put( JDBCDataStoreFactory.MAXWAIT.key, 20 );
             ds = new PostgisNGDataStoreFactory().createDataStore( params );
 
@@ -297,6 +290,8 @@ public class AlkisRepository {
 //            println( "Blattart: " + fst.buchungsstelle.get().buchungsblatt.get().blattart.get() );
 //            println( "Gemarkung: " + fst.gemarkung().bezeichnung.get() );
 //            println( "Gemeinde: " + fst.gemeinde().bezeichnung.get() );
+            
+            println( "gem: " + fst.gemeinde.get() + "/" + fst.gemarkungsnummer.get() );
         }
         
 //        // id queryString

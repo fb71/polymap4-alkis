@@ -411,11 +411,11 @@ public class FlurstueckPanel
                     .label.put( "Kennzeichen" ).create();
 
             row = createColumnRow( site.getPageBody(), 2 );
-            pageSite.newFormField( new PlainValuePropertyAdapter( "gemeinde", entity.gemeinde().bezeichnung.get() ) )
+            pageSite.newFormField( new PlainValuePropertyAdapter( "gemeinde", entity.gemeinde() ) )
                     .parent.put( row )
                     .label.put( "Gemeinde" ).create();
             
-            pageSite.newFormField( new PlainValuePropertyAdapter( "gemarkung", entity.gemarkung().bezeichnung.get() ) )
+            pageSite.newFormField( new PlainValuePropertyAdapter( "gemarkung", entity.gemarkung() ) )
                     .parent.put( row )
                     .label.put( "Gemarkung" ).create();
 

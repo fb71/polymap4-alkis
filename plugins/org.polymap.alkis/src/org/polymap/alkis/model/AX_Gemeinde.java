@@ -28,21 +28,29 @@ import org.polymap.model2.Property;
 public class AX_Gemeinde
         extends AA_NREO {
 
+    public static AX_Gemeinde                   TYPE;
+
     /**
      * 'Land' enthält den Schlüssel für das Bundesland.
+     * Teil des Gesamtschlüssels für die Gemeinde.
      */
     public Property<String>                     land;
 
     /**
-     * 
+     * Teil des Gesamtschlüssels für die Gemeinde.
      */
     @NameInStore("gemeinde")
-    public Property<String>                     gemeindenummer;
+    public Property<String>                     gemeinde;
 
     /**
-     * 
+     * Teil des Gesamtschlüssels für die Gemeinde.
      */
-    public Property<String>                     kreisnummer;
+    public Property<String>                     kreis;
+
+    /**
+     * Teil des Gesamtschlüssels für die Gemeinde.
+     */
+    public Property<String>                     regierungsbezirk;
 
     /**
      * Name der Gemeinde. 

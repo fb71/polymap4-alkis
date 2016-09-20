@@ -70,8 +70,8 @@ public class FlurstueckTransformer
             add( ZAEHLER, fst.zaehler.get() );
             add( NENNER, fst.nenner.get() );
             add( FLUR, fst.flurnummer.get() );
-            add( GMK, fst.gemarkung().bezeichnung.get() );
-            add( GMD, fst.gemeinde().bezeichnung.get() );
+            add( GMK, fst.gemarkung() );
+            add( GMD, fst.gemeinde() );
 
             fst.lagebezeichnung.get().stream().forEach( lbz -> {
                 lbz.katalogeintrag().ifPresent( e -> add( LAGE, e.bezeichnung.get() ) );

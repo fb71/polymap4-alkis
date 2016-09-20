@@ -14,14 +14,25 @@
  */
 package org.polymap.alkis.model;
 
-import java.util.Date;
+import static org.polymap.alkis.model.AlkisRepository.ff;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import org.polymap.core.runtime.cache.Cache;
+import org.polymap.core.runtime.cache.CacheConfig;
 
 import org.polymap.model2.NameInStore;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.store.geotools.FilterWrapper;
 
 /**
  * 'Flurstück_Kerndaten' enthält Eigenschaften des Flurstücks, die auch für andere
@@ -41,25 +52,73 @@ public abstract class AX_Flurstueck_Kerndaten
 
     /**
      * 'Land' enthält den Schlüssel für das Bundesland.
+     * Teil des Gesamtschlüssels für die Gemeinde.
      */
-    public Property<String>                     land;
+    protected Property<String>                  land;
 
+    /**
+     * Teil des Gesamtschlüssels für die Gemeinde.
+     */
+    protected Property<String>                  kreis;
+
+    /**
+     * Teil des Gesamtschlüssels für die Gemeinde.
+     */
+    protected Property<String>                  regierungsbezirk;
+
+    @NameInStore("gemeinde")
+    protected Property<String>                  gemeinde;
+    
+    private static Cache<List<String>,String>   gmdBezeichnungen = CacheConfig.defaults().createCache();
+    
+    /**
+     * Bezeichnung der Gemeinde. 
+     */
+    public String gemeinde() {
+        ArrayList<String> key = Lists.newArrayList( land.get(), regierungsbezirk.get(), kreis.get(), gemeinde.get() );
+        return gmdBezeichnungen.get( key, k -> {
+            FilterWrapper filter = new FilterWrapper( ff.and( Lists.newArrayList( 
+                    ff.equals( ff.property( AX_Gemeinde.TYPE.land.info().getNameInStore() ), ff.literal( land.get() ) ),
+                    ff.equals( ff.property( AX_Gemeinde.TYPE.regierungsbezirk.info().getNameInStore() ), ff.literal( regierungsbezirk.get() ) ),
+                    ff.equals( ff.property( AX_Gemeinde.TYPE.kreis.info().getNameInStore() ), ff.literal( kreis.get() ) ),
+                    ff.equals( ff.property( AX_Gemeinde.TYPE.gemeinde.info().getNameInStore() ), ff.literal( gemeinde.get() ) )
+                    ) ) );
+            try (
+                ResultSet<AX_Gemeinde> rs = context.getUnitOfWork().query( AX_Gemeinde.class ).where( filter ).execute();
+            ){
+                AX_Gemeinde result = Iterables.getOnlyElement( rs );
+                return result.bezeichnung.get();
+            }
+        });
+    }
+    
     /**
      * 'Gemarkungsnummer' enthält die von der Katasterbehörde zur eindeutigen
      * Bezeichnung der Gemarkung vergebene Nummer innerhalb eines Bundeslandes.
      */
-    public Property<String>                     gemarkungsnummer;
+    protected Property<String>                  gemarkungsnummer;
     
-    public AX_Gemarkung gemarkung() {
-        return AlkisRepository.instance.get().gemarkungen.get().get( gemarkungsnummer.get() );
+    private static Cache<List<String>,String>   gmkBezeichnungen = CacheConfig.defaults().createCache();
+    
+    /**
+     * Bezeichnung der Gemarkung. 
+     */
+    public String gemarkung() {
+        ArrayList<String> key = Lists.newArrayList( land.get(), gemarkungsnummer.get() );
+        return gmdBezeichnungen.get( key, k -> {
+            FilterWrapper filter = new FilterWrapper( ff.and( Lists.newArrayList( 
+                    ff.equals( ff.property( AX_Gemarkung.TYPE.land.info().getNameInStore() ), ff.literal( land.get() ) ),
+                    ff.equals( ff.property( AX_Gemarkung.TYPE.gemarkungsnummer.info().getNameInStore() ), ff.literal( gemarkungsnummer.get() ) )
+                    ) ) );
+            try (
+                ResultSet<AX_Gemarkung> rs = context.getUnitOfWork().query( AX_Gemarkung.class ).where( filter ).execute();
+            ){
+                AX_Gemarkung result = Iterables.getOnlyElement( rs );
+                return result.bezeichnung.get();
+            }
+        });
     }
     
-    @NameInStore("gemeinde")
-    public Property<String>                     gemeindenummer;
-    
-    public AX_Gemeinde gemeinde() {
-        return AlkisRepository.instance.get().gemeinden.get().get( gemeindenummer.get() );
-    }
     
 //    /**
 //     * 'Flurstücksnummer' ist die Bezeichnung (Zähler/Nenner), mit der ein Flurstück
@@ -97,7 +156,7 @@ public abstract class AX_Flurstueck_Kerndaten
      * Gesamtlänge des Flurstückkennzeichens beträgt immer 20 Zeichen. Das Attribut
      * ist ein abgeleitetes Attribut und kann nicht gesetzt werden.
      */
-    public Property<String>                    flurstueckskennzeichen;
+    public Property<String>                     flurstueckskennzeichen;
     
     /**
      * 'Amtliche Fläche' ist der im Liegenschaftskataster festgelegte Flächeninhalt
@@ -112,14 +171,14 @@ public abstract class AX_Flurstueck_Kerndaten
      * vergebene Nummer einer Flur, die eine Gruppe von zusammenhängenden Flurstücken
      * innerhalb einer Gemarkung umfasst.
      */
-    public Property<Integer>                   flurnummer;
+    public Property<Integer>                    flurnummer;
     
     /**
      * 'Flurstücksfolge' ist eine weitere Angabe zur Flurstücksnummer zum Nachweis
      * der Flurstücksentwicklung.
      */
     @Nullable
-    public Property<String>                    flurstuecksfolge;
+    public Property<String>                     flurstuecksfolge;
     
 //    /**
 //     * 'Objektkoordinaten' sind die Koordinaten [mm] eines das Objekt 'Flurstück'

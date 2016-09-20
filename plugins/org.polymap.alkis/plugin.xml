@@ -2,43 +2,6 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.polymap.core.data.csvimport.operations">
-      <operation
-            class="org.polymap.alkis.internal.flurliste.FlurlisteCsvOperation"
-            label="Flurstücksliste"
-            tooltip="RW/HW aus Flurstücksliste dekodieren">
-      </operation>
-      <operation
-            class="org.polymap.alkis.internal.flurliste.ZaehlerNennerCsvOperation"
-            label="Zähler/Nenner"
-            tooltip="Zähler/Nenner suchen und Koordinaten des Flurstücks zuordnen">
-      </operation>
-   </extension>
-   <extension
-         point="org.polymap.service.fs.contentProviders">
-      <contentProvider
-            class="org.polymap.alkis.importer.fs.ImportContentProvider"
-            id="org.polymap.alkis.ImportContentProvider"
-            name="ALKIS Import">
-      </contentProvider>
-   </extension>
-   <!--extension
-         point="org.polymap.rhei.form.pageProviders">
-      <pageProvider
-            class="org.polymap.alkis.model.alb.FlurstueckFormPageProvider"
-            id="org.polymap.alkis.FlurstueckFormPageProvider"
-            name="ALB-Flurstueck">
-      </pageProvider>
-   </extension-->
-   <extension
-         point="org.eclipse.ui.importWizards">
-      <wizard
-            class="org.polymap.alkis.importer.nas.NasImportWizard"
-            id="org.polymap.alkis.wizard1"
-            name="ALKIS/NAS">
-      </wizard>
-   </extension>
-   <extension
          point="org.polymap.rhei.batik.panels">
       <panel
             class="org.polymap.alkis.ui.StartPanel"

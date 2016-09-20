@@ -77,7 +77,7 @@ public class FlurstueckTableViewer
                     @Override
                     public String getText( Object elm ) {
                         AX_Flurstueck fst = FeatureTableElement.entity( elm );
-                        return Joiner.on( " / " ).join( fst.gemarkung().bezeichnung.get(), fst.gemeinde().bezeichnung.get() );
+                        return Joiner.on( " / " ).join( fst.gemarkung(), fst.gemeinde() );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
