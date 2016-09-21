@@ -29,5 +29,17 @@
             path="/alkis">
       </entrypoint>
    </extension>
+   <extension
+         id="org.polymap.alkis.app"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.polymap.alkis.AlkisApplication">
+         </run>
+      </application>
+   </extension>
 
 </plugin>
