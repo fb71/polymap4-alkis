@@ -104,15 +104,14 @@ public class FlurstueckUpdater
         int sleepMillis = Integer.parseInt( System.getProperty( "org.polymap.alkis.sleepMillis", "100" ) );
         log.info( "sleepMillis: " + sleepMillis );
         Blocking rejected = new RejectedExecutionHandlers.Blocking().sleepMillis.put( sleepMillis );
-        
         ThreadPoolExecutor executor = new ThreadPoolExecutor( numThreads, numThreads,
                 10L, TimeUnit.SECONDS, new ArrayBlockingQueue( numThreads ), rejected );
         
         try (
-                Updater updater = index.prepareUpdate();
-                ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork()
-                        .query( AX_Flurstueck.class ).firstResult( chunkFirst ).maxResults( chunkMax ).execute()
-            ) {
+            Updater updater = index.prepareUpdate();
+            ResultSet<AX_Flurstueck> rs = repo.newUnitOfWork()
+                    .query( AX_Flurstueck.class ).firstResult( chunkFirst ).maxResults( chunkMax ).execute()
+        ){
             int count = 0;
             for (AX_Flurstueck fst : rs) {
                 count ++;
@@ -120,11 +119,11 @@ public class FlurstueckUpdater
                     try {
                         log.info( Thread.currentThread().getName() );
                         JSONObject transformed = transform( fst );
-                        log.info( "transformed: " + transformed.toString( 4 ) );
+                       // log.info( "transformed: " + transformed.toString( 4 ) );
                         updater.store( transformed, false );                    
                     }
                     catch (Throwable e) {
-                        log.info( "", e );
+                        log.warn( "", e );
                         exceptions.add( e );
                     }
                 });

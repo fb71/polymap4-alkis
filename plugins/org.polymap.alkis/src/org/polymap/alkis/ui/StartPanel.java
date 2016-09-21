@@ -109,8 +109,13 @@ public class StartPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 460 ); // table viewer
-        createLoginContents( parent );
-//        createMainContents( parent );
+        
+        if ("falko".equals( System.getProperty( "user.name" ) )) {
+            createMainContents( parent );
+        }
+        else {
+            createLoginContents( parent );
+        }
     }
     
     
@@ -281,10 +286,9 @@ public class StartPanel
         });
         searchForm.addFieldListener( this );
 
-        String startSearch = System.getenv( "org.polymap.alkis.startSearch" );
-        if (startSearch != null) {
+        if ("falko".equals( System.getProperty( "user.name" ) )) {
             searchField.searchOnEnter.set( false );
-            searchField.getText().setText( startSearch );
+            searchField.getText().setText( "Heidemarie" );
         }
         searchField.searchOnEnter.set( true );
         searchField.getText().setFocus();
