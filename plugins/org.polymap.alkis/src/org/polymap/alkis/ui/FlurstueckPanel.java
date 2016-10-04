@@ -22,8 +22,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Joiner;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.Polygonal;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -67,8 +70,11 @@ import org.polymap.rap.openlayers.base.OlFeature;
 import org.polymap.rap.openlayers.base.OlMap;
 import org.polymap.rap.openlayers.format.GeoJSONFormat;
 import org.polymap.rap.openlayers.geom.PolygonGeometry;
+import org.polymap.rap.openlayers.layer.ImageLayer;
 import org.polymap.rap.openlayers.layer.VectorLayer;
+import org.polymap.rap.openlayers.source.ImageWMSSource;
 import org.polymap.rap.openlayers.source.VectorSource;
+import org.polymap.rap.openlayers.source.WMSRequestParams;
 import org.polymap.rap.openlayers.style.FillStyle;
 import org.polymap.rap.openlayers.style.StrokeStyle;
 import org.polymap.rap.openlayers.style.Style;
@@ -166,23 +172,50 @@ public class FlurstueckPanel
 
         protected void createMapContents( Composite parent ) {
             // map
+            String mapSrs = "EPSG:3857";
             OlMap map = new OlMap( parent, SWT.NONE, new View()
-                    .projection.put( new Projection( "EPSG:3857", Units.m ) )
+                    .projection.put( new Projection( mapSrs, Units.m ) )
                     .center.put( new Coordinate( 1387648, 6688702 ) )
                     .zoom.put( 14 ) );
             
             map.getControl().setLayoutData( FormDataFactory.filled().height( 500 ).create() );
 
-//            // OSM
-//            map.addLayer( new ImageLayer()
-//                    .source.put( new ImageWMSSource()
-//                            .url.put( "http://ows.terrestris.de/osm/service/" )
-//                            .params.put( new ImageWMSSource.RequestParams().layers.put( "OSM-WMS" ) ) ) );
-            // DTK
+            // OSM
+            map.addLayer( new ImageLayer()
+                    .source.put( new ImageWMSSource()
+                            .url.put( "http://ows.terrestris.de/osm/service/" )
+                            .params.put( new WMSRequestParams()
+                                    .version.put( "1.1.1" )  // send "SRS" param
+                                    .format.put( "image/jpeg" )
+                                    .layers.put( "OSM-WMS" ) ) ) );
+            
+//            // DTK
 //            map.addLayer( new ImageLayer()
 //                    .source.put( new ImageWMSSource()
 //                            .url.put( "http://sec.geodatenportal.sachsen-anhalt.de/gateway/gateto/lvermgeo_intern-GDI-LSA_LVermGeo_DTKcolor_OpenData?" )
-//                            .params.put( new ImageWMSSource.RequestParams().layers.put( "DTK100" ) ) ) );
+//                            .params.put( new WMSRequestParams()
+//                                    .version.put( "1.1.1" )  // send "SRS" param
+//                                    .format.put( "image/jpeg" )
+//                                    .layers.put( "DTK100" ) ) ) );
+
+//            // DOP
+//            map.addLayer( new ImageLayer()
+//                    .source.put( new ImageWMSSource()
+//                            .url.put( "http://www.gfds.sachsen-anhalt.de/ows/ws/wms/f4bc7441-e2ce-d0a3/GDI-LSA_MLU_DOP/ows.wms?" )
+//                            .params.put( new WMSRequestParams()
+//                                    .version.put( "1.1.1" )  // send "SRS" param
+//                                    .format.put( "image/jpeg" )
+//                                    .layers.put( "mlu_invekos09_rgb" ) ) ) );
+            
+//            // DOP
+//            map.addLayer( new ImageLayer()
+//                    .source.put( new ImageWMSSource()
+//                            .url.put( "http://sec.geodatenportal.sachsen-anhalt.de/gateway/gateto/lvermgeo_intern-GDI-LSA_LVermGeo_DOP100_OpenData?" )
+//                            .params.put( new WMSRequestParams()
+//                                    .version.put( "1.1.1" )  // send "SRS" param
+//                                    .format.put( "image/jpeg" )
+//                                    .layers.put( "lsa_lvermgeo_dop100" ) ) ) );
+            
             
             // vector source/layer
             VectorSource vectorSource = new VectorSource()
@@ -199,26 +232,44 @@ public class FlurstueckPanel
 
             // feature
             try {
-                Polygon geom = fst.geom.get();
-                Polygon transformed = Geometries.transform( geom, "EPSG:25832", "EPSG:3857" );
+                Polygonal geom = fst.geom.get();
+                Point center = null;
                 
-                List<Coordinate> coords = Arrays.stream( transformed.getCoordinates() )
-                        .map( c -> new Coordinate( c.x, c.y ) )
-                        .collect( Collectors.toList() );
-
-                OlFeature feature = new OlFeature();
-                feature.name.set( "Flurstück" );
-                feature.geometry.set( new PolygonGeometry( coords ) );
-                vectorSource.addFeature( feature );
-                
-                Point center = transformed.getCentroid();
-                map.view.get()
-                        .center.put( new Coordinate( center.getX(), center.getY() ) );
+                // MultiPolygon
+                if (geom instanceof MultiPolygon) {
+                    MultiPolygon transformed = Geometries.transform( (MultiPolygon)geom, "EPSG:25832", mapSrs );
+                    for (int n=0; n<transformed.getNumGeometries(); n++) {
+                        addFeature( vectorSource, transformed.getGeometryN( n ) );
+                    }
+                    center = transformed.getCentroid();
+                }
+                // Polygon
+                else if (geom instanceof Polygon) {
+                    Polygon transformed = Geometries.transform( (Polygon)geom, "EPSG:25832", mapSrs );
+                    addFeature( vectorSource, transformed );
+                    center = transformed.getCentroid();
+                }
+                else {
+                    throw new IllegalStateException( "Unknown geometry type: " + geom );
+                }
+                                
+                map.view.get().center.put( new Coordinate( center.getX(), center.getY() ) );
             }
             catch (Exception e) {
                 StatusDispatcher.handleError( "", e );
                 log.error( "", e );
             }
+        }
+
+        protected void addFeature( VectorSource vectorSource, Geometry geom ) {
+            List<Coordinate> coords = Arrays.stream( geom.getCoordinates() )
+                    .map( c -> new Coordinate( c.x, c.y ) )
+                    .collect( Collectors.toList() );
+
+            OlFeature feature = new OlFeature();
+            feature.name.set( "Flurstück" );
+            feature.geometry.set( new PolygonGeometry( coords ) );
+            vectorSource.addFeature( feature );
         }
     }
     
