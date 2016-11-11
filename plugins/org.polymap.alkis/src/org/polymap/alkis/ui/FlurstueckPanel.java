@@ -51,7 +51,7 @@ import org.polymap.rhei.batik.dashboard.DefaultDashlet;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
-import org.polymap.rhei.field.IFormFieldLabel;
+import org.polymap.rhei.field.HorizontalFieldLayout;
 import org.polymap.rhei.field.PlainValuePropertyAdapter;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.DefaultFormPage;
@@ -383,7 +383,8 @@ public class FlurstueckPanel
 
                 pageSite.newFormField( new PropertyAdapter( anschrift.hausnummer ) )
                         .parent.put( row2 )
-                        .label.put( IFormFieldLabel.NO_LABEL ).create();
+                        .layout.put( HorizontalFieldLayout.NO_LABEL )
+                        .create();
                 
                 row2 = createColumnRow( site.getPageBody(), 2 );
                 pageSite.newFormField( new PropertyAdapter( anschrift.postleitzahlPostzustellung ) )
@@ -392,7 +393,8 @@ public class FlurstueckPanel
 
                 pageSite.newFormField( new PropertyAdapter( anschrift.ort_Post ) )
                         .parent.put( row2 )
-                        .label.put( IFormFieldLabel.NO_LABEL ).create();
+                        .layout.put( HorizontalFieldLayout.NO_LABEL )
+                        .create();
             });
         }
     }
