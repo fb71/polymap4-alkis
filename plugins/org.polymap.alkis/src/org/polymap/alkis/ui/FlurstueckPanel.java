@@ -151,7 +151,7 @@ public class FlurstueckPanel
             dashletSite.title.set( "Karte" );
             dashletSite.constraints.get().add( new PriorityConstraint( 0 ) );
             dashletSite.constraints.get().add( new MinWidthConstraint( 550, 1 ) );
-            dashletSite.isExpandable.set( true );
+            dashletSite.expandable.set( true );
         }
 
         @Override
